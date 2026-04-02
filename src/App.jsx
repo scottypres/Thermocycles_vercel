@@ -525,45 +525,47 @@ function pvToST(v, P) {
 /* Get specific volume from (s,T) */
 function stToV(s, T) {
   const bounds = getDomeBounds(T);
-  if (!bounds || T >= 374) {
-    // Superheated or supercritical - estimate from ideal gas
-    const Pguess = 500;
-    return 0.4615 * (T + 273.15) / Pguess;
+  const P = stToP(s, T);
+
+  if (bounds && s >= bounds.sf && s <= bounds.sg) {
+    // Two-phase: use quality to interpolate vf-vg at this pressure
+    const x = (s - bounds.sf) / (bounds.sg - bounds.sf);
+    const vf = interpSteam(P, "vf");
+    const vg = interpSteam(P, "vg");
+    return vf + x * (vg - vf);
   }
-  if (s <= bounds.sf) return interpSteam(interpSteam(0, "P"), "vf") || 0.001;
-  if (s >= bounds.sg) {
-    // Find P at this T, then estimate superheated volume
-    for (let i = 0; i < STEAM_TABLE.length - 1; i++) {
-      if (T >= STEAM_TABLE[i].T && T <= STEAM_TABLE[i + 1].T) {
-        const P = lerp(T, STEAM_TABLE[i].T, STEAM_TABLE[i + 1].T, STEAM_TABLE[i].P, STEAM_TABLE[i + 1].P);
-        const vg = interpSteam(P, "vg");
-        const extra = (s - bounds.sg) / CP_STEAM * 50;
-        return vg * (1 + extra * 0.01);
-      }
-    }
-    return 0.5;
+  if (bounds && s < bounds.sf) {
+    // Subcooled liquid: v ≈ vf at saturation pressure for this T
+    return interpSteam(P, "vf");
   }
-  // Two-phase
-  const x = (s - bounds.sf) / (bounds.sg - bounds.sf);
-  for (let i = 0; i < STEAM_TABLE.length - 1; i++) {
-    if (T >= STEAM_TABLE[i].T && T <= STEAM_TABLE[i + 1].T) {
-      const vf = lerp(T, STEAM_TABLE[i].T, STEAM_TABLE[i + 1].T, STEAM_TABLE[i].vf, STEAM_TABLE[i + 1].vf);
-      const vg = lerp(T, STEAM_TABLE[i].T, STEAM_TABLE[i + 1].T, STEAM_TABLE[i].vg, STEAM_TABLE[i + 1].vg);
-      return vf + x * (vg - vf);
-    }
-  }
-  return 0.01;
+  // Superheated or supercritical: ideal gas v = RT/P
+  return 0.4615 * (T + 273.15) / Math.max(1, P);
 }
 
 /* Get pressure from (s,T) approximately */
 function stToP(s, T) {
-  for (let i = 0; i < STEAM_TABLE.length - 1; i++) {
-    if (T >= STEAM_TABLE[i].T && T <= STEAM_TABLE[i + 1].T) {
-      return lerp(T, STEAM_TABLE[i].T, STEAM_TABLE[i + 1].T, STEAM_TABLE[i].P, STEAM_TABLE[i + 1].P);
+  const bounds = getDomeBounds(T);
+  // Two-phase or subcooled: P ≈ Psat(T)
+  if (bounds && s <= bounds.sg) {
+    for (let i = 0; i < STEAM_TABLE.length - 1; i++) {
+      if (T >= STEAM_TABLE[i].T && T <= STEAM_TABLE[i + 1].T)
+        return lerp(T, STEAM_TABLE[i].T, STEAM_TABLE[i + 1].T, STEAM_TABLE[i].P, STEAM_TABLE[i + 1].P);
     }
+    if (T < STEAM_TABLE[0].T) return STEAM_TABLE[0].P;
+    return STEAM_TABLE[STEAM_TABLE.length - 1].P;
   }
-  if (T < STEAM_TABLE[0].T) return STEAM_TABLE[0].P;
-  return STEAM_TABLE[STEAM_TABLE.length - 1].P;
+  // Superheated (or supercritical): solve for P via binary search
+  // s = sg(P) + Cp·ln((T+273)/(Tsat(P)+273)); s_calc decreases as P increases
+  let lo = 1, hi = 22000;
+  for (let iter = 0; iter < 30; iter++) {
+    const mid = (lo + hi) / 2;
+    const Tsat = interpSteam(mid, "T");
+    if (T <= Tsat) { hi = mid; continue; }
+    const sg = interpSteam(mid, "sg");
+    const sCalc = sg + CP_STEAM * Math.log((T + 273.15) / (Tsat + 273.15));
+    if (sCalc > s) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
 }
 
 const pvDomeLeft = STEAM_TABLE.filter(r => r.P <= 22064).map(r => ({ v: r.vf, P: r.P }));
