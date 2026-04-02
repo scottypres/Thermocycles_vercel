@@ -483,11 +483,13 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
       {st.map((s, i) => {
         const cx = mapS(s.s), cy = mapT(s.T);
         const off = [{ dx: -14, dy: 14 }, { dx: -14, dy: -10 }, { dx: 8, dy: -10 }, { dx: 8, dy: 14 }];
+        const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
             <circle cx={cx} cy={cy} r={5} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
-            <text x={cx + off[i].dx} y={cy + off[i].dy} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
+            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill="#fff" />
+            <text x={tx} y={ty} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
       })}
@@ -742,11 +744,13 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
       {st.map((s, i) => {
         const cx = mapV(stateV[i]), cy = mapP(stateP[i]);
         const off = [{ dx: -12, dy: 12 }, { dx: -12, dy: -8 }, { dx: 10, dy: -8 }, { dx: 10, dy: 12 }];
+        const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
             <circle cx={cx} cy={cy} r={5} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
-            <text x={cx + off[i].dx} y={cy + off[i].dy} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
+            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill="#fff" />
+            <text x={tx} y={ty} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
       })}
