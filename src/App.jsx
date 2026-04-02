@@ -127,7 +127,7 @@ const domeCurve = [...domeLeft, ...domeRight];
 
 /* ───────── T-s mapping ───────── */
 const TS_W = 360, TS_H = 285;
-const TS_PAD = { l: 28, r: 6, t: 14, b: 28 };
+const TS_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const TS_PLOT = { x: TS_PAD.l, y: TS_PAD.t, w: TS_W - TS_PAD.l - TS_PAD.r, h: TS_H - TS_PAD.t - TS_PAD.b };
 const S_MIN = 0, S_MAX = 9.5, T_MIN = 0, T_MAX = 650;
 function mapS(s) { return TS_PLOT.x + ((s - S_MIN) / (S_MAX - S_MIN)) * TS_PLOT.w; }
@@ -435,7 +435,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
         </g>
       ))}
       <text x={TS_W / 2} y={TS_H - 1} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
-      <text x={4} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,4,${TS_H / 2 - 8})`}>T (°C)</text>
+      <text x={10} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${TS_H / 2 - 8})`}>T (°C)</text>
       {/* Dome */}
       <path d={domePathD} fill={showAreas ? "none" : K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
       {showAreas && (() => {
@@ -535,7 +535,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
 
 /* ───────── P-v Diagram ───────── */
 const PV_W = 360, PV_H = 285;
-const PV_PAD = { l: 30, r: 6, t: 14, b: 28 };
+const PV_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const PV_PLOT = { x: PV_PAD.l, y: PV_PAD.t, w: PV_W - PV_PAD.l - PV_PAD.r, h: PV_H - PV_PAD.t - PV_PAD.b };
 const V_MIN_LOG = -3.2, V_MAX_LOG = 2.5; // log10(v) range: 0.00063 to ~316
 const P_MIN_LOG = 0, P_MAX_LOG = 4.5; // log10(P) range: 1 to ~31623
@@ -716,7 +716,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
         <text key={`pl${i}`} x={PV_PLOT.x - 4} y={mapP(p) + 2.5} fill={K.inkMed} fontSize={6.5} textAnchor="end" fontFamily={FM}>{p >= 1000 ? `${p/1000}k` : p}</text>
       ))}
       <text x={PV_W / 2} y={PV_H - 1} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">v (m³/kg) — log scale</text>
-      <text x={4} y={PV_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,4,${PV_H / 2 - 8})`}>P (kPa)</text>
+      <text x={10} y={PV_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${PV_H / 2 - 8})`}>P (kPa)</text>
       {/* Dome */}
       <path d={domePathD} fill={K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
       {/* Cycle lines */}
