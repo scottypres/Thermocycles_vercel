@@ -601,7 +601,8 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
     const py = Math.max(PV_PLOT.y, Math.min(PV_PLOT.y + PV_PLOT.h, (clientY - rect.top) * scaleY));
     const v = lockV && lockedVRef.current !== null ? lockedVRef.current : unmapV(px);
     const P = lockP && lockedPRef.current !== null ? lockedPRef.current : unmapP(py);
-    return pvToST(v, P);
+    const st = pvToST(v, P);
+    return { ...st, v, P };
   }, [lockP, lockV]);
 
   const handleStart = useCallback((e) => {
@@ -627,9 +628,9 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
   const stateP = st.map(s => s.P);
 
   // Drag point in P-v coords
-  // Use locked ref values for display to prevent drift
-  const dpV = lockV && lockedVRef.current !== null ? lockedVRef.current : stToV(dragPoint.s, dragPoint.T);
-  const dpP = lockP && lockedPRef.current !== null ? lockedPRef.current : stToP(dragPoint.s, dragPoint.T);
+  // Use raw v,P from dragPoint when available (set by PV drag), fall back to conversion
+  const dpV = lockV && lockedVRef.current !== null ? lockedVRef.current : (dragPoint.v != null ? dragPoint.v : stToV(dragPoint.s, dragPoint.T));
+  const dpP = lockP && lockedPRef.current !== null ? lockedPRef.current : (dragPoint.P != null ? dragPoint.P : stToP(dragPoint.s, dragPoint.T));
   const dpx = mapV(dpV);
   const dpy = mapP(dpP);
 
@@ -1143,7 +1144,6 @@ export default function App() {
   const [lockT, setLockT] = useState(false);
   const [lockP, setLockP] = useState(false);
   const [lockV, setLockV] = useState(false);
-  const [diagramMode, setDiagramMode] = useState("ts"); // "ts" or "pv"
 
   const tSatHigh = interpSteam(pHigh, "T");
   const minTSup = Math.ceil(tSatHigh + 10);
@@ -1200,67 +1200,48 @@ export default function App() {
 
       {/* Phase Visualizer */}
       <div style={card}>
-        <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the T–s diagram below</span></h3>
+        <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
         <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} />
       </div>
 
-      {/* Diagram with toggle and lock buttons */}
+      {/* T-s Diagram */}
       <div style={card}>
-        {/* Header row: title + toggle */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: 8 }}>
-          <span>{diagramMode === "ts" ? "T–s" : "P–v"} Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {/* Equations button */}
-            <button onClick={() => setShowEqs(true)} style={{
-              background: "none", border: `1px solid ${K.border}`, padding: "3px 8px",
-              color: K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
-            }}>f(x)</button>
-            {/* T-s / P-v Toggle */}
-            <div onClick={() => { setDiagramMode(d => d === "ts" ? "pv" : "ts"); setLockS(false); setLockT(false); setLockP(false); setLockV(false); }} style={{
-              display: "flex", alignItems: "center", cursor: "pointer",
-              background: K.cardAlt, border: `1px solid ${K.border}`,
-              borderRadius: 12, padding: "2px 3px", position: "relative", width: 72, height: 24,
-            }}>
-              <div style={{
-                position: "absolute", left: diagramMode === "ts" ? 2 : 37, top: 2,
-                width: 33, height: 20, borderRadius: 10,
-                background: K.accent, transition: "left 0.2s ease",
-              }} />
-              <span style={{ flex: 1, textAlign: "center", fontSize: 9, fontFamily: FM, fontWeight: 500, position: "relative", zIndex: 1, color: diagramMode === "ts" ? "#fff" : K.inkMed }}>T–s</span>
-              <span style={{ flex: 1, textAlign: "center", fontSize: 9, fontFamily: FM, fontWeight: 500, position: "relative", zIndex: 1, color: diagramMode === "pv" ? "#fff" : K.inkMed }}>P–v</span>
-            </div>
-          </div>
+          <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
+          <button onClick={() => setShowEqs(true)} style={{
+            background: "none", border: `1px solid ${K.border}`, padding: "3px 8px",
+            color: K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
+          }}>f(x)</button>
         </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <button onClick={() => { setLockS(l => !l); if (!lockS) setLockT(false); }}
+            style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
+            {lockS ? "🔒" : "🔓"} Lock s = {dragPoint.s.toFixed(2)}
+          </button>
+          <button onClick={() => { setLockT(l => !l); if (!lockT) setLockS(false); }}
+            style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
+            {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
+          </button>
+        </div>
+        <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} />
+      </div>
 
-        {/* Lock buttons — context sensitive */}
-        {diagramMode === "ts" ? (
-          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            <button onClick={() => { setLockS(l => !l); if (!lockS) setLockT(false); }}
-              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
-              {lockS ? "🔒" : "🔓"} Lock s = {dragPoint.s.toFixed(2)}
-            </button>
-            <button onClick={() => { setLockT(l => !l); if (!lockT) setLockS(false); }}
-              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
-              {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            <button onClick={() => { setLockP(l => !l); if (!lockP) setLockV(false); }}
-              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
-              {lockP ? "🔒" : "🔓"} Lock P = {stToP(dragPoint.s, dragPoint.T).toFixed(0)} kPa
-            </button>
-            <button onClick={() => { setLockV(l => !l); if (!lockV) setLockP(false); }}
-              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
-              {lockV ? "🔒" : "🔓"} Lock v = {stToV(dragPoint.s, dragPoint.T).toFixed(4)} m³/kg
-            </button>
-          </div>
-        )}
-
-        {diagramMode === "ts"
-          ? <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} />
-          : <PvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockP={lockP} lockV={lockV} />
-        }
+      {/* P-v Diagram */}
+      <div style={card}>
+        <div style={{ ...sec, marginBottom: 8 }}>
+          <span>P–v Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <button onClick={() => { setLockP(l => !l); if (!lockP) setLockV(false); }}
+            style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
+            {lockP ? "🔒" : "🔓"} Lock P = {(dragPoint.P != null ? dragPoint.P : stToP(dragPoint.s, dragPoint.T)).toFixed(0)} kPa
+          </button>
+          <button onClick={() => { setLockV(l => !l); if (!lockV) setLockP(false); }}
+            style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
+            {lockV ? "🔒" : "🔓"} Lock v = {(dragPoint.v != null ? dragPoint.v : stToV(dragPoint.s, dragPoint.T)).toFixed(4)} m³/kg
+          </button>
+        </div>
+        <PvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockP={lockP} lockV={lockV} />
       </div>
       <EquationsModal open={showEqs} onClose={() => setShowEqs(false)} cycle={cycle} />
 
