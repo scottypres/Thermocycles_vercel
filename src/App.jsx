@@ -457,32 +457,12 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
           `L${mapS(st[3].s).toFixed(1)},${axisY.toFixed(1)}`,
           "Z"
         ].join(" ");
-        // Label positions — centered in their respective areas
-        const qInLabelX = mapS((st[2].s + st[3].s) / 2);
-        const qInLabelY = mapT(st[0].T) + (axisY - mapT(st[0].T)) * 0.4;
-        const qOutLabelX = mapS(st[0].s + (st[3].s - st[0].s) * 0.35);
-        const qOutLabelY = mapT(st[0].T) + (axisY - mapT(st[0].T)) * 0.4;
-        const wNetX = mapS((st[0].s + st[2].s) / 2);
-        const wNetY = mapT((st[0].T + st[2].T) / 2);
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
         return (
           <>
             <path d={qInD} fill={`${K.heatIn}18`} stroke="none" />
             <path d={qOutD} fill={`${K.heatOut}18`} stroke="none" />
             <path d={cycleFillD} fill={`${K.workOut}25`} stroke="none" />
-            {/* Q_in label with background */}
-            <rect x={qInLabelX - 32} y={qInLabelY - 10} width={64} height={22} rx={2} fill="rgba(255,255,255,0.85)" />
-            <text x={qInLabelX} y={qInLabelY + 1} fill={K.heatIn} fontSize={9} fontFamily={FD} textAnchor="middle">Q_in</text>
-            <text x={qInLabelX} y={qInLabelY + 11} fill={K.heatIn} fontSize={7} fontFamily={FM} textAnchor="middle">{fmt(cycle.qIn)} kJ/kg</text>
-            {/* Q_out label with background */}
-            <rect x={qOutLabelX - 32} y={qOutLabelY - 10} width={64} height={22} rx={2} fill="rgba(255,255,255,0.85)" />
-            <text x={qOutLabelX} y={qOutLabelY + 1} fill={K.heatOut} fontSize={9} fontFamily={FD} textAnchor="middle">Q_out</text>
-            <text x={qOutLabelX} y={qOutLabelY + 11} fill={K.heatOut} fontSize={7} fontFamily={FM} textAnchor="middle">{fmt(cycle.qOut)} kJ/kg</text>
-            {/* W_net + η label with background */}
-            <rect x={wNetX - 38} y={wNetY - 16} width={76} height={38} rx={2} fill="rgba(255,255,255,0.85)" />
-            <text x={wNetX} y={wNetY - 4} fill={K.workOut} fontSize={10} fontFamily={FD} textAnchor="middle" fontWeight="bold">W_net</text>
-            <text x={wNetX} y={wNetY + 7} fill={K.workOut} fontSize={7} fontFamily={FM} textAnchor="middle">{fmt(cycle.wNet)} kJ/kg</text>
-            <text x={wNetX} y={wNetY + 18} fill={K.ink} fontSize={8} fontFamily={FD} textAnchor="middle" fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
           </>
         );
       })()}
@@ -528,6 +508,27 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
         {/* Instruction hint */}
         <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={7} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
       </>}
+      {showAreas && (() => {
+        const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+        const lx = TS_PLOT.x + 6;
+        const ly = TS_PLOT.y + 4;
+        return (
+          <>
+            <rect x={lx} y={ly} width={152} height={52} rx={2} fill="#fff" stroke={K.border} strokeWidth={0.8} />
+            {/* Q_in */}
+            <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
+            <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={8} fontFamily={FM}>Q_in (1→3) = {fmt(cycle.qIn)} kJ/kg</text>
+            {/* Q_out */}
+            <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
+            <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={8} fontFamily={FM}>Q_out (4→1) = {fmt(cycle.qOut)} kJ/kg</text>
+            {/* W_net */}
+            <rect x={lx + 5} y={ly + 31} width={8} height={8} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
+            <text x={lx + 17} y={ly + 38} fill={K.workOut} fontSize={8} fontFamily={FM}>W_net (1→3→4→1) = {fmt(cycle.wNet)} kJ/kg</text>
+            {/* η */}
+            <text x={lx + 5} y={ly + 49} fill={K.ink} fontSize={8} fontFamily={FD} fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
+          </>
+        );
+      })()}
     </svg>
   );
 }
