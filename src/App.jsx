@@ -1191,6 +1191,18 @@ function StateTable({ cycle, onSelectState }) {
   );
 }
 
+/* ───────── Desktop detection ───────── */
+function useIsDesktop(breakpoint = 840) {
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== "undefined" && window.innerWidth >= breakpoint);
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${breakpoint}px)`);
+    const handler = (e) => setIsDesktop(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [breakpoint]);
+  return isDesktop;
+}
+
 /* ───────── Main ───────── */
 export default function App() {
   const [pHigh, setPHigh] = useState(4000);
@@ -1212,11 +1224,13 @@ export default function App() {
   const phaseInfo = useMemo(() => getPhaseInfo(dragPoint.s, dragPoint.T), [dragPoint]);
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
 
-  const card = { margin: "12px 12px 0", padding: "14px", background: K.card, border: `1px solid ${K.border}` };
-  const sec = { margin: "0 0 10px 0", fontSize: 12, fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 6 };
+  const desktop = useIsDesktop();
+  const gap = desktop ? 16 : 12;
+  const card = { margin: `${gap}px ${gap}px 0`, padding: desktop ? "18px" : "14px", background: K.card, border: `1px solid ${K.border}` };
+  const sec = { margin: "0 0 10px 0", fontSize: desktop ? 14 : 12, fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 6 };
 
   return (
-    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: 480, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1100 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1241,7 +1255,7 @@ export default function App() {
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
 
       {/* Performance */}
-      <div style={{ margin: "12px 12px 0", padding: "12px", background: "#fff", border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      <div style={{ margin: `${gap}px ${gap}px 0`, padding: "12px", background: "#fff", border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         {[
           { l: "η thermal", v: `${(cycle.eta * 100).toFixed(1)}%`, c: K.accent },
           { l: "W net", v: fmt(cycle.wNet), c: K.workOut, s: "kJ/kg" },
@@ -1249,86 +1263,95 @@ export default function App() {
         ].map((m, i) => (
           <div key={i} style={{ textAlign: "center", padding: "4px 0" }}>
             <div style={{ fontSize: 8, color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
-            <div style={{ fontSize: 20, fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
+            <div style={{ fontSize: desktop ? 24 : 20, fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
             {m.s && <div style={{ fontSize: 8, color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
           </div>
         ))}
       </div>
 
-      {/* Schematic */}
-      <div style={card}><h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— Dwg. 001</span></h3><SchematicDiagram cycle={cycle} /></div>
-
-      {/* Phase Visualizer */}
-      <div style={card}>
-        <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
-        <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} />
+      {/* Row: Schematic + Phase Visualizer (side by side on desktop) */}
+      <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
+        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— Dwg. 001</span></h3>
+          <SchematicDiagram cycle={cycle} />
+        </div>
+        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
+          <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} />
+        </div>
       </div>
 
-      {/* T-s Diagram */}
-      <div style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: 8 }}>
-          <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button onClick={() => setShowAreas(a => !a)} style={{
-              background: showAreas ? K.workOut : "none", border: `1px solid ${showAreas ? K.workOut : K.border}`, padding: "3px 8px",
-              color: showAreas ? "#fff" : K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
-            }}>η areas</button>
-            <button onClick={() => setShowEqs(true)} style={{
-              background: "none", border: `1px solid ${K.border}`, padding: "3px 8px",
-              color: K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
-            }}>f(x)</button>
+      {/* Row: T-s + P-v Diagrams (side by side on desktop) */}
+      <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
+        {/* T-s Diagram */}
+        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: 8 }}>
+            <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setShowAreas(a => !a)} style={{
+                background: showAreas ? K.workOut : "none", border: `1px solid ${showAreas ? K.workOut : K.border}`, padding: "3px 8px",
+                color: showAreas ? "#fff" : K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              }}>η areas</button>
+              <button onClick={() => setShowEqs(true)} style={{
+                background: "none", border: `1px solid ${K.border}`, padding: "3px 8px",
+                color: K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
+              }}>f(x)</button>
+            </div>
           </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockV(false); } }}
+              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
+              {lockS ? "🔒" : "🔓"} Lock s = {dragPoint.s.toFixed(2)}
+            </button>
+            <button onClick={() => { setLockT(l => !l); if (!lockT) { setLockS(false); setLockP(false); setLockV(false); } }}
+              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
+              {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
+            </button>
+          </div>
+          <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} showAreas={showAreas} />
         </div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockV(false); } }}
-            style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
-            {lockS ? "🔒" : "🔓"} Lock s = {dragPoint.s.toFixed(2)}
-          </button>
-          <button onClick={() => { setLockT(l => !l); if (!lockT) { setLockS(false); setLockP(false); setLockV(false); } }}
-            style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
-            {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
-          </button>
-        </div>
-        <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} showAreas={showAreas} />
-      </div>
 
-      {/* P-v Diagram */}
-      <div style={card}>
-        <div style={{ ...sec, marginBottom: 8 }}>
-          <span>P–v Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
+        {/* P-v Diagram */}
+        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <div style={{ ...sec, marginBottom: 8 }}>
+            <span>P–v Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockV(false); setLockS(false); setLockT(false); } }}
+              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
+              {lockP ? "🔒" : "🔓"} Lock P = {(dragPoint.P != null ? dragPoint.P : stToP(dragPoint.s, dragPoint.T)).toFixed(0)} kPa
+            </button>
+            <button onClick={() => { setLockV(l => !l); if (!lockV) { setLockP(false); setLockS(false); setLockT(false); } }}
+              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
+              {lockV ? "🔒" : "🔓"} Lock v = {(dragPoint.v != null ? dragPoint.v : stToV(dragPoint.s, dragPoint.T)).toFixed(4)} m³/kg
+            </button>
+          </div>
+          <PvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockP={lockP} lockV={lockV} />
         </div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockV(false); setLockS(false); setLockT(false); } }}
-            style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
-            {lockP ? "🔒" : "🔓"} Lock P = {(dragPoint.P != null ? dragPoint.P : stToP(dragPoint.s, dragPoint.T)).toFixed(0)} kPa
-          </button>
-          <button onClick={() => { setLockV(l => !l); if (!lockV) { setLockP(false); setLockS(false); setLockT(false); } }}
-            style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
-            {lockV ? "🔒" : "🔓"} Lock v = {(dragPoint.v != null ? dragPoint.v : stToV(dragPoint.s, dragPoint.T)).toFixed(4)} m³/kg
-          </button>
-        </div>
-        <PvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockP={lockP} lockV={lockV} />
       </div>
       <EquationsModal open={showEqs} onClose={() => setShowEqs(false)} cycle={cycle} />
 
-      {/* Sliders */}
-      <div style={{ ...card, padding: "16px" }}>
-        <h3 style={sec}>Cycle Parameters</h3>
-        <ParamSlider label="Boiler Pressure (P high)" unit="kPa" color={K.heatIn} value={pHigh} min={500} max={10000} step={100} onChange={setPHigh} />
-        <ParamSlider label="Condenser Pressure (P low)" unit="kPa" color={K.heatOut} value={pLow} min={5} max={100} step={1} onChange={setPLow} />
-        <ParamSlider label="Superheat Temperature (T₃)" unit="°C" color={K.workOut} value={adjustedTSup} min={minTSup} max={600} step={5} onChange={v => setTSup(v)} />
-        <div style={{ marginTop: 6, fontSize: 9, color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
-          T_sat at P_high = {tSatHigh.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
+      {/* Row: Sliders + Table (side by side on desktop) */}
+      <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
+        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : { ...card, padding: "16px" }}>
+          <h3 style={sec}>Cycle Parameters</h3>
+          <ParamSlider label="Boiler Pressure (P high)" unit="kPa" color={K.heatIn} value={pHigh} min={500} max={10000} step={100} onChange={setPHigh} />
+          <ParamSlider label="Condenser Pressure (P low)" unit="kPa" color={K.heatOut} value={pLow} min={5} max={100} step={1} onChange={setPLow} />
+          <ParamSlider label="Superheat Temperature (T₃)" unit="°C" color={K.workOut} value={adjustedTSup} min={minTSup} max={600} step={5} onChange={v => setTSup(v)} />
+          <div style={{ marginTop: 6, fontSize: 9, color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
+            T_sat at P_high = {tSatHigh.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
+          </div>
+        </div>
+        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
+          <StateTable cycle={cycle} onSelectState={setDragPoint} />
         </div>
       </div>
-
-      {/* Table */}
-      <div style={card}><h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3><StateTable cycle={cycle} onSelectState={setDragPoint} /></div>
 
       {/* Energy */}
       <div style={{ ...card, marginBottom: 0 }}>
         <h3 style={sec}>Energy Balance <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— per unit mass</span></h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr 1fr 1fr" : "1fr 1fr", gap: 8 }}>
           {[
             { l: "Q in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn },
             { l: "Q out (Cond.)", v: fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut },
@@ -1341,13 +1364,15 @@ export default function App() {
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 8, padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>Verify: Q_in − Q_out</span>
-          <span style={{ fontSize: 12, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</span>
-        </div>
-        <div style={{ marginTop: 4, padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>W_net = W_t − W_p</span>
-          <span style={{ fontSize: 12, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</span>
+        <div style={{ marginTop: 8, display: desktop ? "grid" : "block", gridTemplateColumns: desktop ? "1fr 1fr" : undefined, gap: desktop ? 8 : undefined }}>
+          <div style={{ padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>Verify: Q_in − Q_out</span>
+            <span style={{ fontSize: 12, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</span>
+          </div>
+          <div style={{ marginTop: desktop ? 0 : 4, padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>W_net = W_t − W_p</span>
+            <span style={{ fontSize: 12, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</span>
+          </div>
         </div>
       </div>
 
