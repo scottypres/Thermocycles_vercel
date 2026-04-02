@@ -457,30 +457,32 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
           `L${mapS(st[3].s).toFixed(1)},${axisY.toFixed(1)}`,
           "Z"
         ].join(" ");
-        // Label positions — Q_in on right (non-overlapping), Q_out on left
-        const qInLabelS = (st[2].s + st[3].s) / 2;
-        const qInLabelT = st[0].T * 0.4;
-        const qOutLabelS = st[0].s + (st[3].s - st[0].s) * 0.3;
-        const qOutLabelT = st[0].T * 0.35;
-        const wNetMidS = (st[0].s + st[2].s) / 2;
-        const wNetMidT = (st[0].T + st[2].T) / 2;
+        // Label positions — centered in their respective areas
+        const qInLabelX = mapS((st[2].s + st[3].s) / 2);
+        const qInLabelY = mapT(st[0].T) + (axisY - mapT(st[0].T)) * 0.4;
+        const qOutLabelX = mapS(st[0].s + (st[3].s - st[0].s) * 0.35);
+        const qOutLabelY = mapT(st[0].T) + (axisY - mapT(st[0].T)) * 0.4;
+        const wNetX = mapS((st[0].s + st[2].s) / 2);
+        const wNetY = mapT((st[0].T + st[2].T) / 2);
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
         return (
           <>
             <path d={qInD} fill={`${K.heatIn}18`} stroke="none" />
             <path d={qOutD} fill={`${K.heatOut}18`} stroke="none" />
             <path d={cycleFillD} fill={`${K.workOut}25`} stroke="none" />
-            {/* Q_in label */}
-            <text x={mapS(qInLabelS)} y={mapT(qInLabelT)} fill={K.heatIn} fontSize={9} fontFamily={FD} textAnchor="middle" opacity={0.85}>Q_in</text>
-            <text x={mapS(qInLabelS)} y={mapT(qInLabelT) + 11} fill={K.heatIn} fontSize={7} fontFamily={FM} textAnchor="middle" opacity={0.7}>{fmt(cycle.qIn)} kJ/kg</text>
-            {/* Q_out label */}
-            <text x={mapS(qOutLabelS)} y={mapT(qOutLabelT)} fill={K.heatOut} fontSize={9} fontFamily={FD} textAnchor="middle" opacity={0.85}>Q_out</text>
-            <text x={mapS(qOutLabelS)} y={mapT(qOutLabelT) + 11} fill={K.heatOut} fontSize={7} fontFamily={FM} textAnchor="middle" opacity={0.7}>{fmt(cycle.qOut)} kJ/kg</text>
-            {/* W_net label */}
-            <text x={mapS(wNetMidS)} y={mapT(wNetMidT) - 6} fill={K.workOut} fontSize={10} fontFamily={FD} textAnchor="middle" fontWeight="bold">W_net</text>
-            <text x={mapS(wNetMidS)} y={mapT(wNetMidT) + 6} fill={K.workOut} fontSize={7} fontFamily={FM} textAnchor="middle">{fmt(cycle.wNet)} kJ/kg</text>
-            {/* η value */}
-            <text x={mapS(wNetMidS)} y={mapT(wNetMidT) + 18} fill={K.ink} fontSize={8} fontFamily={FD} textAnchor="middle" fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
+            {/* Q_in label with background */}
+            <rect x={qInLabelX - 32} y={qInLabelY - 10} width={64} height={22} rx={2} fill="rgba(255,255,255,0.85)" />
+            <text x={qInLabelX} y={qInLabelY + 1} fill={K.heatIn} fontSize={9} fontFamily={FD} textAnchor="middle">Q_in</text>
+            <text x={qInLabelX} y={qInLabelY + 11} fill={K.heatIn} fontSize={7} fontFamily={FM} textAnchor="middle">{fmt(cycle.qIn)} kJ/kg</text>
+            {/* Q_out label with background */}
+            <rect x={qOutLabelX - 32} y={qOutLabelY - 10} width={64} height={22} rx={2} fill="rgba(255,255,255,0.85)" />
+            <text x={qOutLabelX} y={qOutLabelY + 1} fill={K.heatOut} fontSize={9} fontFamily={FD} textAnchor="middle">Q_out</text>
+            <text x={qOutLabelX} y={qOutLabelY + 11} fill={K.heatOut} fontSize={7} fontFamily={FM} textAnchor="middle">{fmt(cycle.qOut)} kJ/kg</text>
+            {/* W_net + η label with background */}
+            <rect x={wNetX - 38} y={wNetY - 16} width={76} height={38} rx={2} fill="rgba(255,255,255,0.85)" />
+            <text x={wNetX} y={wNetY - 4} fill={K.workOut} fontSize={10} fontFamily={FD} textAnchor="middle" fontWeight="bold">W_net</text>
+            <text x={wNetX} y={wNetY + 7} fill={K.workOut} fontSize={7} fontFamily={FM} textAnchor="middle">{fmt(cycle.wNet)} kJ/kg</text>
+            <text x={wNetX} y={wNetY + 18} fill={K.ink} fontSize={8} fontFamily={FD} textAnchor="middle" fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
           </>
         );
       })()}
