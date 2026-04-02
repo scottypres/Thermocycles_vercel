@@ -437,7 +437,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
       <text x={TS_W / 2} y={TS_H - 1} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
       <text x={4} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,4,${TS_H / 2 - 8})`}>T (°C)</text>
       {/* Dome */}
-      <path d={domePathD} fill={K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
+      <path d={domePathD} fill={showAreas ? "none" : K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
       {showAreas && (() => {
         const axisY = TS_PLOT.y + TS_PLOT.h;
         // Q_in area: under boiler path (1→2→3) down to T=0 axis
@@ -486,11 +486,13 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
       <path d={boilerD} fill="none" stroke={K.heatIn} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
       <line x1={mapS(st[2].s)} y1={mapT(st[2].T)} x2={mapS(st[3].s)} y2={mapT(st[3].T)} stroke={K.workOut} strokeWidth={2.2} strokeLinecap="round" />
       <line x1={mapS(st[3].s)} y1={mapT(st[3].T)} x2={mapS(st[0].s)} y2={mapT(st[0].T)} stroke={K.heatOut} strokeWidth={2.2} strokeLinecap="round" />
-      {/* Dimension lines for drag point - solid when locked */}
-      <line x1={dpx} y1={dpy} x2={dpx} y2={TS_PLOT.y + TS_PLOT.h} stroke={lockS ? K.accent : K.inkLight} strokeWidth={lockS ? 1.2 : 0.5} strokeDasharray={lockS ? "none" : "2 2"} />
-      <line x1={dpx} y1={dpy} x2={TS_PLOT.x} y2={dpy} stroke={lockT ? K.accent : K.inkLight} strokeWidth={lockT ? 1.2 : 0.5} strokeDasharray={lockT ? "none" : "2 2"} />
-      {lockT && <line x1={TS_PLOT.x} y1={dpy} x2={TS_PLOT.x + TS_PLOT.w} y2={dpy} stroke={K.accent} strokeWidth={0.6} strokeDasharray="4 3" opacity={0.4} />}
-      {lockS && <line x1={dpx} y1={TS_PLOT.y} x2={dpx} y2={TS_PLOT.y + TS_PLOT.h} stroke={K.accent} strokeWidth={0.6} strokeDasharray="4 3" opacity={0.4} />}
+      {!showAreas && <>
+        {/* Dimension lines for drag point - solid when locked */}
+        <line x1={dpx} y1={dpy} x2={dpx} y2={TS_PLOT.y + TS_PLOT.h} stroke={lockS ? K.accent : K.inkLight} strokeWidth={lockS ? 1.2 : 0.5} strokeDasharray={lockS ? "none" : "2 2"} />
+        <line x1={dpx} y1={dpy} x2={TS_PLOT.x} y2={dpy} stroke={lockT ? K.accent : K.inkLight} strokeWidth={lockT ? 1.2 : 0.5} strokeDasharray={lockT ? "none" : "2 2"} />
+        {lockT && <line x1={TS_PLOT.x} y1={dpy} x2={TS_PLOT.x + TS_PLOT.w} y2={dpy} stroke={K.accent} strokeWidth={0.6} strokeDasharray="4 3" opacity={0.4} />}
+        {lockS && <line x1={dpx} y1={TS_PLOT.y} x2={dpx} y2={TS_PLOT.y + TS_PLOT.h} stroke={K.accent} strokeWidth={0.6} strokeDasharray="4 3" opacity={0.4} />}
+      </>}
       {/* State points */}
       {st.map((s, i) => {
         const cx = mapS(s.s), cy = mapT(s.T);
@@ -503,21 +505,23 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
           </g>
         );
       })}
-      {/* Draggable point */}
-      <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
-      <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
-      {/* Drag point label */}
-      <rect x={dpx + 12} y={dpy - 22} width={70} height={18} rx={2} fill="#fff" stroke={K.ink} strokeWidth={0.8} />
-      <text x={dpx + 16} y={dpy - 10} fill={K.ink} fontSize={8} fontFamily={FM}>
-        {dragPoint.T.toFixed(0)}°C, {dragPoint.s.toFixed(2)}
-      </text>
-      {/* Labels */}
-      <text x={mapS((st[2].s + st[3].s) / 2) + 16} y={mapT((st[2].T + st[3].T) / 2)} fill={K.workOut} fontSize={7} fontFamily={FM} fontWeight="500">Turbine</text>
-      <text x={mapS((st[0].s + st[3].s) / 2)} y={mapT(st[0].T) + 13} fill={K.heatOut} fontSize={7} fontFamily={FM} textAnchor="middle" fontWeight="500">Condenser</text>
-      <text x={mapS(st[0].s) - 10} y={mapT((st[0].T + st[1].T) / 2)} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
-      <text x={mapS((st[1].s + st[2].s) / 2)} y={mapT(cycle.Tsat_high) - 8} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle">Boiler</text>
-      {/* Instruction hint */}
-      <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={7} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
+      {!showAreas && <>
+        {/* Draggable point */}
+        <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
+        <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
+        {/* Drag point label */}
+        <rect x={dpx + 12} y={dpy - 22} width={70} height={18} rx={2} fill="#fff" stroke={K.ink} strokeWidth={0.8} />
+        <text x={dpx + 16} y={dpy - 10} fill={K.ink} fontSize={8} fontFamily={FM}>
+          {dragPoint.T.toFixed(0)}°C, {dragPoint.s.toFixed(2)}
+        </text>
+        {/* Labels */}
+        <text x={mapS((st[2].s + st[3].s) / 2) + 16} y={mapT((st[2].T + st[3].T) / 2)} fill={K.workOut} fontSize={7} fontFamily={FM} fontWeight="500">Turbine</text>
+        <text x={mapS((st[0].s + st[3].s) / 2)} y={mapT(st[0].T) + 13} fill={K.heatOut} fontSize={7} fontFamily={FM} textAnchor="middle" fontWeight="500">Condenser</text>
+        <text x={mapS(st[0].s) - 10} y={mapT((st[0].T + st[1].T) / 2)} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
+        <text x={mapS((st[1].s + st[2].s) / 2)} y={mapT(cycle.Tsat_high) - 8} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle">Boiler</text>
+        {/* Instruction hint */}
+        <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={7} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
+      </>}
     </svg>
   );
 }
