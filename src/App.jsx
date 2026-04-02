@@ -354,7 +354,7 @@ function ParticleVisualizer({ phaseInfo, temperature }) {
 }
 
 /* ───────── Interactive T-s Diagram ───────── */
-function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT }) {
+function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
 
@@ -438,7 +438,49 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT }) {
       <text x={4} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,4,${TS_H / 2 - 8})`}>T (°C)</text>
       {/* Dome */}
       <path d={domePathD} fill={K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
-      <path d={cycleFillD} fill={K.accentLight} stroke="none" />
+      {showAreas && (() => {
+        const axisY = TS_PLOT.y + TS_PLOT.h;
+        // Q_in area: under boiler path (1→2→3) down to T=0 axis
+        const qInD = [
+          `M${mapS(st[0].s).toFixed(1)},${axisY.toFixed(1)}`,
+          `L${mapS(st[0].s).toFixed(1)},${mapT(st[0].T).toFixed(1)}`,
+          `L${mapS(st[1].s).toFixed(1)},${mapT(st[1].T).toFixed(1)}`,
+          boilerD.replace(/^M/, "L"),
+          `L${mapS(st[2].s).toFixed(1)},${axisY.toFixed(1)}`,
+          "Z"
+        ].join(" ");
+        // Q_out area: under condenser line (4→1) down to T=0 axis
+        const qOutD = [
+          `M${mapS(st[0].s).toFixed(1)},${axisY.toFixed(1)}`,
+          `L${mapS(st[0].s).toFixed(1)},${mapT(st[0].T).toFixed(1)}`,
+          `L${mapS(st[3].s).toFixed(1)},${mapT(st[3].T).toFixed(1)}`,
+          `L${mapS(st[3].s).toFixed(1)},${axisY.toFixed(1)}`,
+          "Z"
+        ].join(" ");
+        // Midpoints for labels
+        const qInMidS = (st[1].s + st[2].s) / 2;
+        const qInMidT = st[0].T / 2;
+        const qOutMidS = (st[0].s + st[3].s) / 2;
+        const qOutMidT = st[0].T / 2;
+        const wNetMidS = (st[0].s + st[2].s) / 2;
+        const wNetMidT = (st[0].T + st[2].T) / 2;
+        return (
+          <>
+            <path d={qInD} fill={`${K.heatIn}18`} stroke="none" />
+            <path d={qOutD} fill={`${K.heatOut}18`} stroke="none" />
+            <path d={cycleFillD} fill={`${K.workOut}25`} stroke="none" />
+            {/* Q_in label */}
+            <text x={mapS(qInMidS)} y={mapT(qInMidT)} fill={K.heatIn} fontSize={9} fontFamily={FD} textAnchor="middle" opacity={0.8}>Q_in</text>
+            {/* Q_out label */}
+            <text x={mapS(qOutMidS)} y={mapT(qOutMidT)} fill={K.heatOut} fontSize={9} fontFamily={FD} textAnchor="middle" opacity={0.8}>Q_out</text>
+            {/* W_net label */}
+            <text x={mapS(wNetMidS)} y={mapT(wNetMidT)} fill={K.workOut} fontSize={10} fontFamily={FD} textAnchor="middle" fontWeight="bold">W_net</text>
+            {/* η annotation */}
+            <text x={mapS(wNetMidS)} y={mapT(wNetMidT) + 13} fill={K.ink} fontSize={7.5} fontFamily={FM} textAnchor="middle" opacity={0.7}>η = W_net / Q_in</text>
+          </>
+        );
+      })()}
+      {!showAreas && <path d={cycleFillD} fill={K.accentLight} stroke="none" />}
       {/* Process lines */}
       <line x1={mapS(st[0].s)} y1={mapT(st[0].T)} x2={mapS(st[1].s)} y2={mapT(st[1].T)} stroke={K.workIn} strokeWidth={2.2} strokeLinecap="round" />
       <path d={boilerD} fill="none" stroke={K.heatIn} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
@@ -1142,6 +1184,7 @@ export default function App() {
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [dragPoint, setDragPoint] = useState({ s: 4.2, T: 200 });
+  const [showAreas, setShowAreas] = useState(false);
   const [lockS, setLockS] = useState(false);
   const [lockT, setLockT] = useState(false);
   const [lockP, setLockP] = useState(false);
@@ -1210,10 +1253,16 @@ export default function App() {
       <div style={card}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: 8 }}>
           <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
-          <button onClick={() => setShowEqs(true)} style={{
-            background: "none", border: `1px solid ${K.border}`, padding: "3px 8px",
-            color: K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
-          }}>f(x)</button>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => setShowAreas(a => !a)} style={{
+              background: showAreas ? K.workOut : "none", border: `1px solid ${showAreas ? K.workOut : K.border}`, padding: "3px 8px",
+              color: showAreas ? "#fff" : K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+            }}>η areas</button>
+            <button onClick={() => setShowEqs(true)} style={{
+              background: "none", border: `1px solid ${K.border}`, padding: "3px 8px",
+              color: K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
+            }}>f(x)</button>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
           <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockV(false); } }}
@@ -1225,7 +1274,7 @@ export default function App() {
             {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
           </button>
         </div>
-        <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} />
+        <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} showAreas={showAreas} />
       </div>
 
       {/* P-v Diagram */}
