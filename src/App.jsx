@@ -1216,11 +1216,11 @@ export default function App() {
           }}>f(x)</button>
         </div>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <button onClick={() => { setLockS(l => !l); if (!lockS) setLockT(false); }}
+          <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockV(false); } }}
             style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
             {lockS ? "🔒" : "🔓"} Lock s = {dragPoint.s.toFixed(2)}
           </button>
-          <button onClick={() => { setLockT(l => !l); if (!lockT) setLockS(false); }}
+          <button onClick={() => { setLockT(l => !l); if (!lockT) { setLockS(false); setLockP(false); setLockV(false); } }}
             style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
             {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
           </button>
@@ -1234,11 +1234,11 @@ export default function App() {
           <span>P–v Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
         </div>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <button onClick={() => { setLockP(l => !l); if (!lockP) setLockV(false); }}
+          <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockV(false); setLockS(false); setLockT(false); } }}
             style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
             {lockP ? "🔒" : "🔓"} Lock P = {(dragPoint.P != null ? dragPoint.P : stToP(dragPoint.s, dragPoint.T)).toFixed(0)} kPa
           </button>
-          <button onClick={() => { setLockV(l => !l); if (!lockV) setLockP(false); }}
+          <button onClick={() => { setLockV(l => !l); if (!lockV) { setLockP(false); setLockS(false); setLockT(false); } }}
             style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
             {lockV ? "🔒" : "🔓"} Lock v = {(dragPoint.v != null ? dragPoint.v : stToV(dragPoint.s, dragPoint.T)).toFixed(4)} m³/kg
           </button>
