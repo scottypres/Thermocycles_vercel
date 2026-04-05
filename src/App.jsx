@@ -158,7 +158,7 @@ function ParticleVisualizer({ phaseInfo, temperature }) {
   const particlesRef = useRef(null);
   const animRef = useRef(null);
 
-  const W = 340, H = 180;
+  const W = 680, H = 300;
   const quality = phaseInfo.quality !== null ? phaseInfo.quality : (phaseInfo.phase === "superheated" || phaseInfo.phase === "supercritical" ? 1 : 0);
   const phase = phaseInfo.phase;
   const tNorm = Math.min(1, Math.max(0, temperature / 500));
@@ -168,9 +168,9 @@ function ParticleVisualizer({ phaseInfo, temperature }) {
     particlesRef.current = Array.from({ length: NUM_PARTICLES }, (_, i) => ({
       x: Math.random() * W,
       y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 2,
-      vy: (Math.random() - 0.5) * 2,
-      r: 3 + Math.random() * 2,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4,
+      r: 5 + Math.random() * 3,
       id: i,
     }));
   }
@@ -181,7 +181,7 @@ function ParticleVisualizer({ phaseInfo, temperature }) {
     const ctx = canvas.getContext("2d");
 
     const liquidLevel = H * (1 - quality); // y position of liquid surface
-    const speedBase = 0.3 + tNorm * 3.5;
+    const speedBase = 0.6 + tNorm * 6;
     const vaporSpeed = speedBase * 1.5;
     const liquidSpeed = speedBase * 0.2;
 
@@ -301,7 +301,7 @@ function ParticleVisualizer({ phaseInfo, temperature }) {
   return (
     <div style={{ position: "relative" }}>
       <canvas ref={canvasRef} width={W} height={H}
-        style={{ width: "100%", maxWidth: 420, height: "auto", display: "block", border: `1.5px solid ${K.ink}`, background: "#f8f7f4" }} />
+        style={{ width: "100%", height: "auto", display: "block", border: `1.5px solid ${K.ink}`, background: "#f8f7f4" }} />
       {/* Overlay info */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
@@ -404,7 +404,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
   const phaseInfo = getPhaseInfo(dragPoint.s, dragPoint.T);
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${TS_W} ${TS_H}`} style={{ width: "100%", maxWidth: 420, touchAction: "none", cursor: "crosshair" }}
+    <svg ref={svgRef} viewBox={`0 0 ${TS_W} ${TS_H}`} style={{ width: "100%", touchAction: "none", cursor: "crosshair" }}
       onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
       onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}>
       {/* Fine grid */}
@@ -697,7 +697,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
   const vGridVals = [0.001, 0.01, 0.1, 1, 10, 100];
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${PV_W} ${PV_H}`} style={{ width: "100%", maxWidth: 420, touchAction: "none", cursor: "crosshair" }}
+    <svg ref={svgRef} viewBox={`0 0 ${PV_W} ${PV_H}`} style={{ width: "100%", touchAction: "none", cursor: "crosshair" }}
       onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
       onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}>
       {/* Grid */}
@@ -770,7 +770,7 @@ function SchematicDiagram({ cycle }) {
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
   return (
-    <svg viewBox="0 0 360 320" style={{ width: "100%", maxWidth: 420 }}>
+    <svg viewBox="0 0 360 320" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
