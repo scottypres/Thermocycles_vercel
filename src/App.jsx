@@ -332,13 +332,13 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
       }}>
         {phase === "two-phase" && (
           <div style={{
-            background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: "8px 18px",
+            background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: fillHeight ? "18px 38px" : "8px 18px",
             border: `1.5px solid ${K.ink}`, textAlign: "center",
           }}>
-            <div style={{ fontSize: 28, fontFamily: FD, color: K.accent, lineHeight: 1.1 }}>
+            <div style={{ fontSize: fillHeight ? 44 : 28, fontFamily: FD, color: K.accent, lineHeight: fillHeight ? 1.02 : 1.1 }}>
               {(quality * 100).toFixed(1)}%
             </div>
-            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkMed, letterSpacing: 1, marginTop: 2 }}>
+            <div style={{ fontSize: fillHeight ? 13 : 9, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: fillHeight ? 4 : 2 }}>
               QUALITY (x)
             </div>
           </div>
@@ -361,13 +361,13 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
       <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 6 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.liquidBlue }} />
-          <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>Liquid</span>
+          <span style={{ fontSize: 18, fontFamily: FM, color: K.inkLight }}>Liquid</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.vaporRed }} />
-          <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>Vapor</span>
+          <span style={{ fontSize: 18, fontFamily: FM, color: K.inkLight }}>Vapor</span>
         </div>
-        <div style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>
+        <div style={{ fontSize: 18, fontFamily: FM, color: K.inkLight }}>
           T = {temperature.toFixed(0)}°C
         </div>
       </div>
@@ -554,11 +554,13 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         const color = isBoiler ? K.heatIn : K.heatOut;
         const T = isBoiler ? cycle.Tsat_high : cycle.Tsat_low;
         const label = isBoiler ? "T_sat(high)" : "T_sat(low)";
+        const valueText = `${label} = ${T.toFixed(1)}°C`;
+        const boxW = Math.max(104, valueText.length * 5.7 + 16);
         const boxY = TS_PLOT.y + 2;
         return (<>
           <line x1={TS_PLOT.x} y1={lineY} x2={TS_PLOT.x + TS_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
-          <rect x={TS_PLOT.x + TS_PLOT.w / 2 - 52} y={boxY} width={104} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
-          <text x={TS_PLOT.x + TS_PLOT.w / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{label} = {T.toFixed(1)}°C</text>
+          <rect x={TS_PLOT.x + TS_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
+          <text x={TS_PLOT.x + TS_PLOT.w / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
       })()}
       {!showAreas && <>
@@ -592,10 +594,14 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
           {dragPoint.T.toFixed(0)}°C, {dragPoint.s.toFixed(2)}
         </text>
         {/* Labels — Boiler and Condenser are draggable (hitbox around text) */}
+        <rect x={mapS((st[2].s + st[3].s) / 2) + 14} y={mapT((st[2].T + st[3].T) / 2) - 8} width={34} height={11} rx={2} fill={K.card} />
         <text x={mapS((st[2].s + st[3].s) / 2) + 16} y={mapT((st[2].T + st[3].T) / 2)} fill={K.workOut} fontSize={7} fontFamily={FM} fontWeight="500">Turbine</text>
-        <text x={condTextX} y={condTextY} fill={K.heatOut} fontSize={7} fontFamily={FM} textAnchor="middle" fontWeight="500" style={{ cursor: "ns-resize" }}>Condenser ↕</text>
+        <rect x={condTextX - 24} y={condTextY - 8} width={48} height={11} rx={2} fill={K.card} />
+        <text x={condTextX} y={condTextY} fill={K.heatOut} fontSize={7} fontFamily={FM} textAnchor="middle" fontWeight="500" style={{ cursor: "ns-resize" }}>Condenser</text>
+        <rect x={mapS(st[0].s) - 40} y={mapT((st[0].T + st[1].T) / 2) - 8} width={30} height={11} rx={2} fill={K.card} />
         <text x={mapS(st[0].s) - 10} y={mapT((st[0].T + st[1].T) / 2)} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
-        <text x={boilerTextX} y={boilerTextY} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Boiler ↕</text>
+        <rect x={boilerTextX - 18} y={boilerTextY - 8} width={36} height={11} rx={2} fill={K.card} />
+        <text x={boilerTextX} y={boilerTextY} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Boiler</text>
         {/* Instruction hint */}
         <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={7} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
       </>}
@@ -930,11 +936,13 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         const color = isBoiler ? K.heatIn : K.heatOut;
         const label = isBoiler ? "P_high" : "P_low";
         const P = isBoiler ? cycle.pHigh : cycle.pLow;
+        const valueText = `${label} = ${P} kPa`;
+        const boxW = Math.max(96, valueText.length * 5.7 + 16);
         const boxY = PV_PLOT.y + 2;
         return (<>
           <line x1={PV_PLOT.x} y1={lineY} x2={PV_PLOT.x + PV_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
-          <rect x={PV_PLOT.x + PV_PLOT.w / 2 - 48} y={boxY} width={96} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
-          <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{label} = {P} kPa</text>
+          <rect x={PV_PLOT.x + PV_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
+          <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
       })()}
       {!showPvAreas && <>
@@ -963,21 +971,26 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {/* Labels — Boiler and Condenser are draggable */}
+        <rect x={mapV(stateV[0]) - 40} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2 - 8} width={30} height={11} rx={2} fill={K.card} />
         <text x={mapV(stateV[0]) - 10} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
-        <text x={boilerTextX} y={boilerTextY} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Boiler ↕</text>
+        <rect x={boilerTextX - 18} y={boilerTextY - 8} width={36} height={11} rx={2} fill={K.card} />
+        <text x={boilerTextX} y={boilerTextY} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Boiler</text>
+        <rect x={(mapV(stateV[2]) + mapV(stateV[3])) / 2 + 12} y={(mapP(stateP[2]) + mapP(stateP[3])) / 2 - 8} width={34} height={11} rx={2} fill={K.card} />
         <text x={(mapV(stateV[2]) + mapV(stateV[3])) / 2 + 14} y={(mapP(stateP[2]) + mapP(stateP[3])) / 2} fill={K.workOut} fontSize={7} fontFamily={FM} fontWeight="500">Turbine</text>
-        <text x={condTextX} y={condTextY} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Condenser ↕</text>
+        <rect x={condTextX - 24} y={condTextY - 8} width={48} height={11} rx={2} fill={K.card} />
+        <text x={condTextX} y={condTextY} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Condenser</text>
         {/* Instruction hint */}
         <text x={PV_W - 8} y={PV_PLOT.y + 10} fill={K.inkLight} fontSize={7} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockV ? "v locked" : "tap & drag"}</text>
       </>}
       {showPvAreas && (() => {
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
-        const lx = PV_PLOT.x + 6;
+        const boxW = 168;
+        const lx = PV_PLOT.x + PV_PLOT.w - boxW - 6;
         const ly = PV_PLOT.y + 4;
         const toggle = (key) => setAreaToggles(prev => ({ ...prev, [key]: !prev[key] }));
         return (
           <>
-            <rect x={lx} y={ly} width={168} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
+            <rect x={lx} y={ly} width={boxW} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             {/* W_turbine */}
             <g onClick={() => toggle("wTurbine")} style={{ cursor: "pointer" }} opacity={areaToggles.wTurbine ? 1 : 0.35}>
               <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.workOut}30`} stroke={K.workOut} strokeWidth={0.6} />
@@ -1173,7 +1186,7 @@ function SchematicDiagram({ cycle }) {
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
   return (<>
-    <svg viewBox="-20 -5 400 340" style={{ width: "100%" }}>
+    <svg viewBox="-16 -2 381 330" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -1203,7 +1216,7 @@ function SchematicDiagram({ cycle }) {
           return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
         })}
         <text x={302} y={170} fill={K.workOut} fontSize={10} textAnchor="middle" fontFamily={FD}>Turbine</text>
-        <text x={302} y={183} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+        <text x={302} y={181} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
@@ -1216,7 +1229,7 @@ function SchematicDiagram({ cycle }) {
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("pump")}>
         <circle cx={60} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
         <path d="M46,181 L60,151 L74,181 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-        <text x={60} y={193} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
+        <text x={60} y={191} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
       </g>
       {/* Pipes */}
       <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
@@ -1229,17 +1242,17 @@ function SchematicDiagram({ cycle }) {
       ))}
       {/* Energy */}
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#mO)" />
-      <text x={180} y={8} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_in = {fmt(cycle.qIn)} kJ/kg</text>
+      <text x={180} y={8} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_in = {fmt(cycle.qIn)} kJ/kg</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
-      <text x={180} y={324} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
+      <text x={180} y={324} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_out = {fmt(cycle.qOut)} kJ/kg</text>
       <line x1={321} y1={172} x2={338} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
-      <text x={343} y={166} fill={K.workOut} fontSize={7.5} textAnchor="start" fontFamily={FM} fontWeight="500">W_t</text>
-      <text x={343} y={177} fill={K.workOut} fontSize={7} textAnchor="start" fontFamily={FM}>{fmt(cycle.wTurbine)}</text>
-      <text x={343} y={187} fill={K.workOut} fontSize={6} textAnchor="start" fontFamily={FM}>kJ/kg</text>
+      <text x={343} y={166} fill={K.workOut} fontSize={7.5} textAnchor="start" fontFamily={FM} fontWeight="700">W_t</text>
+      <text x={343} y={177} fill={K.workOut} fontSize={7} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cycle.wTurbine)}</text>
+      <text x={343} y={187} fill={K.workOut} fontSize={6} textAnchor="start" fontFamily={FM} fontWeight="700">kJ/kg</text>
       <line x1={28} y1={172} x2={8} y2={172} stroke={K.workIn} strokeWidth={1.8} markerEnd="url(#mY)" />
-      <text x={4} y={162} fill={K.workIn} fontSize={7.5} textAnchor="end" fontFamily={FM} fontWeight="500">W_p</text>
-      <text x={4} y={173} fill={K.workIn} fontSize={7} textAnchor="end" fontFamily={FM}>{fmt(cycle.wPump)}</text>
-      <text x={4} y={183} fill={K.workIn} fontSize={6} textAnchor="end" fontFamily={FM}>kJ/kg</text>
+      <text x={4} y={162} fill={K.workIn} fontSize={7.5} textAnchor="end" fontFamily={FM} fontWeight="700">W_p</text>
+      <text x={4} y={173} fill={K.workIn} fontSize={7} textAnchor="end" fontFamily={FM} fontWeight="700">{fmt(cycle.wPump)}</text>
+      <text x={4} y={183} fill={K.workIn} fontSize={6} textAnchor="end" fontFamily={FM} fontWeight="700">kJ/kg</text>
     </svg>
     <ComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);
@@ -1585,11 +1598,11 @@ function StateTable({ cycle, onSelectState }) {
   });
   return (
     <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: isWide ? 14 : 10 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: isWide ? 18 : 12 }}>
         <thead>
           <tr style={{ borderBottom: `2px solid ${K.ink}` }}>
             {["State","T (°C)","P (kPa)","h (kJ/kg)","s (kJ/kg·K)","x"].map(h => (
-              <th key={h} style={{ padding: isWide ? "8px 6px" : "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: isWide ? 12 : 9, fontStyle: "italic" }}>{h}</th>
+              <th key={h} style={{ padding: isWide ? "8px 6px" : "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: isWide ? 15 : 11, fontStyle: "italic" }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -1600,7 +1613,7 @@ function StateTable({ cycle, onSelectState }) {
               style={{ borderBottom: `0.5px solid ${K.gridMajor}`, cursor: "pointer", transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = K.cardAlt}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.accent, fontFamily: FD, fontSize: isWide ? 16 : 13 }}>
+              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.accent, fontFamily: FD, fontSize: isWide ? 20 : 16 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
                   {s.label}
                   <svg width="8" height="8" viewBox="0 0 8 8" style={{ opacity: 0.4 }}><circle cx="4" cy="4" r="3" fill="none" stroke={K.accent} strokeWidth="1"/><circle cx="4" cy="4" r="1" fill={K.accent}/></svg>
@@ -1610,12 +1623,12 @@ function StateTable({ cycle, onSelectState }) {
               <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.P)}</td>
               <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.h)}</td>
               <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.s)}</td>
-              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.inkMed, fontSize: isWide ? 12 : 9 }}>{qualities[i]}</td>
+              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.inkMed, fontSize: isWide ? 15 : 11 }}>{qualities[i]}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div style={{ marginTop: 6, fontSize: isWide ? 11 : 8, color: K.inkLight, fontStyle: "italic", textAlign: "center" }}>
+      <div style={{ marginTop: 6, fontSize: isWide ? 13 : 9, color: K.inkLight, fontStyle: "italic", textAlign: "center" }}>
         Tap a row to visualize that state point
       </div>
     </div>
@@ -1636,8 +1649,17 @@ function useIsDesktop(breakpoint = 840) {
 
 /* ───────── Main ───────── */
 export default function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return document.cookie.split('; ').find(c => c.startsWith('darkMode='))?.split('=')[1] === 'true'; } catch { return false; }
+  });
   K = darkMode ? K_DARK : K_LIGHT;
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode(d => {
+      const next = !d;
+      document.cookie = `darkMode=${next};path=/;max-age=31536000`;
+      return next;
+    });
+  }, []);
 
   const [pHigh, setPHigh] = useState(4000);
   const [pLow, setPLow] = useState(20);
@@ -1661,12 +1683,12 @@ export default function App() {
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
 
   const desktop = useIsDesktop();
-  const gap = desktop ? 20 : 12;
+  const gap = desktop ? 25 : 12;
   const card = { margin: `${gap}px ${gap}px 0`, padding: desktop ? "24px" : "14px", background: K.card, border: `1px solid ${K.border}` };
-  const sec = { margin: "0 0 14px 0", fontSize: desktop ? 18 : 12, fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
+  const sec = { margin: "0 0 14px 0", fontSize: desktop ? 22.50 : 12, fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   return (
-    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1400 : 480, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1680,13 +1702,13 @@ export default function App() {
       {/* Header */}
       <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <div style={{ fontSize: desktop ? 11 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
-          <h1 style={{ margin: 0, fontSize: desktop ? 28 : 20, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
+          <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
+          <h1 style={{ margin: 0, fontSize: desktop ? 35 : 20, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
             SteamCycle <span style={{ color: K.accent, fontStyle: "italic" }}>Studio</span>
           </h1>
-          <div style={{ fontSize: desktop ? 11 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Ideal Rankine Cycle Analysis</div>
+          <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Ideal Rankine Cycle Analysis</div>
         </div>
-        <button onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: desktop ? 14 : 11, cursor: "pointer", fontFamily: FD }}>Theory</button>
+        <button onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: desktop ? 17.50 : 11, cursor: "pointer", fontFamily: FD }}>Theory</button>
       </div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
 
@@ -1698,9 +1720,9 @@ export default function App() {
           { l: "BWR", v: `${(cycle.bwr * 100).toFixed(2)}%`, c: K.workIn },
         ].map((m, i) => (
           <div key={i} style={{ textAlign: "center", padding: desktop ? "8px 0" : "4px 0" }}>
-            <div style={{ fontSize: desktop ? 12 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
-            <div style={{ fontSize: desktop ? 32 : 20, fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
-            {m.s && <div style={{ fontSize: desktop ? 11 : 8, color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
+            <div style={{ fontSize: desktop ? 15 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
+            <div style={{ fontSize: desktop ? 40 : 20, fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
+            {m.s && <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
           </div>
         ))}
       </div>
@@ -1712,7 +1734,7 @@ export default function App() {
           <SchematicDiagram cycle={cycle} />
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
-          <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 12 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
+          <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
           <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} fillHeight={desktop} />
         </div>
       </div>
@@ -1721,26 +1743,26 @@ export default function App() {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         {/* T-s Diagram */}
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 12 : 8 }}>
-            <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 12 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
+            <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <div style={{ display: "flex", gap: 6 }}>
               <button onClick={() => setShowAreas(a => !a)} style={{
                 background: showAreas ? K.workOut : "none", border: `1px solid ${showAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
-                color: showAreas ? "#fff" : K.inkMed, fontSize: desktop ? 12 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+                color: showAreas ? "#fff" : K.inkMed, fontSize: desktop ? 15 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
               }}>η areas</button>
               <button onClick={() => setShowEqs(true)} style={{
                 background: "none", border: `1px solid ${K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
-                color: K.inkMed, fontSize: desktop ? 12 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
+                color: K.inkMed, fontSize: desktop ? 15 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
               }}>f(x)</button>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 12 : 8 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockV(false); } }}
-              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 12 : 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 15 : 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
               {lockS ? "🔒" : "🔓"} Lock s = {dragPoint.s.toFixed(2)}
             </button>
             <button onClick={() => { setLockT(l => !l); if (!lockT) { setLockS(false); setLockP(false); setLockV(false); } }}
-              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 12 : 9, fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 15 : 9, fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
               {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
             </button>
           </div>
@@ -1750,20 +1772,20 @@ export default function App() {
 
         {/* P-v Diagram */}
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 12 : 8 }}>
-            <span>P–v Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 12 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
+            <span>P–v Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <button onClick={() => setShowPvAreas(a => !a)} style={{
               background: showPvAreas ? K.workOut : "none", border: `1px solid ${showPvAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
-              color: showPvAreas ? "#fff" : K.inkMed, fontSize: desktop ? 12 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              color: showPvAreas ? "#fff" : K.inkMed, fontSize: desktop ? 15 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
             }}>W areas</button>
           </div>
-          <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 12 : 8 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockV(false); setLockS(false); setLockT(false); } }}
-              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 12 : 9, fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 15 : 9, fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
               {lockP ? "🔒" : "🔓"} Lock P = {(dragPoint.P != null ? dragPoint.P : stToP(dragPoint.s, dragPoint.T)).toFixed(0)} kPa
             </button>
             <button onClick={() => { setLockV(l => !l); if (!lockV) { setLockP(false); setLockS(false); setLockT(false); } }}
-              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 12 : 9, fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 15 : 9, fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
               {lockV ? "🔒" : "🔓"} Lock v = {(dragPoint.v != null ? dragPoint.v : stToV(dragPoint.s, dragPoint.T)).toFixed(4)} m³/kg
             </button>
           </div>
@@ -1780,12 +1802,12 @@ export default function App() {
           <ParamSlider label="Boiler Pressure (P high)" unit="kPa" color={K.heatIn} value={pHigh} min={500} max={25000} step={100} onChange={setPHigh} />
           <ParamSlider label="Condenser Pressure (P low)" unit="kPa" color={K.heatOut} value={pLow} min={5} max={100} step={1} onChange={setPLow} />
           <ParamSlider label="Superheat Temperature (T₃)" unit="°C" color={K.workOut} value={adjustedTSup} min={minTSup} max={600} step={5} onChange={v => setTSup(v)} />
-          <div style={{ marginTop: 6, fontSize: desktop ? 12 : 9, color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
+          <div style={{ marginTop: 6, fontSize: desktop ? 15 : 9, color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
             T_sat at P_high = {tSatHigh.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: desktop ? 12 : 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
+          <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
           <StateTable cycle={cycle} onSelectState={setDragPoint} />
         </div>
       </div>
@@ -1796,56 +1818,56 @@ export default function App() {
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? 16 : 8 }}>
           {/* Heat Transfer group */}
           <div>
-            <div style={{ fontSize: desktop ? 12 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
+            <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
                 { l: "Q in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn },
                 { l: "Q out (Cond.)", v: fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut },
               ].map((e, i) => (
                 <div key={i} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center" }}>
-                  <div style={{ fontSize: desktop ? 11 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
-                  <div style={{ fontSize: desktop ? 28 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
-                  <div style={{ fontSize: desktop ? 11 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
+                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
+                  <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
+                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
                 </div>
               ))}
             </div>
           </div>
           {/* Work group */}
           <div>
-            <div style={{ fontSize: desktop ? 12 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Work</div>
+            <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Work</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
                 { l: "W turbine", v: fmt(cycle.wTurbine), u: "kJ/kg", c: K.workOut },
                 { l: "W pump", v: fmt(cycle.wPump), u: "kJ/kg", c: K.workIn },
               ].map((e, i) => (
                 <div key={i} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center" }}>
-                  <div style={{ fontSize: desktop ? 11 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
-                  <div style={{ fontSize: desktop ? 28 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
-                  <div style={{ fontSize: desktop ? 11 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
+                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
+                  <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
+                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-        <div style={{ marginTop: desktop ? 12 : 8, display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: 8 }}>
+        <div style={{ marginTop: desktop ? 15 : 8, display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: 8 }}>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
-            <div style={{ fontSize: desktop ? 12 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_in − Q_out</div>
-            <div style={{ fontSize: desktop ? 20 : 12, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</div>
+            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_in − Q_out</div>
+            <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</div>
           </div>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
-            <div style={{ fontSize: desktop ? 12 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>W_net = W_t − W_p</div>
-            <div style={{ fontSize: desktop ? 20 : 12, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</div>
+            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>W_net = W_t − W_p</div>
+            <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</div>
           </div>
         </div>
       </div>
 
       <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px" }}>
-        <button onClick={() => setDarkMode(d => !d)} style={{
+        <button onClick={toggleDarkMode} style={{
           background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
           color: K.inkMed, fontSize: desktop ? 13 : 10, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{darkMode ? "☀ Light Mode" : "☾ Dark Mode"}</button>
       </div>
-      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", fontSize: desktop ? 12 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
+      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", fontSize: desktop ? 15 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
         Ideal Rankine Cycle · Simplified Steam Properties
       </div>
     </div>
