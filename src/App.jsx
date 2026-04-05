@@ -434,7 +434,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
           <text x={TS_PLOT.x - 4} y={mapT(t) + 2.5} fill={K.inkMed} fontSize={6.5} textAnchor="end" fontFamily={FM}>{t}</text>
         </g>
       ))}
-      <text x={TS_W / 2} y={TS_H - 1} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
+      <text x={TS_W / 2} y={TS_H - 5} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
       <text x={10} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${TS_H / 2 - 8})`}>T (°C)</text>
       {/* Dome */}
       <path d={domePathD} fill={showAreas ? "none" : K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
@@ -717,7 +717,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
       {pGridVals.map((p, i) => (
         <text key={`pl${i}`} x={PV_PLOT.x - 4} y={mapP(p) + 2.5} fill={K.inkMed} fontSize={6.5} textAnchor="end" fontFamily={FM}>{p >= 1000 ? `${p/1000}k` : p}</text>
       ))}
-      <text x={PV_W / 2} y={PV_H - 1} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">v (m³/kg) — log scale</text>
+      <text x={PV_W / 2} y={PV_H - 5} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">v (m³/kg) — log scale</text>
       <text x={10} y={PV_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${PV_H / 2 - 8})`}>P (kPa)</text>
       {/* Dome */}
       <path d={domePathD} fill={K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
