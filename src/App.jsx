@@ -933,7 +933,7 @@ function SchematicDiagram({ cycle }) {
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
   return (<>
-    <svg viewBox="-40 0 440 330" style={{ width: "100%" }}>
+    <svg viewBox="-20 -5 420 340" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -941,8 +941,8 @@ function SchematicDiagram({ cycle }) {
           </marker>
         ))}
       </defs>
-      {Array.from({ length: 22 }, (_, i) => Array.from({ length: 16 }, (_, j) => (
-        <circle key={`${i}-${j}`} cx={i * 20 - 30} cy={j * 20 + 10} r={0.6} fill={K.gridMajor} />
+      {Array.from({ length: 21 }, (_, i) => Array.from({ length: 17 }, (_, j) => (
+        <circle key={`${i}-${j}`} cx={i * 20 - 10} cy={j * 20} r={0.6} fill={K.gridMajor} />
       )))}
       {/* BOILER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("boiler")}>
