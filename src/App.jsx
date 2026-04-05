@@ -792,7 +792,10 @@ function SchematicDiagram({ cycle }) {
       <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       {/* TURBINE */}
       <path d="M282,122 L322,142 L322,202 L282,222 Z" fill="none" stroke={K.workOut} strokeWidth={1.5} strokeLinejoin="round" />
-      {[148,160,172,184,196,208].map(y => (<line key={y} x1={286} y1={y} x2={318} y2={y} stroke={K.workOut} strokeWidth={0.3} />))}
+      {[148,160,172,184,196,208].map(y => {
+        const x2 = y > 202 ? 322 - (y - 202) / 20 * 40 - 4 : 318;
+        return <line key={y} x1={286} y1={y} x2={x2} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
+      })}
       <text x={302} y={170} fill={K.workOut} fontSize={10} textAnchor="middle" fontFamily={FD}>Turbine</text>
       <text x={302} y={183} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       {/* CONDENSER */}
@@ -817,13 +820,13 @@ function SchematicDiagram({ cycle }) {
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#mO)" />
       <text x={180} y={8} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_in = {fmt(cycle.qIn)} kJ/kg</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
-      <text x={180} y={320} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
+      <text x={180} y={324} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
       <line x1={321} y1={172} x2={348} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
       <text x={337} y={164} fill={K.workOut} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_t</text>
-      <text x={337} y={188} fill={K.workOut} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wTurbine)}</text>
+      <text x={337} y={188} fill={K.workOut} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wTurbine)} kJ/kg</text>
       <line x1={28} y1={172} x2={12} y2={172} stroke={K.workIn} strokeWidth={1.8} />
       <text x={20} y={164} fill={K.workIn} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_p</text>
-      <text x={20} y={188} fill={K.workIn} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wPump)}</text>
+      <text x={20} y={188} fill={K.workIn} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wPump)} kJ/kg</text>
     </svg>
   );
 }
