@@ -1866,8 +1866,12 @@ export default function App() {
           color: K.inkMed, fontSize: desktop ? 13 : 10, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{darkMode ? "☀ Light Mode" : "☾ Dark Mode"}</button>
       </div>
-      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", fontSize: desktop ? 15 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
+      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: desktop ? 15 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
         Ideal Rankine Cycle · Simplified Steam Properties
+      </div>
+      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", borderTop: `1px solid ${K.border}`, marginTop: desktop ? 8 : 4, marginLeft: desktop ? 40 : 16, marginRight: desktop ? 40 : 16 }}>
+        <div style={{ fontSize: desktop ? 14 : 9, color: K.inkMed, fontFamily: FM, marginBottom: 4 }}>Built by <span style={{ fontWeight: 600, color: K.ink }}>Scott Presler</span></div>
+        <a href="mailto:scottypres@gmail.com" style={{ fontSize: desktop ? 13 : 8, color: K.accent, fontFamily: FM, textDecoration: "none" }}>scottypres@gmail.com</a>
       </div>
     </div>
   );
