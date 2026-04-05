@@ -154,6 +154,7 @@ function tempColor(T, quality) {
 }
 
 function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
+  const isWide = useIsDesktop();
   const canvasRef = useRef(null);
   const particlesRef = useRef(null);
   const animRef = useRef(null);
@@ -310,42 +311,42 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
       }}>
         {phase === "two-phase" && (
           <div style={{
-            background: "rgba(255,255,255,0.88)", padding: "8px 18px",
+            background: "rgba(255,255,255,0.88)", padding: isWide ? "12px 26px" : "8px 18px",
             border: `1.5px solid ${K.ink}`, textAlign: "center",
           }}>
-            <div style={{ fontSize: 28, fontFamily: FD, color: K.accent, lineHeight: 1.1 }}>
+            <div style={{ fontSize: isWide ? 36 : 28, fontFamily: FD, color: K.accent, lineHeight: 1.1 }}>
               {(quality * 100).toFixed(1)}%
             </div>
-            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkMed, letterSpacing: 1, marginTop: 2 }}>
+            <div style={{ fontSize: isWide ? 11 : 9, fontFamily: FM, color: K.inkMed, letterSpacing: 1, marginTop: 2 }}>
               QUALITY (x)
             </div>
           </div>
         )}
         {phase !== "two-phase" && (
           <div style={{
-            background: "rgba(255,255,255,0.88)", padding: "6px 14px",
+            background: "rgba(255,255,255,0.88)", padding: isWide ? "10px 20px" : "6px 14px",
             border: `1.5px solid ${K.ink}`, textAlign: "center",
           }}>
-            <div style={{ fontSize: 14, fontFamily: FD, color: K.ink, lineHeight: 1.2 }}>
+            <div style={{ fontSize: isWide ? 18 : 14, fontFamily: FD, color: K.ink, lineHeight: 1.2 }}>
               {phaseLabel}
             </div>
-            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkMed, marginTop: 2 }}>
+            <div style={{ fontSize: isWide ? 11 : 9, fontFamily: FM, color: K.inkMed, marginTop: 2 }}>
               {phase === "subcooled" ? "x = 0 (all liquid)" : "x = 1 (all vapor)"}
             </div>
           </div>
         )}
       </div>
       {/* Legend */}
-      <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 6 }}>
+      <div style={{ display: "flex", gap: isWide ? 20 : 16, justifyContent: "center", marginTop: 6 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.liquidBlue }} />
-          <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>Liquid</span>
+          <span style={{ fontSize: isWide ? 12 : 9, fontFamily: FM, color: K.inkLight }}>Liquid</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.vaporRed }} />
-          <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>Vapor</span>
+          <span style={{ fontSize: isWide ? 12 : 9, fontFamily: FM, color: K.inkLight }}>Vapor</span>
         </div>
-        <div style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>
+        <div style={{ fontSize: isWide ? 12 : 9, fontFamily: FM, color: K.inkLight }}>
           T = {temperature.toFixed(0)}°C
         </div>
       </div>
@@ -963,7 +964,7 @@ function SchematicDiagram({ cycle }) {
           return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
         })}
         <text x={302} y={170} fill={K.workOut} fontSize={10} textAnchor="middle" fontFamily={FD}>Turbine</text>
-        <text x={302} y={183} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+        <text x={302} y={181} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
@@ -1417,7 +1418,7 @@ export default function App() {
   const sec = { margin: "0 0 14px 0", fontSize: desktop ? 18 : 12, fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   return (
-    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1400 : 480, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto", zoom: desktop ? 1.25 : 1 }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
