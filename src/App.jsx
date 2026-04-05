@@ -1676,7 +1676,7 @@ function useIsDesktop(breakpoint = 840) {
 }
 
 /* ───────── Main ───────── */
-export default function App() {
+function RankinePage({ onBack }) {
   const [darkMode, setDarkMode] = useState(() => {
     try { return document.cookie.split('; ').find(c => c.startsWith('darkMode='))?.split('=')[1] === 'true'; } catch { return false; }
   });
@@ -1729,12 +1729,15 @@ export default function App() {
 
       {/* Header */}
       <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 10px", color: K.inkMed, fontSize: 10, cursor: "pointer", fontFamily: FM }}>← Back</button>}
         <div>
           <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
           <h1 style={{ margin: 0, fontSize: desktop ? 35 : 20, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
             SteamCycle <span style={{ color: K.accent, fontStyle: "italic" }}>Studio</span>
           </h1>
           <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Ideal Rankine Cycle Analysis</div>
+        </div>
         </div>
         <button onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: desktop ? 17.50 : 11, cursor: "pointer", fontFamily: FD }}>Theory</button>
       </div>
@@ -1904,4 +1907,16 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+/* ───────── Main App Router ───────── */
+import LandingPage from "./LandingPage.jsx";
+import RefrigerationPage from "./RefrigerationApp.jsx";
+
+export default function App() {
+  const [page, setPage] = useState("landing");
+
+  if (page === "landing") return <LandingPage onNavigate={setPage} />;
+  if (page === "refrigeration") return <RefrigerationPage onBack={() => setPage("landing")} />;
+  return <RankinePage onBack={() => setPage("landing")} />;
 }
