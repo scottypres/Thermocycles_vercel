@@ -158,7 +158,7 @@ function unmapS(px) { return S_MIN + ((px - TS_PLOT.x) / TS_PLOT.w) * (S_MAX - S
 function unmapT(py) { return T_MIN + ((TS_PLOT.y + TS_PLOT.h - py) / TS_PLOT.h) * (T_MAX - T_MIN); }
 
 /* ───────── Particle Phase Visualizer ───────── */
-const NUM_PARTICLES = 60;
+const NUM_PARTICLES = 600;
 
 function tempColor(T, quality) {
   const tNorm = Math.min(1, Math.max(0, T / 500));
@@ -205,7 +205,8 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
     const liquidLevel = H * (1 - quality); // y position of liquid surface
     const speedBase = 0.6 + tNorm * 6;
     const vaporSpeed = speedBase * 1.5;
-    const liquidSpeed = speedBase * 0.2;
+    const liquidSpeed = speedBase * 0.06;
+    const twoPhaseLiquidSpeed = speedBase * 0.35;
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
@@ -238,14 +239,14 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
         const isVapor = i < Math.floor(quality * NUM_PARTICLES);
 
         if (phase === "subcooled") {
-          // All liquid - slow, clustered at bottom
-          p.vy += 0.05;
-          p.vx *= 0.98;
-          p.vy *= 0.98;
+          // All liquid - very slow suspended drift (no settling)
+          const targetY = H * 0.55;
+          p.vx *= 0.985;
+          p.vy *= 0.985;
           const speed = liquidSpeed;
-          p.vx += (Math.random() - 0.5) * speed * 0.3;
-          p.vy += (Math.random() - 0.5) * speed * 0.1;
-          if (p.y < H * 0.5) p.vy += 0.1;
+          p.vx += (Math.random() - 0.5) * speed * 0.18;
+          p.vy += (Math.random() - 0.5) * speed * 0.18;
+          p.vy += (targetY - p.y) * 0.002;
         } else if (phase === "superheated" || phase === "supercritical") {
           // All vapor - fast, spread out
           p.vx += (Math.random() - 0.5) * vaporSpeed * 0.5;
@@ -262,23 +263,45 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
             p.vy *= 0.96;
             if (p.y > liquidLevel - 5) p.vy -= 0.3;
           } else {
-            // Liquid - below surface, slower
-            p.vy += 0.04;
-            p.vx *= 0.97;
-            p.vy *= 0.97;
-            p.vx += (Math.random() - 0.5) * liquidSpeed * 0.4;
-            p.vy += (Math.random() - 0.5) * liquidSpeed * 0.2;
-            if (p.y < liquidLevel + 5) p.vy += 0.15;
+            // Liquid in two-phase region: active/turbulent motion while staying below interface.
+            const minY = liquidLevel + p.r + 2;
+            const maxY = H - p.r - 2;
+            const span = Math.max(1, maxY - minY);
+            // Deterministic per-particle depth target to keep liquid phase evenly populated.
+            const depthFrac = ((p.id * 0.61803398875) % 1);
+            const targetY = minY + depthFrac * span;
+            p.vx *= 0.94;
+            p.vy *= 0.94;
+            p.vx += (Math.random() - 0.5) * twoPhaseLiquidSpeed * 0.85;
+            p.vy += (Math.random() - 0.5) * twoPhaseLiquidSpeed * 0.65;
+            p.vy += (targetY - p.y) * 0.0016;
+            if (p.y < liquidLevel + 8) p.vy += 0.08;
           }
         }
 
         // Clamp velocity
-        const maxV = isVapor ? vaporSpeed * 2 : liquidSpeed * 3;
+        const maxV = isVapor ? vaporSpeed * 2 : (phase === "two-phase" ? twoPhaseLiquidSpeed * 2.2 : liquidSpeed * 3);
         const v = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
         if (v > maxV) { p.vx = (p.vx / v) * maxV; p.vy = (p.vy / v) * maxV; }
 
         p.x += p.vx;
         p.y += p.vy;
+
+        // Hard phase boundary in two-phase mode: no particle crossing.
+        if (phase === "two-phase") {
+          if (isVapor) {
+            const maxY = liquidLevel - p.r - 1;
+            if (p.y > maxY) { p.y = maxY; p.vy = -Math.abs(p.vy) * 0.6; }
+          } else {
+            const minY = liquidLevel + p.r + 1;
+            if (p.y < minY) {
+              // Reinsert liquid particles at a random depth so they don't stack in a line.
+              const maxY = H - p.r - 1;
+              p.y = minY + Math.random() * Math.max(1, maxY - minY);
+              p.vy = Math.abs(p.vy) * 0.4;
+            }
+          }
+        }
 
         // Bounce off walls
         if (p.x < p.r) { p.x = p.r; p.vx = Math.abs(p.vx); }
