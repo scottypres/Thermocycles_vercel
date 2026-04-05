@@ -762,14 +762,177 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
   );
 }
 
+/* ───────── Component Detail Modal ───────── */
+const COMPONENT_INFO = {
+  boiler: {
+    title: "Boiler (Steam Generator)",
+    color: K.heatIn,
+    process: "2 → 3",
+    type: "Constant-Pressure Heat Addition",
+    purpose: "The boiler heats compressed liquid water at constant pressure, transforming it into superheated steam. This is where energy enters the cycle from an external heat source (combustion, nuclear, solar, etc.). The fluid undergoes three phases: subcooled liquid heating, vaporization (phase change), and superheating.",
+    keyPoints: [
+      "Operates at constant high pressure (P_H)",
+      "No work is done (rigid vessel, no moving parts)",
+      "All energy transfer is heat (Q_in)",
+      "Temperature rises from T₂ to T₃",
+      "Fluid enters as compressed liquid, exits as superheated vapor",
+    ],
+    equations: [
+      { label: "First Law (open system, steady state)", eq: "q_in = h₃ − h₂" },
+      { label: "Since no work is done", eq: "w_boiler = 0" },
+      { label: "Heat input calculation", eq: "Q_in = ṁ · (h₃ − h₂)" },
+      { label: "Entropy change", eq: "Δs = s₃ − s₂ > 0 (entropy increases)" },
+    ],
+    insight: "Increasing boiler pressure raises the average temperature of heat addition, improving cycle efficiency. Superheating beyond the saturation dome improves turbine exit quality and prevents blade erosion from liquid droplets.",
+  },
+  turbine: {
+    title: "Turbine",
+    color: K.workOut,
+    process: "3 → 4",
+    type: "Isentropic Expansion",
+    purpose: "The turbine converts the thermal energy of high-pressure superheated steam into mechanical shaft work. As steam expands through the turbine blades, its pressure and temperature drop while producing the cycle's primary work output. In the ideal Rankine cycle, this expansion is isentropic (reversible and adiabatic).",
+    keyPoints: [
+      "Primary work-producing device in the cycle",
+      "Ideal process is isentropic (s₃ = s₄)",
+      "Pressure drops from P_H to P_L",
+      "Steam may become a wet mixture at the exit (state 4)",
+      "Quality x₄ < 1 means liquid droplets are present",
+    ],
+    equations: [
+      { label: "First Law (steady-state, adiabatic)", eq: "w_turbine = h₃ − h₄" },
+      { label: "Isentropic condition", eq: "s₃ = s₄" },
+      { label: "Exit quality (if two-phase)", eq: "x₄ = (s₄ − s_f) / (s_g − s_f)" },
+      { label: "Exit enthalpy", eq: "h₄ = h_f + x₄ · h_fg" },
+      { label: "Power output", eq: "Ẇ_t = ṁ · (h₃ − h₄)" },
+    ],
+    insight: "The turbine produces the largest work term in the cycle. Turbine exit quality (x₄) should stay above ~0.88 to avoid excessive blade erosion from liquid droplets. Reheating can improve exit quality.",
+  },
+  condenser: {
+    title: "Condenser",
+    color: K.heatOut,
+    process: "4 → 1",
+    type: "Constant-Pressure Heat Rejection",
+    purpose: "The condenser removes heat from the wet steam exiting the turbine, condensing it back into a saturated liquid. This heat is rejected to a cooling medium (river water, cooling tower, etc.). The condenser completes the cycle by returning the working fluid to a liquid state so the pump can pressurize it.",
+    keyPoints: [
+      "Operates at constant low pressure (P_L)",
+      "No work is done",
+      "Heat is rejected to the surroundings (Q_out)",
+      "Fluid enters as a wet mixture, exits as saturated liquid (x₁ = 0)",
+      "Lower condenser pressure → higher efficiency (but limited by cooling source temperature)",
+    ],
+    equations: [
+      { label: "First Law (open system, steady state)", eq: "q_out = h₄ − h₁" },
+      { label: "Since no work is done", eq: "w_condenser = 0" },
+      { label: "Heat rejected", eq: "Q_out = ṁ · (h₄ − h₁)" },
+      { label: "Exit state", eq: "x₁ = 0 (saturated liquid at P_L)" },
+    ],
+    insight: "The condenser is necessary because pumping a liquid requires far less work than compressing a gas. Lowering the condenser pressure improves efficiency but is limited by the temperature of the available cooling medium.",
+  },
+  pump: {
+    title: "Pump",
+    color: K.workIn,
+    process: "1 → 2",
+    type: "Isentropic Compression",
+    purpose: "The pump raises the pressure of the saturated liquid from condenser pressure (P_L) to boiler pressure (P_H). Because liquids are nearly incompressible, the pump requires very little work compared to the turbine output — this is a key advantage of the Rankine cycle over gas power cycles.",
+    keyPoints: [
+      "Ideal process is isentropic (s₁ = s₂)",
+      "Compresses liquid, not vapor (much less work needed)",
+      "Back Work Ratio (BWR) is typically 1–3% for steam cycles",
+      "Negligible temperature rise across the pump",
+      "Specific volume remains nearly constant (v ≈ v_f)",
+    ],
+    equations: [
+      { label: "Pump work (exact)", eq: "w_pump = h₂ − h₁" },
+      { label: "Pump work (incompressible approx.)", eq: "w_pump ≈ v_f · (P_H − P_L)" },
+      { label: "Exit enthalpy", eq: "h₂ = h₁ + w_pump" },
+      { label: "Isentropic condition", eq: "s₁ = s₂" },
+      { label: "Back Work Ratio", eq: "BWR = w_pump / w_turbine" },
+    ],
+    insight: "The pump work is tiny compared to the turbine output because liquid specific volume is ~1000× smaller than steam. This gives the Rankine cycle a very low BWR compared to gas cycles like the Brayton cycle (~40–80% BWR).",
+  },
+};
+
+function ComponentModal({ component, cycle, onClose }) {
+  const isWide = useIsDesktop();
+  if (!component) return null;
+  const info = COMPONENT_INFO[component];
+  const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+
+  const liveValues = {
+    boiler: { main: `Q_in = ${f(cycle.qIn)} kJ/kg`, detail: `h₃ − h₂ = ${f(cycle.h3)} − ${f(cycle.h2)}` },
+    turbine: { main: `W_t = ${f(cycle.wTurbine)} kJ/kg`, detail: `h₃ − h₄ = ${f(cycle.h3)} − ${f(cycle.h4)}, x₄ = ${cycle.x4.toFixed(4)}` },
+    condenser: { main: `Q_out = ${f(cycle.qOut)} kJ/kg`, detail: `h₄ − h₁ = ${f(cycle.h4)} − ${f(cycle.h1)}` },
+    pump: { main: `W_p = ${f(cycle.wPump)} kJ/kg`, detail: `v_f·(P_H − P_L) = 0.001 × (${f(cycle.states[2].P)} − ${f(cycle.states[0].P)}), BWR = ${(cycle.bwr * 100).toFixed(2)}%` },
+  };
+  const live = liveValues[component];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
+      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: isWide ? 680 : 420, width: "100%", padding: isWide ? "28px 32px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 18 : 14, borderBottom: `2px solid ${info.color}`, paddingBottom: 10 }}>
+          <h2 style={{ margin: 0, fontSize: isWide ? 22 : 16, fontFamily: FD, color: info.color }}>{info.title}</h2>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 12 : 11, cursor: "pointer", padding: isWide ? "5px 16px" : "3px 12px", fontFamily: FM }}>Close</button>
+        </div>
+
+        {/* Process badge */}
+        <div style={{ display: "flex", gap: 8, marginBottom: isWide ? 16 : 12, flexWrap: "wrap" }}>
+          <span style={{ background: info.color, color: "#fff", padding: "3px 10px", fontSize: isWide ? 11 : 9, fontFamily: FM, fontWeight: 700 }}>Process {info.process}</span>
+          <span style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: "3px 10px", fontSize: isWide ? 11 : 9, fontFamily: FM, color: K.inkMed }}>{info.type}</span>
+        </div>
+
+        {/* Live values */}
+        <div style={{ background: K.cardAlt, border: `2px solid ${info.color}`, padding: isWide ? "14px 18px" : "10px 12px", marginBottom: isWide ? 16 : 12, textAlign: "center" }}>
+          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: info.color, marginBottom: 4 }}>{live.main}</div>
+          <div style={{ fontSize: isWide ? 11 : 9, fontFamily: FM, color: K.inkMed }}>{live.detail}</div>
+        </div>
+
+        {/* Purpose */}
+        <p style={{ fontSize: isWide ? 12.5 : 10.5, lineHeight: 1.9, color: K.inkMed, marginBottom: isWide ? 16 : 12 }}>{info.purpose}</p>
+
+        {/* Key points and equations side by side on desktop */}
+        <div style={isWide ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 } : { marginBottom: 12 }}>
+          {/* Key Points */}
+          <div style={{ borderLeft: `3px solid ${info.color}`, paddingLeft: 12, marginBottom: isWide ? 0 : 12 }}>
+            <div style={{ fontFamily: FD, fontSize: isWide ? 14 : 12, marginBottom: 8, color: K.ink }}>Key Points</div>
+            {info.keyPoints.map((pt, i) => (
+              <div key={i} style={{ fontSize: isWide ? 11 : 10, color: K.inkMed, marginBottom: 4, lineHeight: 1.6 }}>{"▸ " + pt}</div>
+            ))}
+          </div>
+
+          {/* Equations */}
+          <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "14px 16px" : "10px 12px" }}>
+            <div style={{ fontFamily: FD, fontSize: isWide ? 14 : 12, marginBottom: 8, color: K.ink }}>Equations</div>
+            {info.equations.map((eq, i) => (
+              <div key={i} style={{ marginBottom: 8, fontSize: isWide ? 11 : 10, lineHeight: 1.7 }}>
+                <div style={{ color: K.inkLight, fontSize: isWide ? 9 : 8 }}>{eq.label}</div>
+                <div style={{ color: info.color, fontWeight: 600 }}>{eq.eq}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Insight */}
+        <div style={{ background: "#fffef5", border: `1px solid #e8e0c0`, padding: isWide ? "12px 16px" : "10px 12px", marginBottom: isWide ? 16 : 12 }}>
+          <div style={{ fontFamily: FD, fontSize: isWide ? 12 : 10, color: K.ink, marginBottom: 4 }}>💡 Engineering Insight</div>
+          <div style={{ fontSize: isWide ? 11 : 10, color: K.inkMed, lineHeight: 1.7 }}>{info.insight}</div>
+        </div>
+
+        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "12px" : "10px", background: info.color, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 14 : 12, fontFamily: FD, cursor: "pointer" }}>Close</button>
+      </div>
+    </div>
+  );
+}
+
 /* ───────── Schematic ───────── */
 function SchematicDiagram({ cycle }) {
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+  const [activeComponent, setActiveComponent] = useState(null);
   const mk = [
     { id: "mO", c: K.heatIn }, { id: "mB", c: K.heatOut }, { id: "mG", c: K.workOut },
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
-  return (
+  return (<>
     <svg viewBox="-40 0 440 330" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
@@ -782,31 +945,39 @@ function SchematicDiagram({ cycle }) {
         <circle key={`${i}-${j}`} cx={i * 20 - 30} cy={j * 20 + 10} r={0.6} fill={K.gridMajor} />
       )))}
       {/* BOILER */}
-      <rect x={110} y={32} width={140} height={50} fill="none" stroke={K.heatIn} strokeWidth={1.5} />
-      {[130,150,170,190,210,230].map(x => (
-        <g key={x}><line x1={x} y1={42} x2={x} y2={72} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},72 L${x},76 L${x+3},72`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
-      ))}
-      <rect x={152} y={40} width={56} height={16} fill="#fff" />
-      <text x={180} y={53} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Boiler</text>
-      <rect x={148} y={58} width={64} height={12} fill="#fff" />
-      <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+      <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("boiler")}>
+        <rect x={110} y={32} width={140} height={50} fill="rgba(255,255,255,0.01)" stroke={K.heatIn} strokeWidth={1.5} />
+        {[130,150,170,190,210,230].map(x => (
+          <g key={x}><line x1={x} y1={42} x2={x} y2={72} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},72 L${x},76 L${x+3},72`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
+        ))}
+        <rect x={152} y={40} width={56} height={16} fill="#fff" />
+        <text x={180} y={53} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Boiler</text>
+        <rect x={148} y={58} width={64} height={12} fill="#fff" />
+        <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+      </g>
       {/* TURBINE */}
-      <path d="M282,122 L322,142 L322,202 L282,222 Z" fill="none" stroke={K.workOut} strokeWidth={1.5} strokeLinejoin="round" />
-      {[132, 145, 158, 171, 184, 197, 212].map(y => {
-        const xr = y < 142 ? 282 + (y - 122) / 20 * 40 : y > 202 ? 322 - (y - 202) / 20 * 40 : 322;
-        return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
-      })}
-      <text x={302} y={170} fill={K.workOut} fontSize={10} textAnchor="middle" fontFamily={FD}>Turbine</text>
-      <text x={302} y={183} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+      <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("turbine")}>
+        <path d="M282,122 L322,142 L322,202 L282,222 Z" fill="rgba(255,255,255,0.01)" stroke={K.workOut} strokeWidth={1.5} strokeLinejoin="round" />
+        {[132, 145, 158, 171, 184, 197, 212].map(y => {
+          const xr = y < 142 ? 282 + (y - 122) / 20 * 40 : y > 202 ? 322 - (y - 202) / 20 * 40 : 322;
+          return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
+        })}
+        <text x={302} y={170} fill={K.workOut} fontSize={10} textAnchor="middle" fontFamily={FD}>Turbine</text>
+        <text x={302} y={183} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+      </g>
       {/* CONDENSER */}
-      <rect x={110} y={248} width={140} height={50} fill="none" stroke={K.heatOut} strokeWidth={1.5} />
-      <path d="M125,275 Q135,265 145,275 Q155,285 165,275 Q175,265 185,275 Q195,285 205,275 Q215,265 225,275 Q235,285 240,278" fill="none" stroke={K.heatOut} strokeWidth={0.7} />
-      <text x={180} y={265} fill={K.heatOut} fontSize={11} textAnchor="middle" fontFamily={FD}>Condenser</text>
-      <text x={180} y={292} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+      <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
+        <rect x={110} y={248} width={140} height={50} fill="rgba(255,255,255,0.01)" stroke={K.heatOut} strokeWidth={1.5} />
+        <path d="M125,275 Q135,265 145,275 Q155,285 165,275 Q175,265 185,275 Q195,285 205,275 Q215,265 225,275 Q235,285 240,278" fill="none" stroke={K.heatOut} strokeWidth={0.7} />
+        <text x={180} y={265} fill={K.heatOut} fontSize={11} textAnchor="middle" fontFamily={FD}>Condenser</text>
+        <text x={180} y={292} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+      </g>
       {/* PUMP */}
-      <circle cx={60} cy={172} r={28} fill="none" stroke={K.workIn} strokeWidth={1.5} />
-      <path d="M46,181 L60,151 L74,181 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-      <text x={60} y={193} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
+      <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("pump")}>
+        <circle cx={60} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
+        <path d="M46,181 L60,151 L74,181 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <text x={60} y={193} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
+      </g>
       {/* Pipes */}
       <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="250,57 282,57 282,122" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
@@ -828,7 +999,8 @@ function SchematicDiagram({ cycle }) {
       <text x={4} y={168} fill={K.workIn} fontSize={7.5} textAnchor="end" fontFamily={FM} fontWeight="500">W_p</text>
       <text x={4} y={180} fill={K.workIn} fontSize={7} textAnchor="end" fontFamily={FM}>{fmt(cycle.wPump)} kJ/kg</text>
     </svg>
-  );
+    <ComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
+  </>);
 }
 
 /* ───────── Info Modal ───────── */
