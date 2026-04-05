@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 /* ───────── Palette ───────── */
-export const K = {
+export const K_LIGHT = {
   bg: "#fafaf7", card: "#ffffff", cardAlt: "#f5f4f0",
   border: "#d4d0c8", ink: "#1a1a2e", inkMed: "#3a3a5c", inkLight: "#8888a0",
   gridFine: "#e8e6e0", gridMajor: "#d4d0c8",
@@ -11,6 +11,17 @@ export const K = {
   stateCircle: "#1a1a2e", stateFill: "#c0392b",
   liquidBlue: "#2471a3", vaporRed: "#c0392b",
 };
+export const K_DARK = {
+  bg: "#0d1117", card: "#161b22", cardAlt: "#1c2128",
+  border: "#30363d", ink: "#e6edf3", inkMed: "#b1bac4", inkLight: "#8b949e",
+  gridFine: "#1c2128", gridMajor: "#30363d",
+  accent: "#e05545", accentLight: "#e0554522",
+  heatIn: "#f47067", heatOut: "#58a6ff", workOut: "#3fb950", workIn: "#d29922",
+  dome: "#58a6ff22", domeLine: "#58a6ff66",
+  stateCircle: "#e6edf3", stateFill: "#e05545",
+  liquidBlue: "#58a6ff", vaporRed: "#f47067",
+};
+export const K = K_LIGHT;
 export const FD = "'DM Serif Display',serif";
 export const FM = "'DM Mono',monospace";
 

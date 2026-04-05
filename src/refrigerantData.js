@@ -114,23 +114,6 @@ const R1234YF_TABLE = [
   { P: 3382, T: 94.7,  hf: 395.0, hg: 395.0, sf: 1.560, sg: 1.560, vf: 0.002000, vg: 0.002000 },
 ];
 
-// ── R-290 (Propane) ──
-const R290_TABLE = [
-  { P: 50,   T: -56.2, hf: 75.0,  hg: 504.0, sf: 0.400, sg: 2.580, vf: 0.001550, vg: 0.7900 },
-  { P: 100,  T: -42.1, hf: 108.0, hg: 520.0, sf: 0.540, sg: 2.500, vf: 0.001590, vg: 0.4120 },
-  { P: 200,  T: -25.4, hf: 152.0, hg: 539.0, sf: 0.710, sg: 2.410, vf: 0.001650, vg: 0.2150 },
-  { P: 300,  T: -14.3, hf: 181.0, hg: 550.0, sf: 0.820, sg: 2.363, vf: 0.001700, vg: 0.1470 },
-  { P: 500,  T: 1.7,   hf: 225.0, hg: 567.0, sf: 0.980, sg: 2.300, vf: 0.001780, vg: 0.0892 },
-  { P: 700,  T: 13.5,  hf: 258.0, hg: 577.0, sf: 1.090, sg: 2.261, vf: 0.001845, vg: 0.0638 },
-  { P: 1000, T: 26.9,  hf: 298.0, hg: 586.0, sf: 1.210, sg: 2.218, vf: 0.001930, vg: 0.0443 },
-  { P: 1500, T: 43.3,  hf: 350.0, hg: 594.0, sf: 1.360, sg: 2.167, vf: 0.002050, vg: 0.0285 },
-  { P: 2000, T: 55.9,  hf: 395.0, hg: 596.0, sf: 1.480, sg: 2.120, vf: 0.002180, vg: 0.0201 },
-  { P: 2500, T: 66.2,  hf: 436.0, hg: 593.0, sf: 1.585, sg: 2.073, vf: 0.002330, vg: 0.0147 },
-  { P: 3000, T: 74.8,  hf: 476.0, hg: 585.0, sf: 1.685, sg: 2.020, vf: 0.002520, vg: 0.0106 },
-  { P: 3500, T: 82.1,  hf: 518.0, hg: 571.0, sf: 1.785, sg: 1.958, vf: 0.002790, vg: 0.0073 },
-  { P: 4247, T: 96.7,  hf: 560.0, hg: 560.0, sf: 1.940, sg: 1.940, vf: 0.004500, vg: 0.004500 },
-];
-
 /* ───────── Refrigerant Registry ───────── */
 export const REFRIGERANTS = [
   {
@@ -180,14 +163,6 @@ export const REFRIGERANTS = [
     applications: "Automotive AC (replacement for R-134a)",
     notes: "Ultra-low GWP; mandated in EU vehicles since 2017; mildly flammable",
     status: "Current (automotive)",
-  },
-  {
-    id: "R290", name: "R-290", formula: "C₃H₈", type: "Natural (HC)",
-    table: R290_TABLE, criticalT: 96.7, criticalP: 4247,
-    gwp: 3, odp: 0,
-    applications: "Commercial display cases, small AC units, heat pumps",
-    notes: "Excellent thermodynamic performance; flammable (A3); charge limits apply",
-    status: "Emerging",
   },
 ];
 

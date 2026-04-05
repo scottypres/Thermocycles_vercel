@@ -1356,8 +1356,9 @@ const EQ_TOPICS = [
   { id: "states", label: "States", title: "Finding State Point Properties", color: K.ink },
 ];
 
-function EquationsModal({ open, onClose, cycle }) {
+function EquationsModal({ open, onClose, cycle, initialTopic }) {
   const [topic, setTopic] = useState("wt");
+  useEffect(() => { if (initialTopic && open) setTopic(initialTopic); }, [initialTopic, open]);
   const isWide = useIsDesktop();
   if (!open) return null;
 
@@ -1694,6 +1695,7 @@ function RankinePage({ onBack }) {
   const [tSup, setTSup] = useState(450);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
+  const [eqTopic, setEqTopic] = useState(null);
   const [dragPoint, setDragPoint] = useState({ s: 4.2, T: 200 });
   const [showAreas, setShowAreas] = useState(false);
   const [showPvAreas, setShowPvAreas] = useState(false);
@@ -1824,7 +1826,7 @@ function RankinePage({ onBack }) {
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} />
         </div>
       </div>
-      <EquationsModal open={showEqs} onClose={() => setShowEqs(false)} cycle={cycle} />
+      <EquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} />
 
       {/* Row: Sliders + Table (side by side on desktop) */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
@@ -1852,10 +1854,10 @@ function RankinePage({ onBack }) {
             <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
-                { l: "Q in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn },
-                { l: "Q out (Cond.)", v: "−" + fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut },
+                { l: "Q in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn, topic: "qin" },
+                { l: "Q out (Cond.)", v: "−" + fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut, topic: "qout" },
               ].map((e, i) => (
-                <div key={i} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center" }}>
+                <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
                   <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
                   <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
                   <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
@@ -1868,10 +1870,10 @@ function RankinePage({ onBack }) {
             <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Work</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
-                { l: "W turbine", v: fmt(cycle.wTurbine), u: "kJ/kg", c: K.workOut },
-                { l: "W pump", v: "−" + fmt(cycle.wPump), u: "kJ/kg", c: K.workIn },
+                { l: "W turbine", v: fmt(cycle.wTurbine), u: "kJ/kg", c: K.workOut, topic: "wt" },
+                { l: "W pump", v: "−" + fmt(cycle.wPump), u: "kJ/kg", c: K.workIn, topic: "wp" },
               ].map((e, i) => (
-                <div key={i} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center" }}>
+                <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
                   <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
                   <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
                   <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>

@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { K, FD, FM, lerp, ParamSlider, useIsDesktop, FontLoader, AuthorFooter } from "./shared.jsx";
+import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop } from "./shared.jsx";
+let K = K_LIGHT;
 import { REFRIGERANTS, interpRefrigerant, getRefrigerantDomeBounds, getRefrigerantPhaseInfo, getDefaultPressures } from "./refrigerantData.js";
 
 /* ───────── Cycle Calculation ───────── */
@@ -249,9 +250,10 @@ const TS_W = 360, TS_H = 285;
 const TS_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const TS_PLOT = { x: TS_PAD.l, y: TS_PAD.t, w: TS_W - TS_PAD.l - TS_PAD.r, h: TS_H - TS_PAD.t - TS_PAD.b };
 
-function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAreas }) {
+function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd }) {
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
+  const lineDragRef = useRef(null);
 
   // Auto-scale axes from refrigerant data
   const table = refData.table;
@@ -265,24 +267,105 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
   const unmapS = px => sMin + ((px - TS_PLOT.x) / TS_PLOT.w) * (sMax - sMin);
   const unmapT = py => tMin + ((TS_PLOT.y + TS_PLOT.h - py) / TS_PLOT.h) * (tMax - tMin);
 
-  const getSvgPoint = useCallback((e) => {
+  // Reverse lookup: T → P for this refrigerant
+  const satTempToP = useCallback((T) => {
+    if (T <= table[0].T) return table[0].P;
+    if (T >= table[table.length - 1].T) return table[table.length - 1].P;
+    for (let i = 0; i < table.length - 1; i++) {
+      if (T >= table[i].T && T <= table[i + 1].T)
+        return lerp(T, table[i].T, table[i + 1].T, table[i].P, table[i + 1].P);
+    }
+    return table[table.length - 1].P;
+  }, [table]);
+
+  const getSvgXY = useCallback((e) => {
     const svg = svgRef.current;
     if (!svg) return null;
     const rect = svg.getBoundingClientRect();
-    if (rect.width === 0) return null;
+    if (rect.width === 0 || rect.height === 0) return null;
     const scaleX = TS_W / rect.width, scaleY = TS_H / rect.height;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const px = Math.max(TS_PLOT.x, Math.min(TS_PLOT.x + TS_PLOT.w, (clientX - rect.left) * scaleX));
     const py = Math.max(TS_PLOT.y, Math.min(TS_PLOT.y + TS_PLOT.h, (clientY - rect.top) * scaleY));
-    const s = lockS ? dragPoint.s : unmapS(px);
-    const T = lockT ? dragPoint.T : unmapT(py);
-    return { s, T };
-  }, [lockS, lockT, dragPoint]);
+    return { px, py };
+  }, []);
 
-  const handleStart = useCallback((e) => { draggingRef.current = true; const pt = getSvgPoint(e); if (pt) onDrag(pt); }, [getSvgPoint, onDrag]);
-  const handleMove = useCallback((e) => { if (!draggingRef.current) return; e.preventDefault(); const pt = getSvgPoint(e); if (pt) onDrag(pt); }, [getSvgPoint, onDrag]);
-  const handleEnd = useCallback(() => { draggingRef.current = false; }, []);
+  const getSvgY = useCallback((e) => {
+    const r = getSvgXY(e);
+    return r ? r.py : null;
+  }, [getSvgXY]);
+
+  const getSvgPoint = useCallback((e) => {
+    const r = getSvgXY(e);
+    if (!r) return null;
+    const s = lockS ? dragPoint.s : unmapS(r.px);
+    const T = lockT ? dragPoint.T : unmapT(r.py);
+    return { s, T };
+  }, [getSvgXY, lockS, lockT, dragPoint]);
+
+  // Text label positions for hitbox detection
+  const condTextX = mapS((cycle.states[1].s + cycle.states[2].s) / 2);
+  const condTextY = mapT(cycle.Tsat_high) - 8;
+  const evapTextX = mapS((cycle.states[3].s + cycle.states[0].s) / 2);
+  const evapTextY = mapT(cycle.states[0].T) + 13;
+
+  const handleStart = useCallback((e) => {
+    if (e.touches && e.touches.length === 0) return;
+    const r = getSvgXY(e);
+    if (r) {
+      if (Math.abs(r.px - condTextX) < 25 && Math.abs(r.py - condTextY) < 10) {
+        lineDragRef.current = "condenser";
+        if (onLineDragStart) onLineDragStart("condenser");
+        e.preventDefault();
+        return;
+      }
+      if (Math.abs(r.px - evapTextX) < 30 && Math.abs(r.py - evapTextY) < 10) {
+        lineDragRef.current = "evaporator";
+        if (onLineDragStart) onLineDragStart("evaporator");
+        e.preventDefault();
+        return;
+      }
+    }
+    draggingRef.current = true;
+    const pt = getSvgPoint(e);
+    if (pt) onDrag(pt);
+  }, [getSvgXY, getSvgPoint, onDrag, condTextX, condTextY, evapTextX, evapTextY, onLineDragStart]);
+
+  const handleMove = useCallback((e) => {
+    if (lineDragRef.current) {
+      e.preventDefault();
+      const py = getSvgY(e);
+      if (py == null) return;
+      const T = unmapT(py);
+      const P = satTempToP(T);
+      const pMin = table[0].P;
+      const pMax = table[table.length - 2].P;
+      if (lineDragRef.current === "condenser") {
+        const clamped = Math.max(Math.round(pMin + (pMax - pMin) * 0.2), Math.min(pMax, Math.round(P)));
+        if (onPHighChange) onPHighChange(clamped);
+        if (onLineDragMove) onLineDragMove("condenser", clamped, T);
+      }
+      if (lineDragRef.current === "evaporator") {
+        const clamped = Math.max(pMin, Math.min(Math.round(pMin + (pMax - pMin) * 0.6), Math.round(P)));
+        if (onPLowChange) onPLowChange(clamped);
+        if (onLineDragMove) onLineDragMove("evaporator", clamped, T);
+      }
+      return;
+    }
+    if (!draggingRef.current) return;
+    e.preventDefault();
+    const pt = getSvgPoint(e);
+    if (pt) onDrag(pt);
+  }, [getSvgPoint, getSvgY, onDrag, satTempToP, table, onPHighChange, onPLowChange, onLineDragMove]);
+
+  const handleEnd = useCallback(() => {
+    draggingRef.current = false;
+    if (lineDragRef.current) {
+      lineDragRef.current = null;
+      if (onLineDragEnd) onLineDragEnd();
+    }
+  }, [onLineDragEnd]);
 
   // Dome curve
   const domeLeft = table.map(r => ({ s: r.sf, T: r.T }));
@@ -368,11 +451,28 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
       <path d={expansionD} fill="none" stroke={K.inkMed} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" />
       {/* 4→1 Evaporator (horizontal at Tsat_low) */}
       <line x1={mapS(st[3].s)} y1={mapT(st[3].T)} x2={mapS(st[0].s)} y2={mapT(st[0].T)} stroke={K.heatIn} strokeWidth={2.2} strokeLinecap="round" />
+      {/* Drag popup for condenser/evaporator labels */}
+      {lineDragInfo && (() => {
+        const isCond = lineDragInfo.which === "condenser";
+        const lineY = isCond ? mapT(cycle.Tsat_high) : mapT(cycle.Tsat_low);
+        const color = isCond ? K.heatOut : K.heatIn;
+        const T = isCond ? cycle.Tsat_high : cycle.Tsat_low;
+        const label = isCond ? "T_cond" : "T_evap";
+        const valueText = `${label} = ${T.toFixed(1)}°C`;
+        const boxW = Math.max(104, valueText.length * 5.7 + 16);
+        const boxX = TS_PLOT.x + 4;
+        const boxY = TS_PLOT.y + 2;
+        return (<>
+          <line x1={TS_PLOT.x} y1={lineY} x2={TS_PLOT.x + TS_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+          <rect x={boxX} y={boxY} width={boxW} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
+          <text x={boxX + boxW / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
+        </>);
+      })()}
       {!showAreas && <>
         <text x={mapS(st[0].s) + 8} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500">Compressor</text>
-        <text x={mapS((st[1].s + st[2].s) / 2)} y={mapT(cycle.Tsat_high) - 8} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle">Condenser</text>
+        <text x={mapS((st[1].s + st[2].s) / 2)} y={mapT(cycle.Tsat_high) - 8} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Condenser</text>
         <text x={mapS((st[2].s + st[3].s) / 2) - 16} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.inkMed} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Exp. Valve</text>
-        <text x={mapS((st[3].s + st[0].s) / 2)} y={mapT(st[0].T) + 13} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle">Evaporator</text>
+        <text x={mapS((st[3].s + st[0].s) / 2)} y={mapT(st[0].T) + 13} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Evaporator</text>
         <line x1={dpx} y1={dpy} x2={dpx} y2={TS_PLOT.y + TS_PLOT.h} stroke={lockS ? K.accent : K.inkLight} strokeWidth={lockS ? 1.2 : 0.5} strokeDasharray={lockS ? "none" : "2 2"} />
         <line x1={dpx} y1={dpy} x2={TS_PLOT.x} y2={dpy} stroke={lockT ? K.accent : K.inkLight} strokeWidth={lockT ? 1.2 : 0.5} strokeDasharray={lockT ? "none" : "2 2"} />
       </>}
@@ -383,9 +483,9 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
         const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
-            <circle cx={cx} cy={cy} r={5} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} />
+            <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
-            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill="#fff" />
+            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill={K.card} />
             <text x={tx} y={ty} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
@@ -400,7 +500,7 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
         const lx = TS_PLOT.x + 6, ly = TS_PLOT.y + 4;
         return (
           <>
-            <rect x={lx} y={ly} width={160} height={52} rx={2} fill="#fff" stroke={K.border} strokeWidth={0.8} />
+            <rect x={lx} y={ly} width={160} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
             <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={8} fontFamily={FM}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
             <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
@@ -420,9 +520,10 @@ const PH_W = 360, PH_H = 285;
 const PH_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const PH_PLOT = { x: PH_PAD.l, y: PH_PAD.t, w: PH_W - PH_PAD.l - PH_PAD.r, h: PH_H - PH_PAD.t - PH_PAD.b };
 
-function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAreas }) {
+function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd }) {
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
+  const lineDragRef = useRef(null);
 
   const table = refData.table;
   const hMin = Math.floor(table[0].hf / 20) * 20 - 20;
@@ -466,9 +567,85 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
     return { s, T, h, P };
   }, [lockP, lockH, dragPoint, table]);
 
-  const handleStart = useCallback((e) => { draggingRef.current = true; const pt = getSvgPoint(e); if (pt) onDrag(pt); }, [getSvgPoint, onDrag]);
-  const handleMove = useCallback((e) => { if (!draggingRef.current) return; e.preventDefault(); const pt = getSvgPoint(e); if (pt) onDrag(pt); }, [getSvgPoint, onDrag]);
-  const handleEnd = useCallback(() => { draggingRef.current = false; }, []);
+  const getSvgXY = useCallback((e) => {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const rect = svg.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    const scaleX = PH_W / rect.width, scaleY = PH_H / rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const px = Math.max(PH_PLOT.x, Math.min(PH_PLOT.x + PH_PLOT.w, (clientX - rect.left) * scaleX));
+    const py = Math.max(PH_PLOT.y, Math.min(PH_PLOT.y + PH_PLOT.h, (clientY - rect.top) * scaleY));
+    return { px, py };
+  }, []);
+
+  const getSvgY = useCallback((e) => {
+    const r = getSvgXY(e);
+    return r ? r.py : null;
+  }, [getSvgXY]);
+
+  // Text label positions for hitbox detection
+  const condTextX = (mapH(cycle.h2) + mapH(cycle.h3)) / 2;
+  const condTextY = mapP(cycle.states[1].P) - 7;
+  const evapTextX = (mapH(cycle.h4) + mapH(cycle.h1)) / 2;
+  const evapTextY = mapP(cycle.states[0].P) + 13;
+
+  const handleStart = useCallback((e) => {
+    if (e.touches && e.touches.length === 0) return;
+    const r = getSvgXY(e);
+    if (r) {
+      if (Math.abs(r.px - condTextX) < 25 && Math.abs(r.py - condTextY) < 10) {
+        lineDragRef.current = "condenser";
+        if (onLineDragStart) onLineDragStart("condenser");
+        e.preventDefault();
+        return;
+      }
+      if (Math.abs(r.px - evapTextX) < 30 && Math.abs(r.py - evapTextY) < 10) {
+        lineDragRef.current = "evaporator";
+        if (onLineDragStart) onLineDragStart("evaporator");
+        e.preventDefault();
+        return;
+      }
+    }
+    draggingRef.current = true;
+    const pt = getSvgPoint(e);
+    if (pt) onDrag(pt);
+  }, [getSvgXY, getSvgPoint, onDrag, condTextX, condTextY, evapTextX, evapTextY, onLineDragStart]);
+
+  const handleMove = useCallback((e) => {
+    if (lineDragRef.current) {
+      e.preventDefault();
+      const py = getSvgY(e);
+      if (py == null) return;
+      const P = unmapP(py);
+      const pMin = table[0].P;
+      const pMax = table[table.length - 2].P;
+      if (lineDragRef.current === "condenser") {
+        const clamped = Math.max(Math.round(pMin + (pMax - pMin) * 0.2), Math.min(pMax, Math.round(P)));
+        if (onPHighChange) onPHighChange(clamped);
+        if (onLineDragMove) onLineDragMove("condenser", clamped, null);
+      }
+      if (lineDragRef.current === "evaporator") {
+        const clamped = Math.max(pMin, Math.min(Math.round(pMin + (pMax - pMin) * 0.6), Math.round(P)));
+        if (onPLowChange) onPLowChange(clamped);
+        if (onLineDragMove) onLineDragMove("evaporator", clamped, null);
+      }
+      return;
+    }
+    if (!draggingRef.current) return;
+    e.preventDefault();
+    const pt = getSvgPoint(e);
+    if (pt) onDrag(pt);
+  }, [getSvgPoint, getSvgY, onDrag, table, onPHighChange, onPLowChange, onLineDragMove]);
+
+  const handleEnd = useCallback(() => {
+    draggingRef.current = false;
+    if (lineDragRef.current) {
+      lineDragRef.current = null;
+      if (onLineDragEnd) onLineDragEnd();
+    }
+  }, [onLineDragEnd]);
 
   // Dome curve on P-h: left = hf, right = hg
   const domeLeft = table.map(r => ({ h: r.hf, P: r.P }));
@@ -543,11 +720,28 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
       <line x1={mapH(cycle.h3)} y1={mapP(st[2].P)} x2={mapH(cycle.h4)} y2={mapP(st[3].P)} stroke={K.inkMed} strokeWidth={2.2} strokeLinecap="round" strokeDasharray="4 3" />
       {/* 4→1 Evaporator (horizontal right at P_low) */}
       <line x1={mapH(cycle.h4)} y1={mapP(st[3].P)} x2={mapH(cycle.h1)} y2={mapP(st[0].P)} stroke={K.heatIn} strokeWidth={2.2} strokeLinecap="round" />
+      {/* Drag popup for condenser/evaporator labels */}
+      {lineDragInfo && (() => {
+        const isCond = lineDragInfo.which === "condenser";
+        const lineY = isCond ? mapP(st[1].P) : mapP(st[0].P);
+        const color = isCond ? K.heatOut : K.heatIn;
+        const P = isCond ? st[1].P : st[0].P;
+        const label = isCond ? "P_cond" : "P_evap";
+        const valueText = `${label} = ${P >= 1000 ? (P/1000).toFixed(1) + "k" : P} kPa`;
+        const boxW = Math.max(104, valueText.length * 5.7 + 16);
+        const boxX = PH_PLOT.x + 4;
+        const boxY = PH_PLOT.y + 2;
+        return (<>
+          <line x1={PH_PLOT.x} y1={lineY} x2={PH_PLOT.x + PH_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+          <rect x={boxX} y={boxY} width={boxW} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
+          <text x={boxX + boxW / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
+        </>);
+      })()}
       {!showAreas && <>
         <text x={(mapH(cycle.h1) + mapH(cycle.h2)) / 2 + 10} y={(mapP(st[0].P) + mapP(st[1].P)) / 2} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500">Compressor</text>
-        <text x={(mapH(cycle.h2) + mapH(cycle.h3)) / 2} y={mapP(st[1].P) - 7} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle">Condenser</text>
+        <text x={(mapH(cycle.h2) + mapH(cycle.h3)) / 2} y={mapP(st[1].P) - 7} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Condenser</text>
         <text x={mapH(cycle.h3) - 10} y={(mapP(st[2].P) + mapP(st[3].P)) / 2} fill={K.inkMed} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Exp. Valve</text>
-        <text x={(mapH(cycle.h4) + mapH(cycle.h1)) / 2} y={mapP(st[0].P) + 13} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle">Evaporator</text>
+        <text x={(mapH(cycle.h4) + mapH(cycle.h1)) / 2} y={mapP(st[0].P) + 13} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Evaporator</text>
         <line x1={dpx} y1={dpy} x2={dpx} y2={PH_PLOT.y + PH_PLOT.h} stroke={lockH ? K.accent : K.inkLight} strokeWidth={lockH ? 1.2 : 0.5} strokeDasharray={lockH ? "none" : "2 2"} />
         <line x1={dpx} y1={dpy} x2={PH_PLOT.x} y2={dpy} stroke={lockP ? K.accent : K.inkLight} strokeWidth={lockP ? 1.2 : 0.5} strokeDasharray={lockP ? "none" : "2 2"} />
       </>}
@@ -558,9 +752,9 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
         const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
-            <circle cx={cx} cy={cy} r={5} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} />
+            <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
-            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill="#fff" />
+            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill={K.card} />
             <text x={tx} y={ty} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
@@ -575,7 +769,7 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
         const lx = PH_PLOT.x + 6, ly = PH_PLOT.y + 4;
         return (
           <>
-            <rect x={lx} y={ly} width={160} height={52} rx={2} fill="#fff" stroke={K.border} strokeWidth={0.8} />
+            <rect x={lx} y={ly} width={160} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
             <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={8} fontFamily={FM}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
             <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
@@ -590,14 +784,157 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
   );
 }
 
+/* ───────── Component Detail Modal (Refrigeration) ───────── */
+const REF_COMPONENT_INFO = {
+  compressor: {
+    title: "Compressor",
+    color: () => K.workIn,
+    process: "1 → 2",
+    type: "Isentropic Compression",
+    purpose: "The compressor raises the pressure of low-pressure saturated vapor from the evaporator to the high-pressure condenser level. This is the only work input to the cycle. The ideal process is isentropic (constant entropy), producing superheated vapor at the compressor exit.",
+    keyPoints: [
+      "Only work-input device in the cycle",
+      "Ideal process is isentropic (s₁ = s₂)",
+      "Compresses vapor, not liquid (centrifugal or reciprocating)",
+      "Exit state is superheated vapor at P_high",
+      "Higher pressure ratio → more work required → lower COP",
+    ],
+    equations: [
+      { label: "First Law (steady-state, adiabatic)", eq: "w_comp = h₂ − h₁" },
+      { label: "Isentropic condition", eq: "s₁ = s₂" },
+      { label: "Power input", eq: "Ẇ_comp = ṁ · (h₂ − h₁)" },
+    ],
+    insight: "Unlike the Rankine cycle pump (which compresses liquid), the refrigeration compressor compresses vapor — requiring significantly more work. This is why COP is typically 2–6 rather than the higher efficiencies seen in power cycles.",
+  },
+  condenser: {
+    title: "Condenser",
+    color: () => K.heatOut,
+    process: "2 → 3",
+    type: "Constant-Pressure Heat Rejection",
+    purpose: "The condenser removes heat from the high-pressure superheated vapor, first desuperheating it to saturated vapor, then condensing it to saturated liquid. Heat is rejected to the warm environment (outdoor air, cooling water, etc.).",
+    keyPoints: [
+      "Operates at constant high pressure (P_high)",
+      "No work is done",
+      "Fluid enters as superheated vapor, exits as saturated liquid",
+      "Heat rejected = Q_evap + W_comp (energy balance)",
+      "Lower condenser temperature improves COP",
+    ],
+    equations: [
+      { label: "First Law (open system, steady state)", eq: "q_cond = h₂ − h₃" },
+      { label: "Energy balance verification", eq: "q_cond = q_evap + w_comp" },
+      { label: "Heat rejected", eq: "Q_cond = ṁ · (h₂ − h₃)" },
+    ],
+    insight: "In heat pump mode, the condenser heat rejection IS the useful output. COP_heating = Q_cond / W_comp = COP_cooling + 1, which is always greater than 1.",
+  },
+  expvalve: {
+    title: "Expansion Valve",
+    color: () => K.inkMed,
+    process: "3 → 4",
+    type: "Isenthalpic Throttling",
+    purpose: "The expansion valve (or throttling device) reduces the refrigerant pressure from condenser to evaporator level. This is an irreversible process with no work or heat transfer — enthalpy remains constant (h₃ = h₄). The result is a cold, low-pressure two-phase mixture.",
+    keyPoints: [
+      "Isenthalpic process: h₃ = h₄",
+      "NOT isentropic — entropy increases (irreversible)",
+      "No work done, no heat transfer",
+      "Produces a two-phase (liquid + vapor) mixture",
+      "Quality x₄ determined from enthalpy, not entropy",
+    ],
+    equations: [
+      { label: "Throttling condition", eq: "h₃ = h₄ (isenthalpic)" },
+      { label: "Quality after throttling", eq: "x₄ = (h₄ − h_f) / (h_g − h_f) at P_low" },
+      { label: "Entropy change", eq: "s₄ > s₃ (irreversible process)" },
+    ],
+    insight: "The throttling process is the key difference from power cycles. Because it's irreversible, it's a source of thermodynamic loss. Replacing it with an isentropic expander could recover work, but the complexity isn't worth it for most applications.",
+  },
+  evaporator: {
+    title: "Evaporator",
+    color: () => K.heatIn,
+    process: "4 → 1",
+    type: "Constant-Pressure Heat Absorption",
+    purpose: "The evaporator absorbs heat from the cold space (refrigerator interior, building interior, etc.) at constant low pressure. The two-phase mixture from the expansion valve evaporates completely to saturated vapor. This heat absorption IS the useful cooling effect.",
+    keyPoints: [
+      "Operates at constant low pressure (P_low)",
+      "No work is done",
+      "Fluid enters as two-phase mixture, exits as saturated vapor",
+      "Q_evap is the useful refrigeration effect",
+      "Higher evaporator temperature → higher COP",
+    ],
+    equations: [
+      { label: "First Law (open system, steady state)", eq: "q_evap = h₁ − h₄" },
+      { label: "Cooling capacity", eq: "Q_evap = ṁ · (h₁ − h₄)" },
+      { label: "COP (cooling)", eq: "COP = q_evap / w_comp" },
+    ],
+    insight: "The evaporator temperature must be below the cold space temperature to drive heat transfer. Each 1°C increase in evaporator temperature can improve COP by 2–4%, which is why proper sizing and airflow are critical.",
+  },
+};
+
+function RefComponentModal({ component, cycle, onClose }) {
+  const isWide = useIsDesktop();
+  if (!component) return null;
+  const info = REF_COMPONENT_INFO[component];
+  const color = info.color();
+  const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+
+  const liveValues = {
+    compressor: { main: `W_comp = ${f(cycle.wComp)} kJ/kg`, detail: `h₂ − h₁ = ${f(cycle.h2)} − ${f(cycle.h1)}` },
+    condenser: { main: `Q_cond = ${f(cycle.qCond)} kJ/kg`, detail: `h₂ − h₃ = ${f(cycle.h2)} − ${f(cycle.h3)}` },
+    expvalve: { main: `h₃ = h₄ = ${f(cycle.h3)} kJ/kg`, detail: `x₄ = ${cycle.x4.toFixed(4)} (${(cycle.x4 * 100).toFixed(1)}% vapor)` },
+    evaporator: { main: `Q_evap = ${f(cycle.qEvap)} kJ/kg`, detail: `h₁ − h₄ = ${f(cycle.h1)} − ${f(cycle.h4)}` },
+  };
+  const live = liveValues[component];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 780 : 420, width: "100%", padding: isWide ? "36px 40px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 22 : 14, borderBottom: `2px solid ${color}`, paddingBottom: 12 }}>
+          <h2 style={{ margin: 0, fontSize: isWide ? 28 : 16, fontFamily: FD, color }}>{info.title}</h2>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 14 : 11, cursor: "pointer", padding: isWide ? "6px 20px" : "3px 12px", fontFamily: FM }}>Close</button>
+        </div>
+        <div style={{ display: "flex", gap: 10, marginBottom: isWide ? 20 : 12, flexWrap: "wrap" }}>
+          <span style={{ background: color, color: "#fff", padding: isWide ? "5px 14px" : "3px 10px", fontSize: isWide ? 14 : 9, fontFamily: FM, fontWeight: 700 }}>Process {info.process}</span>
+          <span style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "5px 14px" : "3px 10px", fontSize: isWide ? 14 : 9, fontFamily: FM, color: K.inkMed }}>{info.type}</span>
+        </div>
+        <div style={{ background: K.cardAlt, border: `2px solid ${color}`, padding: isWide ? "18px 24px" : "10px 12px", marginBottom: isWide ? 20 : 12, textAlign: "center" }}>
+          <div style={{ fontSize: isWide ? 26 : 16, fontFamily: FD, color, marginBottom: 6 }}>{live.main}</div>
+          <div style={{ fontSize: isWide ? 14 : 9, fontFamily: FM, color: K.inkMed }}>{live.detail}</div>
+        </div>
+        <p style={{ fontSize: isWide ? 16 : 10.5, lineHeight: 1.9, color: K.inkMed, marginBottom: isWide ? 20 : 12 }}>{info.purpose}</p>
+        <div style={isWide ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 } : { marginBottom: 12 }}>
+          <div style={{ borderLeft: `3px solid ${color}`, paddingLeft: 14, marginBottom: isWide ? 0 : 12 }}>
+            <div style={{ fontFamily: FD, fontSize: isWide ? 18 : 12, marginBottom: 10, color: K.ink }}>Key Points</div>
+            {info.keyPoints.map((pt, i) => (
+              <div key={i} style={{ fontSize: isWide ? 14 : 10, color: K.inkMed, marginBottom: 6, lineHeight: 1.6 }}>{"▸ " + pt}</div>
+            ))}
+          </div>
+          <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px 20px" : "10px 12px" }}>
+            <div style={{ fontFamily: FD, fontSize: isWide ? 18 : 12, marginBottom: 10, color: K.ink }}>Equations</div>
+            {info.equations.map((eq, i) => (
+              <div key={i} style={{ marginBottom: 10, fontSize: isWide ? 14 : 10, lineHeight: 1.7 }}>
+                <div style={{ color: K.inkLight, fontSize: isWide ? 12 : 8 }}>{eq.label}</div>
+                <div style={{ color, fontWeight: 600, fontSize: isWide ? 15 : 10 }}>{eq.eq}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: K.bg === "#0d1117" ? "#1c1f12" : "#fffef5", border: `1px solid ${K.bg === "#0d1117" ? "#3d3a20" : "#e8e0c0"}`, padding: isWide ? "16px 20px" : "10px 12px", marginBottom: isWide ? 20 : 12 }}>
+          <div style={{ fontFamily: FD, fontSize: isWide ? 16 : 10, color: K.ink, marginBottom: 6 }}>Engineering Insight</div>
+          <div style={{ fontSize: isWide ? 14 : 10, color: K.inkMed, lineHeight: 1.7 }}>{info.insight}</div>
+        </div>
+        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "14px" : "10px", background: color, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 16 : 12, fontFamily: FD, cursor: "pointer" }}>Close</button>
+      </div>
+    </div>
+  );
+}
+
 /* ───────── Schematic ───────── */
 function RefSchematicDiagram({ cycle }) {
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+  const [activeComponent, setActiveComponent] = useState(null);
   const mk = [
     { id: "rO", c: K.heatIn }, { id: "rB", c: K.heatOut }, { id: "rY", c: K.workIn },
     { id: "rM", c: K.inkMed }, { id: "rK", c: K.ink },
   ];
-  return (
+  return (<>
     <svg viewBox="0 0 360 320" style={{ width: "100%", maxWidth: 420 }}>
       <defs>
         {mk.map(m => (
@@ -610,27 +947,35 @@ function RefSchematicDiagram({ cycle }) {
         <circle key={`${i}-${j}`} cx={i * 20 + 10} cy={j * 20 + 10} r={0.6} fill={K.gridMajor} />
       )))}
       {/* COMPRESSOR */}
-      <circle cx={68} cy={172} r={28} fill="none" stroke={K.workIn} strokeWidth={1.5} />
-      <path d="M54,185 L68,158 L82,185 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-      <text x={68} y={175} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Compressor</text>
-      <text x={68} y={205} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+      <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("compressor")}>
+        <circle cx={68} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
+        <path d="M54,185 L68,158 L82,185 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <text x={68} y={175} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Compressor</text>
+        <text x={68} y={205} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+      </g>
       {/* CONDENSER */}
-      <rect x={110} y={32} width={140} height={50} fill="none" stroke={K.heatOut} strokeWidth={1.5} />
-      <path d="M125,63 Q135,53 145,63 Q155,73 165,63 Q175,53 185,63 Q195,73 205,63 Q215,53 225,63 Q235,73 240,66" fill="none" stroke={K.heatOut} strokeWidth={0.7} />
-      <text x={180} y={53} fill={K.heatOut} fontSize={11} textAnchor="middle" fontFamily={FD}>Condenser</text>
-      <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+      <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
+        <rect x={110} y={32} width={140} height={50} fill="rgba(255,255,255,0.01)" stroke={K.heatOut} strokeWidth={1.5} />
+        <path d="M125,63 Q135,53 145,63 Q155,73 165,63 Q175,53 185,63 Q195,73 205,63 Q215,53 225,63 Q235,73 240,66" fill="none" stroke={K.heatOut} strokeWidth={0.7} />
+        <text x={180} y={53} fill={K.heatOut} fontSize={11} textAnchor="middle" fontFamily={FD}>Condenser</text>
+        <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+      </g>
       {/* EXPANSION VALVE */}
-      <path d="M295,152 L315,172 L295,192 L275,172 Z" fill="none" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
-      <text x={295} y={170} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Exp.</text>
-      <text x={295} y={181} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Valve</text>
-      <text x={295} y={198} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
+      <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("expvalve")}>
+        <path d="M295,152 L315,172 L295,192 L275,172 Z" fill="rgba(255,255,255,0.01)" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
+        <text x={295} y={170} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Exp.</text>
+        <text x={295} y={181} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Valve</text>
+        <text x={295} y={198} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
+      </g>
       {/* EVAPORATOR */}
-      <rect x={110} y={248} width={140} height={50} fill="none" stroke={K.heatIn} strokeWidth={1.5} />
-      {[130,150,170,190,210,230].map(x => (
-        <g key={x}><line x1={x} y1={258} x2={x} y2={288} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},258 L${x},254 L${x+3},258`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
-      ))}
-      <text x={180} y={272} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Evaporator</text>
-      <text x={180} y={286} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+      <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("evaporator")}>
+        <rect x={110} y={248} width={140} height={50} fill="rgba(255,255,255,0.01)" stroke={K.heatIn} strokeWidth={1.5} />
+        {[130,150,170,190,210,230].map(x => (
+          <g key={x}><line x1={x} y1={258} x2={x} y2={288} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},258 L${x},254 L${x+3},258`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
+        ))}
+        <text x={180} y={272} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Evaporator</text>
+        <text x={180} y={286} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+      </g>
       {/* Pipes */}
       <polyline points="68,144 68,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       <polyline points="250,57 295,57 295,152" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
@@ -638,7 +983,7 @@ function RefSchematicDiagram({ cycle }) {
       <polyline points="110,273 68,273 68,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       {/* State markers */}
       {[{ n:"2",x:88,y:76 },{ n:"3",x:265,y:40 },{ n:"4",x:308,y:242 },{ n:"1",x:88,y:252 }].map((p,i) => (
-        <g key={i}><circle cx={p.x} cy={p.y} r={11} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={12} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
+        <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={12} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy labels */}
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#rB)" />
@@ -651,7 +996,8 @@ function RefSchematicDiagram({ cycle }) {
       <text x={27} y={160} fill={K.workIn} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
       <text x={27} y={188} fill={K.workIn} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
     </svg>
-  );
+    <RefComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
+  </>);
 }
 
 /* ───────── Info Modal (Refrigeration Theory) ───────── */
@@ -659,7 +1005,7 @@ function RefInfoModal({ open, onClose }) {
   if (!open) return null;
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: 420, width: "100%", padding: "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: 420, width: "100%", padding: "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
           <h2 style={{ margin: 0, fontSize: 18, fontFamily: FD, color: K.ink }}>Vapor-Compression Refrigeration</h2>
           <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "3px 12px", fontFamily: FM }}>Close</button>
@@ -723,15 +1069,16 @@ const REF_EQ_TOPICS = [
   { id: "states", label: "States", title: "State Point Properties", color: K.ink },
 ];
 
-function RefEquationsModal({ open, onClose, cycle }) {
+function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
   const [topic, setTopic] = useState("wc");
+  useEffect(() => { if (initialTopic && open) setTopic(initialTopic); }, [initialTopic, open]);
   if (!open) return null;
 
   const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const sel = REF_EQ_TOPICS.find(t => t.id === topic);
   const stepStyle = { background: K.cardAlt, border: `1px solid ${K.border}`, padding: "10px 12px", marginBottom: 8, fontSize: 10.5, lineHeight: 2, fontFamily: FM };
   const numStyle = { color: K.accent, fontWeight: 700 };
-  const resultStyle = { background: "#fff", border: `2px solid ${sel.color}`, padding: "10px 12px", textAlign: "center", marginTop: 4 };
+  const resultStyle = { background: K.card, border: `2px solid ${sel.color}`, padding: "10px 12px", textAlign: "center", marginTop: 4 };
 
   function renderContent() {
     switch (topic) {
@@ -871,7 +1218,7 @@ function RefEquationsModal({ open, onClose, cycle }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: 420, width: "100%", padding: "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: 420, width: "100%", padding: "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
           <h2 style={{ margin: 0, fontSize: 16, fontFamily: FD, color: K.ink }}>Solve: <span style={{ color: sel.color }}>{sel.title}</span></h2>
           <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "3px 12px", fontFamily: FM }}>Close</button>
@@ -900,7 +1247,7 @@ function RefrigerantInfoModal({ open, onClose, currentRef }) {
   if (!open) return null;
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: 520, width: "100%", padding: "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: 520, width: "100%", padding: "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
           <h2 style={{ margin: 0, fontSize: 18, fontFamily: FD, color: K.ink }}>Refrigerant Reference</h2>
           <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "3px 12px", fontFamily: FM }}>Close</button>
@@ -995,6 +1342,18 @@ function RefStateTable({ cycle, refData, onSelectState }) {
 
 /* ───────── Main Refrigeration Page ───────── */
 export default function RefrigerationPage({ onBack }) {
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return document.cookie.split('; ').find(c => c.startsWith('darkMode='))?.split('=')[1] === 'true'; } catch { return false; }
+  });
+  K = darkMode ? K_DARK : K_LIGHT;
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode(d => {
+      const next = !d;
+      document.cookie = `darkMode=${next};path=/;max-age=31536000`;
+      return next;
+    });
+  }, []);
+
   const [refIdx, setRefIdx] = useState(0);
   const refData = REFRIGERANTS[refIdx];
   const defaults = useMemo(() => getDefaultPressures(refData), [refData]);
@@ -1003,9 +1362,11 @@ export default function RefrigerationPage({ onBack }) {
   const [pLow, setPLow] = useState(() => getDefaultPressures(REFRIGERANTS[0]).pLow);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
+  const [eqTopic, setEqTopic] = useState(null);
   const [showRefInfo, setShowRefInfo] = useState(false);
   const [showTsAreas, setShowTsAreas] = useState(false);
   const [showPhAreas, setShowPhAreas] = useState(false);
+  const [lineDragInfo, setLineDragInfo] = useState(null);
 
   const table = refData.table;
   const pMin = Math.round(table[0].P);
@@ -1073,10 +1434,18 @@ export default function RefrigerationPage({ onBack }) {
 
   return (
     <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1100 : 480, margin: "0 auto" }}>
-      <FontLoader />
+      <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+      <style>{`
+        input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
+          background:${K.accent};border:2px solid ${K.card};cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.15);
+        }
+        input[type="range"]::-moz-range-thumb { width:16px;height:16px;border-radius:50%;background:${K.accent};border:2px solid ${K.card};cursor:pointer; }
+        *{box-sizing:border-box}body{margin:0;background:${K.bg}}
+      `}</style>
 
       {/* Header */}
-      <div style={{ padding: "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: "#fff" }}>
+      <div style={{ padding: "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 10px", color: K.inkMed, fontSize: 10, cursor: "pointer", fontFamily: FM }}>← Back</button>}
@@ -1112,7 +1481,7 @@ export default function RefrigerationPage({ onBack }) {
       <RefrigerantInfoModal open={showRefInfo} onClose={() => setShowRefInfo(false)} currentRef={refData} />
 
       {/* Performance bar */}
-      <div style={{ margin: `${gap}px ${gap}px 0`, padding: "12px", background: "#fff", border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      <div style={{ margin: `${gap}px ${gap}px 0`, padding: "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         {[
           { l: "COP cooling", v: cycle.copCool.toFixed(2), c: K.accent },
           { l: "COP heating", v: cycle.copHeat.toFixed(2), c: K.heatOut },
@@ -1165,7 +1534,9 @@ export default function RefrigerationPage({ onBack }) {
               {lockT ? "\u{1F512}" : "\u{1F513}"} Lock T = {dragPoint.T.toFixed(0)}°C
             </button>
           </div>
-          <RefTsDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handleTsDrag} lockS={lockS} lockT={lockT} showAreas={showTsAreas} />
+          <RefTsDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handleTsDrag} lockS={lockS} lockT={lockT} showAreas={showTsAreas}
+            onPHighChange={setPHigh} onPLowChange={setPLow}
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} />
         </div>
 
         {/* P-h Diagram */}
@@ -1187,10 +1558,12 @@ export default function RefrigerationPage({ onBack }) {
               {lockH ? "\u{1F512}" : "\u{1F513}"} Lock h = {(dragPoint.h || cycle.h1).toFixed(0)} kJ/kg
             </button>
           </div>
-          <RefPhDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handlePhDrag} lockP={lockP} lockH={lockH} showAreas={showPhAreas} />
+          <RefPhDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handlePhDrag} lockP={lockP} lockH={lockH} showAreas={showPhAreas}
+            onPHighChange={setPHigh} onPLowChange={setPLow}
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} />
         </div>
       </div>
-      <RefEquationsModal open={showEqs} onClose={() => setShowEqs(false)} cycle={cycle} />
+      <RefEquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} />
 
       {/* Row: Sliders + Table */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
@@ -1210,31 +1583,54 @@ export default function RefrigerationPage({ onBack }) {
 
       {/* Energy Balance */}
       <div style={{ ...card, marginBottom: 0 }}>
-        <h3 style={sec}>Energy Balance <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— per unit mass</span></h3>
-        <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr 1fr" : "1fr 1fr", gap: 8 }}>
-          {[
-            { l: "Q evap (Cooling)", v: fmt(cycle.qEvap), u: "kJ/kg", c: K.heatIn },
-            { l: "Q cond (Rejected)", v: fmt(cycle.qCond), u: "kJ/kg", c: K.heatOut },
-            { l: "W compressor", v: fmt(cycle.wComp), u: "kJ/kg", c: K.workIn },
-          ].map((e, i) => (
-            <div key={i} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: "8px 10px" }}>
-              <div style={{ fontSize: 8, color: K.inkLight, marginBottom: 3, fontStyle: "italic" }}>{e.l}</div>
-              <div style={{ fontSize: 16, fontFamily: FD, color: e.c }}>{e.v} <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>{e.u}</span></div>
+        <h3 style={sec}>Energy Balance</h3>
+        <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? 16 : 8 }}>
+          {/* Heat Transfer group */}
+          <div>
+            <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {[
+                { l: "Q evap (Cooling)", v: fmt(cycle.qEvap), u: "kJ/kg", c: K.heatIn, topic: "qe" },
+                { l: "Q cond (Rejected)", v: fmt(cycle.qCond), u: "kJ/kg", c: K.heatOut, topic: "qc" },
+              ].map((e, i) => (
+                <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
+                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
+                  <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
+                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div style={{ marginTop: 8, display: desktop ? "grid" : "block", gridTemplateColumns: desktop ? "1fr 1fr" : undefined, gap: desktop ? 8 : undefined }}>
-          <div style={{ padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>Verify: Q_evap + W_comp</span>
-            <span style={{ fontSize: 12, fontFamily: FD, color: K.accent }}>= {fmt(cycle.qEvap + cycle.wComp)} kJ/kg</span>
           </div>
-          <div style={{ marginTop: desktop ? 0 : 4, padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>Q_cond (should match)</span>
-            <span style={{ fontSize: 12, fontFamily: FD, color: K.heatOut }}>= {fmt(cycle.qCond)} kJ/kg</span>
+          {/* Work group */}
+          <div>
+            <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Work</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+              <div onClick={() => { setEqTopic("wc"); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
+                <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>W compressor</div>
+                <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: K.workIn }}>{fmt(cycle.wComp)}</div>
+                <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>kJ/kg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{ marginTop: desktop ? 15 : 8, display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: 8 }}>
+          <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
+            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Verify: Q_evap + W_comp</div>
+            <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.accent }}>= {fmt(cycle.qEvap + cycle.wComp)} kJ/kg</div>
+          </div>
+          <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
+            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_cond (should match)</div>
+            <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.heatOut }}>= {fmt(cycle.qCond)} kJ/kg</div>
           </div>
         </div>
       </div>
 
+      <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px" }}>
+        <button onClick={toggleDarkMode} style={{
+          background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
+          color: K.inkMed, fontSize: desktop ? 13 : 10, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
+        }}>{darkMode ? "\u2600 Light Mode" : "\u263E Dark Mode"}</button>
+      </div>
       <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: desktop ? 15 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
         Vapor-Compression Refrigeration · {refData.name} ({refData.formula})
       </div>
