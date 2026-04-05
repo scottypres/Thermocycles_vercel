@@ -321,13 +321,13 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
       }}>
         {phase === "two-phase" && (
           <div style={{
-            background: "rgba(255,255,255,0.88)", padding: fillHeight ? "18px 38px" : "14px 32px",
+            background: "rgba(255,255,255,0.88)", padding: fillHeight ? "18px 38px" : "8px 18px",
             border: `1.5px solid ${K.ink}`, textAlign: "center",
           }}>
-            <div style={{ fontSize: fillHeight ? 44 : 38, fontFamily: FD, color: K.accent, lineHeight: 1.02 }}>
+            <div style={{ fontSize: fillHeight ? 44 : 28, fontFamily: FD, color: K.accent, lineHeight: fillHeight ? 1.02 : 1.1 }}>
               {(quality * 100).toFixed(1)}%
             </div>
-            <div style={{ fontSize: fillHeight ? 13 : 11, fontFamily: FM, color: K.inkMed, letterSpacing: 1.4, marginTop: 4 }}>
+            <div style={{ fontSize: fillHeight ? 13 : 9, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: fillHeight ? 4 : 2 }}>
               QUALITY (x)
             </div>
           </div>
@@ -1162,7 +1162,7 @@ function SchematicDiagram({ cycle }) {
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
   return (<>
-    <svg viewBox="-20 -5 400 340" style={{ width: "100%" }}>
+    <svg viewBox="-16 -2 381 330" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
