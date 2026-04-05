@@ -345,13 +345,13 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
         )}
         {phase !== "two-phase" && (
           <div style={{
-            background: "rgba(255,255,255,0.88)", padding: "6px 14px",
+            background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: fillHeight ? "18px 38px" : "8px 18px",
             border: `1.5px solid ${K.ink}`, textAlign: "center",
           }}>
-            <div style={{ fontSize: 14, fontFamily: FD, color: K.ink, lineHeight: 1.2 }}>
+            <div style={{ fontSize: fillHeight ? 44 : 28, fontFamily: FD, color: K.ink, lineHeight: fillHeight ? 1.02 : 1.1 }}>
               {phaseLabel}
             </div>
-            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkMed, marginTop: 2 }}>
+            <div style={{ fontSize: fillHeight ? 13 : 9, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: fillHeight ? 4 : 2 }}>
               {phase === "subcooled" ? "x = 0 (all liquid)" : "x = 1 (all vapor)"}
             </div>
           </div>
