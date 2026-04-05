@@ -84,13 +84,13 @@ function calculateRefrigerationCycle(ref, pHigh, pLow) {
   };
 }
 
-/* ───────── Particle Visualizer (adapted) ───────── */
-const NUM_PARTICLES = 60;
+/* ───────── Particle Visualizer (matches steam cycle dynamics) ───────── */
+const NUM_PARTICLES = 600;
 function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
   const canvasRef = useRef(null);
   const particlesRef = useRef(null);
   const animRef = useRef(null);
-  const W = 340, H = 180;
+  const W = 680, H = 480;
   const quality = phaseInfo.quality !== null ? phaseInfo.quality : (phaseInfo.phase === "superheated" || phaseInfo.phase === "supercritical" ? 1 : 0);
   const phase = phaseInfo.phase;
   const tNorm = Math.min(1, Math.max(0, temperature / (criticalT || 100)));
@@ -98,8 +98,8 @@ function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
   if (!particlesRef.current) {
     particlesRef.current = Array.from({ length: NUM_PARTICLES }, (_, i) => ({
       x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
-      r: 3 + Math.random() * 2, id: i,
+      vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4,
+      r: 5 + Math.random() * 3, id: i,
     }));
   }
 
@@ -107,10 +107,11 @@ function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    const liquidLevel = H * (1 - quality);
-    const speedBase = 0.3 + tNorm * 3.5;
-    const vaporSpeed = speedBase * 1.5;
-    const liquidSpeed = speedBase * 0.2;
+    const liquidLevel = phase === "subcooled" ? 0 : H * quality;
+    const speedBase = 0.6 + tNorm * 6;
+    const vaporSpeed = speedBase * 4.32;
+    const liquidSpeed = speedBase * 0.06;
+    const twoPhaseLiquidSpeed = speedBase * 0.672;
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
@@ -136,10 +137,15 @@ function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
       particles.forEach((p, i) => {
         const isVapor = i < Math.floor(quality * NUM_PARTICLES);
         if (phase === "subcooled") {
-          p.vy += 0.05; p.vx *= 0.98; p.vy *= 0.98;
-          p.vx += (Math.random() - 0.5) * liquidSpeed * 0.3;
-          p.vy += (Math.random() - 0.5) * liquidSpeed * 0.1;
-          if (p.y < H * 0.5) p.vy += 0.1;
+          const minY = p.r + 2, maxY = H - p.r - 2;
+          const span = Math.max(1, maxY - minY);
+          const depthFrac = ((p.id * 0.61803398875) % 1);
+          const targetY = minY + depthFrac * span;
+          p.vx *= 0.99; p.vy *= 0.99;
+          const speed = liquidSpeed * 0.45;
+          p.vx += (Math.random() - 0.5) * speed * 0.12;
+          p.vy += (Math.random() - 0.5) * speed * 0.12;
+          p.vy += (targetY - p.y) * 0.0012;
         } else if (phase === "superheated" || phase === "supercritical") {
           p.vx += (Math.random() - 0.5) * vaporSpeed * 0.5;
           p.vy += (Math.random() - 0.5) * vaporSpeed * 0.5;
@@ -151,16 +157,32 @@ function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
             p.vx *= 0.96; p.vy *= 0.96;
             if (p.y > liquidLevel - 5) p.vy -= 0.3;
           } else {
-            p.vy += 0.04; p.vx *= 0.97; p.vy *= 0.97;
-            p.vx += (Math.random() - 0.5) * liquidSpeed * 0.4;
-            p.vy += (Math.random() - 0.5) * liquidSpeed * 0.2;
-            if (p.y < liquidLevel + 5) p.vy += 0.15;
+            const minY = liquidLevel + p.r + 2, maxY = H - p.r - 2;
+            const span = Math.max(1, maxY - minY);
+            const depthFrac = ((p.id * 0.61803398875) % 1);
+            const targetY = minY + depthFrac * span;
+            p.vx *= 0.94; p.vy *= 0.94;
+            p.vx += (Math.random() - 0.5) * twoPhaseLiquidSpeed * 0.85;
+            p.vy += (Math.random() - 0.5) * twoPhaseLiquidSpeed * 0.65;
+            p.vy += (targetY - p.y) * 0.0016;
+            if (p.y < liquidLevel + 8) p.vy += 0.08;
           }
         }
-        const maxV = isVapor ? vaporSpeed * 2 : liquidSpeed * 3;
+        const maxV = isVapor ? vaporSpeed * 2 : (phase === "two-phase" ? twoPhaseLiquidSpeed * 2.2 : liquidSpeed * 3);
         const v = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
         if (v > maxV) { p.vx = (p.vx / v) * maxV; p.vy = (p.vy / v) * maxV; }
         p.x += p.vx; p.y += p.vy;
+
+        if (phase === "two-phase") {
+          if (isVapor) {
+            const maxY2 = liquidLevel - p.r - 1;
+            if (p.y > maxY2) { p.y = maxY2; p.vy = -Math.abs(p.vy) * 0.6; }
+          } else {
+            const minY2 = liquidLevel + p.r + 1;
+            if (p.y < minY2) { p.y = minY2 + Math.random() * Math.max(1, H - p.r - 1 - minY2); p.vy = Math.abs(p.vy) * 0.4; }
+          }
+        }
+
         if (p.x < p.r) { p.x = p.r; p.vx = Math.abs(p.vx); }
         if (p.x > W - p.r) { p.x = W - p.r; p.vx = -Math.abs(p.vx); }
         if (p.y < p.r) { p.y = p.r; p.vy = Math.abs(p.vy); }
@@ -169,7 +191,10 @@ function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
         if (isVapor) {
           const r2 = p.r * (0.6 + tNorm * 0.3);
           ctx.beginPath(); ctx.arc(p.x, p.y, r2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${160 + Math.round(tNorm * 60)}, ${50 + Math.round((1 - tNorm) * 30)}, 40, 0.7)`;
+          ctx.fillStyle = `rgba(${160 + Math.round(tNorm * 60)}, ${50 + Math.round((1 - tNorm) * 30)}, 40, 0.49)`;
+          ctx.fill();
+          ctx.beginPath(); ctx.arc(p.x, p.y, r2 + 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${180 + Math.round(tNorm * 40)}, 60, 40, 0.1)`;
           ctx.fill();
         } else {
           ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 0.85, 0, Math.PI * 2);
@@ -190,7 +215,7 @@ function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
   return (
     <div style={{ position: "relative" }}>
       <canvas ref={canvasRef} width={W} height={H}
-        style={{ width: "100%", maxWidth: 420, height: "auto", display: "block", border: `1.5px solid ${K.ink}`, background: "#f8f7f4" }} />
+        style={{ width: "100%", height: "auto", display: "block", border: `1.5px solid ${K.ink}`, background: K.cardAlt }} />
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
         {phase === "two-phase" ? (
           <div style={{ background: "rgba(255,255,255,0.88)", padding: "8px 18px", border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
@@ -198,9 +223,9 @@ function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
             <div style={{ fontSize: 9, fontFamily: FM, color: K.inkMed, letterSpacing: 1, marginTop: 2 }}>QUALITY (x)</div>
           </div>
         ) : (
-          <div style={{ background: "rgba(255,255,255,0.88)", padding: "6px 14px", border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
-            <div style={{ fontSize: 14, fontFamily: FD, color: K.ink, lineHeight: 1.2 }}>{phaseLabel}</div>
-            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkMed, marginTop: 2 }}>{phase === "subcooled" ? "x = 0 (all liquid)" : "x = 1 (all vapor)"}</div>
+          <div style={{ background: "rgba(255,255,255,0.88)", padding: "8px 18px", border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>{phaseLabel}</div>
+            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkMed, letterSpacing: 1, marginTop: 2 }}>{phase === "subcooled" ? "x = 0 (all liquid)" : "x = 1 (all vapor)"}</div>
           </div>
         )}
       </div>
@@ -585,21 +610,20 @@ function RefSchematicDiagram({ cycle }) {
         <circle key={`${i}-${j}`} cx={i * 20 + 10} cy={j * 20 + 10} r={0.6} fill={K.gridMajor} />
       )))}
       {/* COMPRESSOR */}
-      <circle cx={60} cy={172} r={28} fill="none" stroke={K.workIn} strokeWidth={1.5} />
-      <path d="M46,185 L60,155 L74,185 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-      <text x={60} y={170} fill={K.workIn} fontSize={9} textAnchor="middle" fontFamily={FD}>Comp-</text>
-      <text x={60} y={181} fill={K.workIn} fontSize={9} textAnchor="middle" fontFamily={FD}>ressor</text>
-      <text x={60} y={197} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+      <circle cx={68} cy={172} r={28} fill="none" stroke={K.workIn} strokeWidth={1.5} />
+      <path d="M54,185 L68,158 L82,185 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+      <text x={68} y={175} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Compressor</text>
+      <text x={68} y={205} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       {/* CONDENSER */}
       <rect x={110} y={32} width={140} height={50} fill="none" stroke={K.heatOut} strokeWidth={1.5} />
       <path d="M125,63 Q135,53 145,63 Q155,73 165,63 Q175,53 185,63 Q195,73 205,63 Q215,53 225,63 Q235,73 240,66" fill="none" stroke={K.heatOut} strokeWidth={0.7} />
       <text x={180} y={53} fill={K.heatOut} fontSize={11} textAnchor="middle" fontFamily={FD}>Condenser</text>
       <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       {/* EXPANSION VALVE */}
-      <path d="M302,152 L322,172 L302,192 L282,172 Z" fill="none" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
-      <text x={302} y={170} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Exp.</text>
-      <text x={302} y={181} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Valve</text>
-      <text x={302} y={197} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
+      <path d="M295,152 L315,172 L295,192 L275,172 Z" fill="none" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
+      <text x={295} y={170} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Exp.</text>
+      <text x={295} y={181} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Valve</text>
+      <text x={295} y={198} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
       {/* EVAPORATOR */}
       <rect x={110} y={248} width={140} height={50} fill="none" stroke={K.heatIn} strokeWidth={1.5} />
       {[130,150,170,190,210,230].map(x => (
@@ -608,12 +632,12 @@ function RefSchematicDiagram({ cycle }) {
       <text x={180} y={272} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Evaporator</text>
       <text x={180} y={286} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       {/* Pipes */}
-      <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
-      <polyline points="250,57 302,57 302,152" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
-      <polyline points="302,192 302,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
-      <polyline points="110,273 60,273 60,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
+      <polyline points="68,144 68,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
+      <polyline points="250,57 295,57 295,152" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
+      <polyline points="295,192 295,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
+      <polyline points="110,273 68,273 68,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       {/* State markers */}
-      {[{ n:"2",x:80,y:76 },{ n:"3",x:268,y:102 },{ n:"4",x:314,y:242 },{ n:"1",x:80,y:252 }].map((p,i) => (
+      {[{ n:"2",x:88,y:76 },{ n:"3",x:265,y:40 },{ n:"4",x:308,y:242 },{ n:"1",x:88,y:252 }].map((p,i) => (
         <g key={i}><circle cx={p.x} cy={p.y} r={11} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={12} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy labels */}
@@ -622,10 +646,10 @@ function RefSchematicDiagram({ cycle }) {
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatIn} strokeWidth={1.8} />
       <path d="M176,302 L180,298 L184,302" fill="none" stroke={K.heatIn} strokeWidth={1.5} />
       <text x={180} y={318} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_evap = {fmt(cycle.qEvap)} kJ/kg</text>
-      <line x1={28} y1={172} x2={12} y2={172} stroke={K.workIn} strokeWidth={1.8} />
-      <path d="M32,168 L28,172 L32,176" fill="none" stroke={K.workIn} strokeWidth={1.5} />
-      <text x={20} y={164} fill={K.workIn} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
-      <text x={20} y={188} fill={K.workIn} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
+      <line x1={36} y1={172} x2={18} y2={172} stroke={K.workIn} strokeWidth={1.8} />
+      <path d="M40,168 L36,172 L40,176" fill="none" stroke={K.workIn} strokeWidth={1.5} />
+      <text x={27} y={160} fill={K.workIn} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
+      <text x={27} y={188} fill={K.workIn} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
     </svg>
   );
 }
@@ -1211,8 +1235,12 @@ export default function RefrigerationPage({ onBack }) {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", padding: "14px 12px 28px", fontSize: 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
-        Vapor-Compression Refrigeration · {refData.name} ({refData.formula}) · <AuthorFooter />
+      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: desktop ? 15 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
+        Vapor-Compression Refrigeration · {refData.name} ({refData.formula})
+      </div>
+      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", borderTop: `1px solid ${K.border}`, marginTop: desktop ? 8 : 4, marginLeft: desktop ? 40 : 16, marginRight: desktop ? 40 : 16 }}>
+        <div style={{ fontSize: desktop ? 14 : 9, color: K.inkMed, fontFamily: FM, marginBottom: 4 }}>Built by <span style={{ fontWeight: 600, color: K.ink }}>Scott Presbrey</span></div>
+        <span onClick={() => { const u="scottypres",d="gmail",t="com"; window.location.href="mailto:"+u+"\u0040"+d+"."+t; }} style={{ fontSize: desktop ? 13 : 8, color: K.accent, fontFamily: FM, textDecoration: "underline", cursor: "pointer" }}>{"scottypres" + "\u0040" + "gmail.com"}</span>
       </div>
     </div>
   );
