@@ -206,9 +206,9 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
     // quality is vapor mass fraction, so higher quality => less liquid => lower level (toward bottom).
     const liquidLevel = phase === "subcooled" ? 0 : H * quality;
     const speedBase = 0.6 + tNorm * 6;
-    const vaporSpeed = speedBase * 1.5;
+    const vaporSpeed = speedBase * 4.32;
     const liquidSpeed = speedBase * 0.06;
-    const twoPhaseLiquidSpeed = speedBase * 0.35;
+    const twoPhaseLiquidSpeed = speedBase * 0.672;
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
