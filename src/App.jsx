@@ -119,7 +119,7 @@ function calculateCycle(pHigh, pLow, tSuperheat) {
 }
 
 /* ───────── Palette ───────── */
-const K = {
+const K_LIGHT = {
   bg: "#fafaf7", card: "#ffffff", cardAlt: "#f5f4f0",
   border: "#d4d0c8", ink: "#1a1a2e", inkMed: "#3a3a5c", inkLight: "#5c5c78",
   gridFine: "#e8e6e0", gridMajor: "#d4d0c8",
@@ -129,6 +129,17 @@ const K = {
   stateCircle: "#1a1a2e", stateFill: "#c0392b",
   liquidBlue: "#2471a3", vaporRed: "#c0392b",
 };
+const K_DARK = {
+  bg: "#0d1117", card: "#161b22", cardAlt: "#1c2128",
+  border: "#30363d", ink: "#e6edf3", inkMed: "#b1bac4", inkLight: "#8b949e",
+  gridFine: "#1c2128", gridMajor: "#30363d",
+  accent: "#e05545", accentLight: "#e0554522",
+  heatIn: "#f47067", heatOut: "#58a6ff", workOut: "#3fb950", workIn: "#d29922",
+  dome: "#58a6ff22", domeLine: "#58a6ff66",
+  stateCircle: "#e6edf3", stateFill: "#e05545",
+  liquidBlue: "#58a6ff", vaporRed: "#f47067",
+};
+let K = K_LIGHT;
 const FD = "'DM Serif Display',serif";
 const FM = "'DM Mono',monospace";
 
@@ -312,7 +323,7 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
   return (
     <div style={{ position: "relative", ...(fillHeight ? { flex: 1, display: "flex", flexDirection: "column" } : {}) }}>
       <canvas ref={canvasRef} width={W} height={H}
-        style={{ width: "100%", display: "block", border: `1.5px solid ${K.ink}`, background: "#f8f7f4", ...(fillHeight ? { flex: 1, height: 0 } : { height: "auto" }) }} />
+        style={{ width: "100%", display: "block", border: `1.5px solid ${K.ink}`, background: K.cardAlt, ...(fillHeight ? { flex: 1, height: 0 } : { height: "auto" }) }} />
       {/* Overlay info */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
@@ -321,7 +332,7 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
       }}>
         {phase === "two-phase" && (
           <div style={{
-            background: "rgba(255,255,255,0.88)", padding: "8px 18px",
+            background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: "8px 18px",
             border: `1.5px solid ${K.ink}`, textAlign: "center",
           }}>
             <div style={{ fontSize: 28, fontFamily: FD, color: K.accent, lineHeight: 1.1 }}>
@@ -369,6 +380,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null); // "boiler" | "condenser" | null
+  const [areaToggles, setAreaToggles] = useState({ qIn: true, qOut: true, wNet: true });
 
   const domePathD = domeCurve.map((p, i) => `${i === 0 ? "M" : "L"}${mapS(p.s).toFixed(1)},${mapT(p.T).toFixed(1)}`).join(" ") + " Z";
   const boilerD = cycle.boilerPath.map((p, i) => `${i === 0 ? "M" : "L"}${mapS(p.s).toFixed(1)},${mapT(p.T).toFixed(1)}`).join(" ");
@@ -506,7 +518,6 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
       <path d={domePathD} fill={showAreas ? "none" : K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
       {showAreas && (() => {
         const axisY = TS_PLOT.y + TS_PLOT.h;
-        // Q_in area: under boiler path (1→2→3) down to T=0 axis
         const qInD = [
           `M${mapS(st[0].s).toFixed(1)},${axisY.toFixed(1)}`,
           `L${mapS(st[0].s).toFixed(1)},${mapT(st[0].T).toFixed(1)}`,
@@ -515,7 +526,6 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
           `L${mapS(st[2].s).toFixed(1)},${axisY.toFixed(1)}`,
           "Z"
         ].join(" ");
-        // Q_out area: under condenser line (4→1) down to T=0 axis
         const qOutD = [
           `M${mapS(st[0].s).toFixed(1)},${axisY.toFixed(1)}`,
           `L${mapS(st[0].s).toFixed(1)},${mapT(st[0].T).toFixed(1)}`,
@@ -523,12 +533,11 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
           `L${mapS(st[3].s).toFixed(1)},${axisY.toFixed(1)}`,
           "Z"
         ].join(" ");
-        const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
         return (
           <>
-            <path d={qInD} fill={`${K.heatIn}18`} stroke="none" />
-            <path d={qOutD} fill={`${K.heatOut}18`} stroke="none" />
-            <path d={cycleFillD} fill={`${K.workOut}25`} stroke="none" />
+            {areaToggles.qIn && <path d={qInD} fill={`${K.heatIn}18`} stroke="none" />}
+            {areaToggles.qOut && <path d={qOutD} fill={`${K.heatOut}18`} stroke="none" />}
+            {areaToggles.wNet && <path d={cycleFillD} fill={`${K.workOut}25`} stroke="none" />}
           </>
         );
       })()}
@@ -548,7 +557,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         const boxY = TS_PLOT.y + 2;
         return (<>
           <line x1={TS_PLOT.x} y1={lineY} x2={TS_PLOT.x + TS_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
-          <rect x={TS_PLOT.x + TS_PLOT.w / 2 - 52} y={boxY} width={104} height={18} rx={2} fill="#fff" stroke={color} strokeWidth={0.8} />
+          <rect x={TS_PLOT.x + TS_PLOT.w / 2 - 52} y={boxY} width={104} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
           <text x={TS_PLOT.x + TS_PLOT.w / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{label} = {T.toFixed(1)}°C</text>
         </>);
       })()}
@@ -566,19 +575,19 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
-            <circle cx={cx} cy={cy} r={5} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} />
+            <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
-            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill="#fff" />
+            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill={K.card} />
             <text x={tx} y={ty} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
       })}
       {!showAreas && <>
         {/* Draggable point */}
-        <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
+        <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {/* Drag point label */}
-        <rect x={dpx + 12} y={dpy - 22} width={70} height={18} rx={2} fill="#fff" stroke={K.ink} strokeWidth={0.8} />
+        <rect x={dpx + 12} y={dpy - 22} width={70} height={18} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
         <text x={dpx + 16} y={dpy - 10} fill={K.ink} fontSize={8} fontFamily={FM}>
           {dragPoint.T.toFixed(0)}°C, {dragPoint.s.toFixed(2)}
         </text>
@@ -594,18 +603,25 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
         const lx = TS_PLOT.x + 6;
         const ly = TS_PLOT.y + 4;
+        const toggle = (key) => setAreaToggles(prev => ({ ...prev, [key]: !prev[key] }));
         return (
           <>
-            <rect x={lx} y={ly} width={152} height={52} rx={2} fill="#fff" stroke={K.border} strokeWidth={0.8} />
+            <rect x={lx} y={ly} width={152} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             {/* Q_in */}
-            <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={8} fontFamily={FM}>Q_in (1→3) = {fmt(cycle.qIn)} kJ/kg</text>
+            <g onClick={() => toggle("qIn")} style={{ cursor: "pointer" }} opacity={areaToggles.qIn ? 1 : 0.35}>
+              <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
+              <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={8} fontFamily={FM}>Q_in (1→3) = {fmt(cycle.qIn)} kJ/kg</text>
+            </g>
             {/* Q_out */}
-            <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={8} fontFamily={FM}>Q_out (4→1) = {fmt(cycle.qOut)} kJ/kg</text>
+            <g onClick={() => toggle("qOut")} style={{ cursor: "pointer" }} opacity={areaToggles.qOut ? 1 : 0.35}>
+              <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
+              <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={8} fontFamily={FM}>Q_out (4→1) = {fmt(cycle.qOut)} kJ/kg</text>
+            </g>
             {/* W_net */}
-            <rect x={lx + 5} y={ly + 31} width={8} height={8} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 38} fill={K.workOut} fontSize={8} fontFamily={FM}>W_net (1→3→4→1) = {fmt(cycle.wNet)} kJ/kg</text>
+            <g onClick={() => toggle("wNet")} style={{ cursor: "pointer" }} opacity={areaToggles.wNet ? 1 : 0.35}>
+              <rect x={lx + 5} y={ly + 31} width={8} height={8} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
+              <text x={lx + 17} y={ly + 38} fill={K.workOut} fontSize={8} fontFamily={FM}>W_net (1→3→4→1) = {fmt(cycle.wNet)} kJ/kg</text>
+            </g>
             {/* η */}
             <text x={lx + 5} y={ly + 49} fill={K.ink} fontSize={8} fontFamily={FD} fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
           </>
@@ -713,6 +729,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
   const lockedVRef = useRef(null);
   const lockedPRef = useRef(null);
   const lineDragRef = useRef(null);
+  const [areaToggles, setAreaToggles] = useState({ wTurbine: true, wPump: true, wNet: true });
 
   // Capture exact lock values when locks activate
   useEffect(() => {
@@ -885,9 +902,9 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         ].join(" ");
         return (
           <>
-            <path d={wExpD} fill={`${K.workOut}18`} stroke="none" />
-            <path d={wCompD} fill={`${K.workIn}18`} stroke="none" />
-            <path d={wNetD} fill={`${K.workOut}25`} stroke="none" />
+            {areaToggles.wTurbine && <path d={wExpD} fill={`${K.workOut}18`} stroke="none" />}
+            {areaToggles.wPump && <path d={wCompD} fill={`${K.workIn}18`} stroke="none" />}
+            {areaToggles.wNet && <path d={wNetD} fill={`${K.workOut}25`} stroke="none" />}
           </>
         );
       })()}
@@ -916,7 +933,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         const boxY = PV_PLOT.y + 2;
         return (<>
           <line x1={PV_PLOT.x} y1={lineY} x2={PV_PLOT.x + PV_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
-          <rect x={PV_PLOT.x + PV_PLOT.w / 2 - 48} y={boxY} width={96} height={18} rx={2} fill="#fff" stroke={color} strokeWidth={0.8} />
+          <rect x={PV_PLOT.x + PV_PLOT.w / 2 - 48} y={boxY} width={96} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
           <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{label} = {P} kPa</text>
         </>);
       })()}
@@ -934,16 +951,16 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
-            <circle cx={cx} cy={cy} r={5} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} />
+            <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
-            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill="#fff" />
+            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill={K.card} />
             <text x={tx} y={ty} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
       })}
       {!showPvAreas && <>
         {/* Drag point */}
-        <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
+        <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {/* Labels — Boiler and Condenser are draggable */}
         <text x={mapV(stateV[0]) - 10} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
@@ -957,18 +974,25 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
         const lx = PV_PLOT.x + 6;
         const ly = PV_PLOT.y + 4;
+        const toggle = (key) => setAreaToggles(prev => ({ ...prev, [key]: !prev[key] }));
         return (
           <>
-            <rect x={lx} y={ly} width={168} height={52} rx={2} fill="#fff" stroke={K.border} strokeWidth={0.8} />
-            {/* W_expansion */}
-            <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.workOut}30`} stroke={K.workOut} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 12} fill={K.workOut} fontSize={8} fontFamily={FM}>W_turbine (3→4) = {fmt(cycle.wTurbine)} kJ/kg</text>
-            {/* W_compression */}
-            <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.workIn}30`} stroke={K.workIn} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 25} fill={K.workIn} fontSize={8} fontFamily={FM}>W_pump (1→2) = {fmt(cycle.wPump)} kJ/kg</text>
+            <rect x={lx} y={ly} width={168} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
+            {/* W_turbine */}
+            <g onClick={() => toggle("wTurbine")} style={{ cursor: "pointer" }} opacity={areaToggles.wTurbine ? 1 : 0.35}>
+              <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.workOut}30`} stroke={K.workOut} strokeWidth={0.6} />
+              <text x={lx + 17} y={ly + 12} fill={K.workOut} fontSize={8} fontFamily={FM}>W_turbine (3→4) = {fmt(cycle.wTurbine)} kJ/kg</text>
+            </g>
+            {/* W_pump */}
+            <g onClick={() => toggle("wPump")} style={{ cursor: "pointer" }} opacity={areaToggles.wPump ? 1 : 0.35}>
+              <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.workIn}30`} stroke={K.workIn} strokeWidth={0.6} />
+              <text x={lx + 17} y={ly + 25} fill={K.workIn} fontSize={8} fontFamily={FM}>W_pump (1→2) = {fmt(cycle.wPump)} kJ/kg</text>
+            </g>
             {/* W_net */}
-            <rect x={lx + 5} y={ly + 31} width={8} height={8} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 38} fill={K.workOut} fontSize={8} fontFamily={FM}>W_net = {fmt(cycle.wNet)} kJ/kg</text>
+            <g onClick={() => toggle("wNet")} style={{ cursor: "pointer" }} opacity={areaToggles.wNet ? 1 : 0.35}>
+              <rect x={lx + 5} y={ly + 31} width={8} height={8} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
+              <text x={lx + 17} y={ly + 38} fill={K.workOut} fontSize={8} fontFamily={FM}>W_net = {fmt(cycle.wNet)} kJ/kg</text>
+            </g>
             {/* BWR */}
             <text x={lx + 5} y={ly + 49} fill={K.ink} fontSize={8} fontFamily={FD} fontWeight="bold">BWR = {(cycle.bwr * 100).toFixed(1)}%</text>
           </>
@@ -1084,57 +1108,57 @@ function ComponentModal({ component, cycle, onClose }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: isWide ? 680 : 420, width: "100%", padding: isWide ? "28px 32px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 780 : 420, width: "100%", padding: isWide ? "36px 40px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 18 : 14, borderBottom: `2px solid ${info.color}`, paddingBottom: 10 }}>
-          <h2 style={{ margin: 0, fontSize: isWide ? 22 : 16, fontFamily: FD, color: info.color }}>{info.title}</h2>
-          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 12 : 11, cursor: "pointer", padding: isWide ? "5px 16px" : "3px 12px", fontFamily: FM }}>Close</button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 22 : 14, borderBottom: `2px solid ${info.color}`, paddingBottom: 12 }}>
+          <h2 style={{ margin: 0, fontSize: isWide ? 28 : 16, fontFamily: FD, color: info.color }}>{info.title}</h2>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 14 : 11, cursor: "pointer", padding: isWide ? "6px 20px" : "3px 12px", fontFamily: FM }}>Close</button>
         </div>
 
         {/* Process badge */}
-        <div style={{ display: "flex", gap: 8, marginBottom: isWide ? 16 : 12, flexWrap: "wrap" }}>
-          <span style={{ background: info.color, color: "#fff", padding: "3px 10px", fontSize: isWide ? 11 : 9, fontFamily: FM, fontWeight: 700 }}>Process {info.process}</span>
-          <span style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: "3px 10px", fontSize: isWide ? 11 : 9, fontFamily: FM, color: K.inkMed }}>{info.type}</span>
+        <div style={{ display: "flex", gap: 10, marginBottom: isWide ? 20 : 12, flexWrap: "wrap" }}>
+          <span style={{ background: info.color, color: "#fff", padding: isWide ? "5px 14px" : "3px 10px", fontSize: isWide ? 14 : 9, fontFamily: FM, fontWeight: 700 }}>Process {info.process}</span>
+          <span style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "5px 14px" : "3px 10px", fontSize: isWide ? 14 : 9, fontFamily: FM, color: K.inkMed }}>{info.type}</span>
         </div>
 
         {/* Live values */}
-        <div style={{ background: K.cardAlt, border: `2px solid ${info.color}`, padding: isWide ? "14px 18px" : "10px 12px", marginBottom: isWide ? 16 : 12, textAlign: "center" }}>
-          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: info.color, marginBottom: 4 }}>{live.main}</div>
-          <div style={{ fontSize: isWide ? 11 : 9, fontFamily: FM, color: K.inkMed }}>{live.detail}</div>
+        <div style={{ background: K.cardAlt, border: `2px solid ${info.color}`, padding: isWide ? "18px 24px" : "10px 12px", marginBottom: isWide ? 20 : 12, textAlign: "center" }}>
+          <div style={{ fontSize: isWide ? 26 : 16, fontFamily: FD, color: info.color, marginBottom: 6 }}>{live.main}</div>
+          <div style={{ fontSize: isWide ? 14 : 9, fontFamily: FM, color: K.inkMed }}>{live.detail}</div>
         </div>
 
         {/* Purpose */}
-        <p style={{ fontSize: isWide ? 12.5 : 10.5, lineHeight: 1.9, color: K.inkMed, marginBottom: isWide ? 16 : 12 }}>{info.purpose}</p>
+        <p style={{ fontSize: isWide ? 16 : 10.5, lineHeight: 1.9, color: K.inkMed, marginBottom: isWide ? 20 : 12 }}>{info.purpose}</p>
 
         {/* Key points and equations side by side on desktop */}
-        <div style={isWide ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 } : { marginBottom: 12 }}>
+        <div style={isWide ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 } : { marginBottom: 12 }}>
           {/* Key Points */}
-          <div style={{ borderLeft: `3px solid ${info.color}`, paddingLeft: 12, marginBottom: isWide ? 0 : 12 }}>
-            <div style={{ fontFamily: FD, fontSize: isWide ? 14 : 12, marginBottom: 8, color: K.ink }}>Key Points</div>
+          <div style={{ borderLeft: `3px solid ${info.color}`, paddingLeft: 14, marginBottom: isWide ? 0 : 12 }}>
+            <div style={{ fontFamily: FD, fontSize: isWide ? 18 : 12, marginBottom: 10, color: K.ink }}>Key Points</div>
             {info.keyPoints.map((pt, i) => (
-              <div key={i} style={{ fontSize: isWide ? 11 : 10, color: K.inkMed, marginBottom: 4, lineHeight: 1.6 }}>{"▸ " + pt}</div>
+              <div key={i} style={{ fontSize: isWide ? 14 : 10, color: K.inkMed, marginBottom: 6, lineHeight: 1.6 }}>{"▸ " + pt}</div>
             ))}
           </div>
 
           {/* Equations */}
-          <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "14px 16px" : "10px 12px" }}>
-            <div style={{ fontFamily: FD, fontSize: isWide ? 14 : 12, marginBottom: 8, color: K.ink }}>Equations</div>
+          <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px 20px" : "10px 12px" }}>
+            <div style={{ fontFamily: FD, fontSize: isWide ? 18 : 12, marginBottom: 10, color: K.ink }}>Equations</div>
             {info.equations.map((eq, i) => (
-              <div key={i} style={{ marginBottom: 8, fontSize: isWide ? 11 : 10, lineHeight: 1.7 }}>
-                <div style={{ color: K.inkLight, fontSize: isWide ? 9 : 8 }}>{eq.label}</div>
-                <div style={{ color: info.color, fontWeight: 600 }}>{eq.eq}</div>
+              <div key={i} style={{ marginBottom: 10, fontSize: isWide ? 14 : 10, lineHeight: 1.7 }}>
+                <div style={{ color: K.inkLight, fontSize: isWide ? 12 : 8 }}>{eq.label}</div>
+                <div style={{ color: info.color, fontWeight: 600, fontSize: isWide ? 15 : 10 }}>{eq.eq}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Insight */}
-        <div style={{ background: "#fffef5", border: `1px solid #e8e0c0`, padding: isWide ? "12px 16px" : "10px 12px", marginBottom: isWide ? 16 : 12 }}>
-          <div style={{ fontFamily: FD, fontSize: isWide ? 12 : 10, color: K.ink, marginBottom: 4 }}>💡 Engineering Insight</div>
-          <div style={{ fontSize: isWide ? 11 : 10, color: K.inkMed, lineHeight: 1.7 }}>{info.insight}</div>
+        <div style={{ background: K.bg === "#0d1117" ? "#1c1f12" : "#fffef5", border: `1px solid ${K.bg === "#0d1117" ? "#3d3a20" : "#e8e0c0"}`, padding: isWide ? "16px 20px" : "10px 12px", marginBottom: isWide ? 20 : 12 }}>
+          <div style={{ fontFamily: FD, fontSize: isWide ? 16 : 10, color: K.ink, marginBottom: 6 }}>💡 Engineering Insight</div>
+          <div style={{ fontSize: isWide ? 14 : 10, color: K.inkMed, lineHeight: 1.7 }}>{info.insight}</div>
         </div>
 
-        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "12px" : "10px", background: info.color, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 14 : 12, fontFamily: FD, cursor: "pointer" }}>Close</button>
+        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "14px" : "10px", background: info.color, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 16 : 12, fontFamily: FD, cursor: "pointer" }}>Close</button>
       </div>
     </div>
   );
@@ -1166,9 +1190,9 @@ function SchematicDiagram({ cycle }) {
         {[130,150,170,190,210,230].map(x => (
           <g key={x}><line x1={x} y1={42} x2={x} y2={72} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},72 L${x},76 L${x+3},72`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
         ))}
-        <rect x={152} y={40} width={56} height={16} fill="#fff" />
+        <rect x={152} y={40} width={56} height={16} fill={K.card} />
         <text x={180} y={53} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Boiler</text>
-        <rect x={148} y={58} width={64} height={12} fill="#fff" />
+        <rect x={148} y={58} width={64} height={12} fill={K.card} />
         <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* TURBINE */}
@@ -1201,7 +1225,7 @@ function SchematicDiagram({ cycle }) {
       <polyline points="110,273 60,273 60,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       {/* State markers */}
       {[{ n:"2",x:80,y:76 },{ n:"3",x:268,y:102 },{ n:"4",x:314,y:242 },{ n:"1",x:80,y:252 }].map((p,i) => (
-        <g key={i}><circle cx={p.x} cy={p.y} r={11} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={12} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
+        <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={12} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy */}
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#mO)" />
@@ -1227,7 +1251,7 @@ function InfoModal({ open, onClose }) {
   if (!open) return null;
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: isWide ? 720 : 420, width: "100%", padding: isWide ? "32px 36px" : "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 720 : 420, width: "100%", padding: isWide ? "32px 36px" : "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 20 : 16, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
           <h2 style={{ margin: 0, fontSize: isWide ? 24 : 18, fontFamily: FD, color: K.ink }}>The Rankine Cycle</h2>
           <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 12 : 11, cursor: "pointer", padding: isWide ? "5px 16px" : "3px 12px", fontFamily: FM }}>Close</button>
@@ -1298,192 +1322,196 @@ function EquationsModal({ open, onClose, cycle }) {
   const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const sel = EQ_TOPICS.find(t => t.id === topic);
 
-  const stepStyle = { background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "14px 18px" : "10px 12px", marginBottom: isWide ? 10 : 8, fontSize: isWide ? 12.5 : 10.5, lineHeight: 2, fontFamily: FM };
+  const stepStyle = { background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px 22px" : "10px 12px", marginBottom: isWide ? 12 : 8, fontSize: isWide ? 16 : 10.5, lineHeight: 2, fontFamily: FM };
   const numStyle = { color: K.accent, fontWeight: 700 };
-  const resultStyle = { background: "#fff", border: `2px solid ${sel.color}`, padding: isWide ? "14px 18px" : "10px 12px", textAlign: "center", marginTop: isWide ? 8 : 4 };
+  const resultStyle = { background: K.card, border: `2px solid ${sel.color}`, padding: isWide ? "18px 22px" : "10px 12px", textAlign: "center", marginTop: isWide ? 10 : 4 };
+  const labelStyle = { color: K.inkLight, fontSize: isWide ? 12 : 9, marginBottom: isWide ? 6 : 4 };
+  const noteStyle = { color: K.inkLight, fontSize: isWide ? 13 : 9, marginTop: isWide ? 6 : 4 };
+  const resultLabelStyle = { fontSize: isWide ? 12 : 9, color: K.inkLight, marginBottom: isWide ? 4 : 2 };
+  const resultValueStyle = { fontSize: isWide ? 24 : 16, fontFamily: FD, color: sel.color };
 
   function renderContent() {
     switch (topic) {
       case "wt": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>W_turbine = h₃ − h₄</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>The turbine extracts work as steam expands isentropically from boiler pressure to condenser pressure.</div>
+          <div style={noteStyle}>The turbine extracts work as steam expands isentropically from boiler pressure to condenser pressure.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 1 — Find h₃ (superheated steam at turbine inlet)</div>
+          <div style={labelStyle}>STEP 1 — Find h₃ (superheated steam at turbine inlet)</div>
           <div>At P_high = <span style={numStyle}>{f(cycle.states[2].P)}</span> kPa, T₃ = <span style={numStyle}>{f(cycle.T3)}</span>°C:</div>
           <div>h₃ = h_g + c_p·(T₃ − T_sat)</div>
           <div>h₃ = <span style={numStyle}>{f(cycle.h3)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 2 — Find h₄ (wet mixture at turbine exit)</div>
+          <div style={labelStyle}>STEP 2 — Find h₄ (wet mixture at turbine exit)</div>
           <div>Since s₄ = s₃ (isentropic): s₄ = <span style={numStyle}>{f(cycle.s4)}</span> kJ/kg·K</div>
           <div>x₄ = (s₄ − s_f) / (s_g − s_f) = <span style={numStyle}>{cycle.x4.toFixed(4)}</span></div>
           <div>h₄ = h_f + x₄·(h_g − h_f) = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: isWide ? 10 : 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: sel.color }}>W_turbine = {f(cycle.h3)} − {f(cycle.h4)} = <strong>{f(cycle.wTurbine)}</strong> kJ/kg</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>W_turbine = {f(cycle.h3)} − {f(cycle.h4)} = <strong>{f(cycle.wTurbine)}</strong> kJ/kg</div>
         </div>
       </>);
       case "wp": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>W_pump = h₂ − h₁ ≈ v_f · (P_high − P_low)</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>For incompressible liquid, pump work is well approximated by the specific volume times the pressure difference.</div>
+          <div style={noteStyle}>For incompressible liquid, pump work is well approximated by the specific volume times the pressure difference.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 1 — Find h₁ (saturated liquid at condenser pressure)</div>
+          <div style={labelStyle}>STEP 1 — Find h₁ (saturated liquid at condenser pressure)</div>
           <div>At P_low = <span style={numStyle}>{f(cycle.states[0].P)}</span> kPa:</div>
           <div>h₁ = h_f = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 2 — Calculate pump work</div>
+          <div style={labelStyle}>STEP 2 — Calculate pump work</div>
           <div>v_f ≈ 0.001 m³/kg</div>
           <div>W_pump = 0.001 × ({f(cycle.states[2].P)} − {f(cycle.states[0].P)})</div>
           <div>W_pump = <span style={numStyle}>{f(cycle.wPump)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 3 — Find h₂</div>
+          <div style={labelStyle}>STEP 3 — Find h₂</div>
           <div>h₂ = h₁ + W_pump = {f(cycle.h1)} + {f(cycle.wPump)} = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: isWide ? 10 : 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: sel.color }}>W_pump = <strong>{f(cycle.wPump)}</strong> kJ/kg</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>W_pump = <strong>{f(cycle.wPump)}</strong> kJ/kg</div>
         </div>
       </>);
       case "qin": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>Q_in = h₃ − h₂</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>Heat is added at constant pressure in the boiler. This includes sensible heating, latent heat, and superheating.</div>
+          <div style={noteStyle}>Heat is added at constant pressure in the boiler. This includes sensible heating, latent heat, and superheating.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>VALUES</div>
+          <div style={labelStyle}>VALUES</div>
           <div>h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg (compressed liquid entering boiler)</div>
           <div>h₃ = <span style={numStyle}>{f(cycle.h3)}</span> kJ/kg (superheated steam leaving boiler)</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: isWide ? 10 : 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: sel.color }}>Q_in = {f(cycle.h3)} − {f(cycle.h2)} = <strong>{f(cycle.qIn)}</strong> kJ/kg</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>Q_in = {f(cycle.h3)} − {f(cycle.h2)} = <strong>{f(cycle.qIn)}</strong> kJ/kg</div>
         </div>
       </>);
       case "qout": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>Q_out = h₄ − h₁</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>Heat is rejected at constant pressure in the condenser as wet steam is cooled to saturated liquid.</div>
+          <div style={noteStyle}>Heat is rejected at constant pressure in the condenser as wet steam is cooled to saturated liquid.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>VALUES</div>
+          <div style={labelStyle}>VALUES</div>
           <div>h₄ = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg (wet mixture entering condenser)</div>
           <div>h₁ = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg (saturated liquid leaving condenser)</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: isWide ? 10 : 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: sel.color }}>Q_out = {f(cycle.h4)} − {f(cycle.h1)} = <strong>{f(cycle.qOut)}</strong> kJ/kg</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>Q_out = {f(cycle.h4)} − {f(cycle.h1)} = <strong>{f(cycle.qOut)}</strong> kJ/kg</div>
         </div>
       </>);
       case "eta": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>η_th = W_net / Q_in = (W_t − W_p) / Q_in</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>Also: η_th = 1 − Q_out / Q_in</div>
+          <div style={noteStyle}>Also: η_th = 1 − Q_out / Q_in</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 1 — Net work</div>
+          <div style={labelStyle}>STEP 1 — Net work</div>
           <div>W_net = W_t − W_p = {f(cycle.wTurbine)} − {f(cycle.wPump)} = <span style={numStyle}>{f(cycle.wNet)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 2 — Divide by heat input</div>
+          <div style={labelStyle}>STEP 2 — Divide by heat input</div>
           <div>η_th = {f(cycle.wNet)} / {f(cycle.qIn)}</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: isWide ? 10 : 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: sel.color }}>η_th = <strong>{(cycle.eta * 100).toFixed(2)}%</strong></div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>η_th = <strong>{(cycle.eta * 100).toFixed(2)}%</strong></div>
         </div>
       </>);
       case "wnet": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>W_net = W_turbine − W_pump</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>Also: W_net = Q_in − Q_out (energy balance)</div>
+          <div style={noteStyle}>Also: W_net = Q_in − Q_out (energy balance)</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>METHOD 1 — From work terms</div>
+          <div style={labelStyle}>METHOD 1 — From work terms</div>
           <div>W_net = {f(cycle.wTurbine)} − {f(cycle.wPump)} = <span style={numStyle}>{f(cycle.wNet)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>METHOD 2 — From heat terms (verify)</div>
+          <div style={labelStyle}>METHOD 2 — From heat terms (verify)</div>
           <div>W_net = {f(cycle.qIn)} − {f(cycle.qOut)} = <span style={numStyle}>{f(cycle.qIn - cycle.qOut)}</span> kJ/kg</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: isWide ? 10 : 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: sel.color }}>W_net = <strong>{f(cycle.wNet)}</strong> kJ/kg</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>W_net = <strong>{f(cycle.wNet)}</strong> kJ/kg</div>
         </div>
       </>);
       case "x4": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>x₄ = (s₄ − s_f) / (s_g − s_f)</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>For isentropic expansion: s₄ = s₃. The quality tells us the fraction of vapor in the wet mixture.</div>
+          <div style={noteStyle}>For isentropic expansion: s₄ = s₃. The quality tells us the fraction of vapor in the wet mixture.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 1 — s₃ from superheated state</div>
+          <div style={labelStyle}>STEP 1 — s₃ from superheated state</div>
           <div>s₃ = s₄ = <span style={numStyle}>{f(cycle.s3)}</span> kJ/kg·K (isentropic)</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 2 — Look up sat. properties at P_low = {f(cycle.states[0].P)} kPa</div>
+          <div style={labelStyle}>STEP 2 — Look up sat. properties at P_low = {f(cycle.states[0].P)} kPa</div>
           <div>s_f = <span style={numStyle}>{f(cycle.s1)}</span> kJ/kg·K</div>
           <div>s_g = <span style={numStyle}>{interpSteam(cycle.states[0].P, "sg").toFixed(3)}</span> kJ/kg·K</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 3 — Calculate quality</div>
+          <div style={labelStyle}>STEP 3 — Calculate quality</div>
           <div>x₄ = ({f(cycle.s4)} − {f(cycle.s1)}) / ({interpSteam(cycle.states[0].P, "sg").toFixed(3)} − {f(cycle.s1)})</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 4 — Find h₄</div>
+          <div style={labelStyle}>STEP 4 — Find h₄</div>
           <div>h₄ = h_f + x₄·h_fg = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: isWide ? 10 : 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: sel.color }}>x₄ = <strong>{cycle.x4.toFixed(4)}</strong> ({(cycle.x4 * 100).toFixed(1)}% vapor)</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>x₄ = <strong>{cycle.x4.toFixed(4)}</strong> ({(cycle.x4 * 100).toFixed(1)}% vapor)</div>
         </div>
       </>);
       case "bwr": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>BWR = W_pump / W_turbine</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>The back work ratio measures what fraction of turbine output is consumed by the pump. For steam cycles this is typically very small (&lt;5%).</div>
+          <div style={noteStyle}>The back work ratio measures what fraction of turbine output is consumed by the pump. For steam cycles this is typically very small (&lt;5%).</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>CALCULATION</div>
+          <div style={labelStyle}>CALCULATION</div>
           <div>BWR = {f(cycle.wPump)} / {f(cycle.wTurbine)}</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: isWide ? 10 : 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: isWide ? 20 : 16, fontFamily: FD, color: sel.color }}>BWR = <strong>{(cycle.bwr * 100).toFixed(2)}%</strong></div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>BWR = <strong>{(cycle.bwr * 100).toFixed(2)}%</strong></div>
         </div>
       </>);
       case "states": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STATE 1 — Saturated Liquid at P_low</div>
+          <div style={labelStyle}>STATE 1 — Saturated Liquid at P_low</div>
           <div>P₁ = <span style={numStyle}>{f(cycle.states[0].P)}</span> kPa → look up sat. liquid properties</div>
           <div>T₁ = T_sat = <span style={numStyle}>{f(cycle.T1)}</span>°C, h₁ = h_f = <span style={numStyle}>{f(cycle.h1)}</span>, s₁ = s_f = <span style={numStyle}>{f(cycle.s1)}</span></div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STATE 2 — Compressed Liquid at P_high</div>
+          <div style={labelStyle}>STATE 2 — Compressed Liquid at P_high</div>
           <div>h₂ = h₁ + v_f·(P₂ − P₁) = {f(cycle.h1)} + 0.001×({f(cycle.states[2].P)} − {f(cycle.states[0].P)})</div>
           <div>h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg, T₂ ≈ <span style={numStyle}>{f(cycle.T2)}</span>°C</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STATE 3 — Superheated Vapor at P_high, T₃</div>
+          <div style={labelStyle}>STATE 3 — Superheated Vapor at P_high, T₃</div>
           <div>Given: P₃ = <span style={numStyle}>{f(cycle.states[2].P)}</span> kPa, T₃ = <span style={numStyle}>{f(cycle.T3)}</span>°C</div>
           <div>Look up (or interpolate): h₃ = <span style={numStyle}>{f(cycle.h3)}</span>, s₃ = <span style={numStyle}>{f(cycle.s3)}</span></div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STATE 4 — Wet Mixture at P_low</div>
+          <div style={labelStyle}>STATE 4 — Wet Mixture at P_low</div>
           <div>s₄ = s₃ = <span style={numStyle}>{f(cycle.s4)}</span> (isentropic expansion)</div>
           <div>x₄ = <span style={numStyle}>{cycle.x4.toFixed(4)}</span>, h₄ = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg, T₄ = <span style={numStyle}>{f(cycle.T4)}</span>°C</div>
         </div>
@@ -1494,17 +1522,17 @@ function EquationsModal({ open, onClose, cycle }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: isWide ? 760 : 420, width: "100%", padding: isWide ? "32px 36px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 18 : 14, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
-          <h2 style={{ margin: 0, fontSize: isWide ? 22 : 16, fontFamily: FD, color: K.ink }}>Solve: <span style={{ color: sel.color }}>{sel.title}</span></h2>
-          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 12 : 11, cursor: "pointer", padding: isWide ? "5px 16px" : "3px 12px", fontFamily: FM }}>Close</button>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 820 : 420, width: "100%", padding: isWide ? "36px 40px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 22 : 14, borderBottom: `2px solid ${K.ink}`, paddingBottom: 12 }}>
+          <h2 style={{ margin: 0, fontSize: isWide ? 28 : 16, fontFamily: FD, color: K.ink }}>Solve: <span style={{ color: sel.color }}>{sel.title}</span></h2>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 14 : 11, cursor: "pointer", padding: isWide ? "6px 20px" : "3px 12px", fontFamily: FM }}>Close</button>
         </div>
 
         {/* Topic selector pills */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: isWide ? 6 : 5, marginBottom: isWide ? 18 : 14 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isWide ? 8 : 5, marginBottom: isWide ? 22 : 14 }}>
           {EQ_TOPICS.map(t => (
             <button key={t.id} onClick={() => setTopic(t.id)} style={{
-              padding: isWide ? "6px 16px" : "4px 10px", fontSize: isWide ? 11 : 9, fontFamily: FM,
+              padding: isWide ? "8px 18px" : "4px 10px", fontSize: isWide ? 14 : 9, fontFamily: FM,
               background: topic === t.id ? t.color : K.cardAlt,
               color: topic === t.id ? "#fff" : K.inkMed,
               border: `1px solid ${topic === t.id ? t.color : K.border}`,
@@ -1517,7 +1545,7 @@ function EquationsModal({ open, onClose, cycle }) {
         {/* Content */}
         {renderContent()}
 
-        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "12px" : "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 14 : 12, fontFamily: FD, cursor: "pointer", marginTop: 12 }}>Close</button>
+        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "14px" : "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 16 : 12, fontFamily: FD, cursor: "pointer", marginTop: 14 }}>Close</button>
       </div>
     </div>
   );
@@ -1608,6 +1636,9 @@ function useIsDesktop(breakpoint = 840) {
 
 /* ───────── Main ───────── */
 export default function App() {
+  const [darkMode, setDarkMode] = useState(false);
+  K = darkMode ? K_DARK : K_LIGHT;
+
   const [pHigh, setPHigh] = useState(4000);
   const [pLow, setPLow] = useState(20);
   const [tSup, setTSup] = useState(450);
@@ -1640,14 +1671,14 @@ export default function App() {
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
           -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
-          background:${K.accent};border:2px solid #fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.15);
+          background:${K.accent};border:2px solid ${K.card};cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.15);
         }
-        input[type="range"]::-moz-range-thumb { width:16px;height:16px;border-radius:50%;background:${K.accent};border:2px solid #fff;cursor:pointer; }
+        input[type="range"]::-moz-range-thumb { width:16px;height:16px;border-radius:50%;background:${K.accent};border:2px solid ${K.card};cursor:pointer; }
         *{box-sizing:border-box}body{margin:0;background:${K.bg}}
       `}</style>
 
       {/* Header */}
-      <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <div style={{ fontSize: desktop ? 11 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
           <h1 style={{ margin: 0, fontSize: desktop ? 28 : 20, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
@@ -1660,7 +1691,7 @@ export default function App() {
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
 
       {/* Performance */}
-      <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: "#fff", border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         {[
           { l: "η thermal", v: `${(cycle.eta * 100).toFixed(1)}%`, c: K.accent },
           { l: "W net", v: fmt(cycle.wNet), c: K.workOut, s: "kJ/kg" },
@@ -1808,7 +1839,13 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", padding: desktop ? "20px 12px 36px" : "14px 12px 28px", fontSize: desktop ? 12 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
+      <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px" }}>
+        <button onClick={() => setDarkMode(d => !d)} style={{
+          background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
+          color: K.inkMed, fontSize: desktop ? 13 : 10, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
+        }}>{darkMode ? "☀ Light Mode" : "☾ Dark Mode"}</button>
+      </div>
+      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", fontSize: desktop ? 12 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
         Ideal Rankine Cycle · Simplified Steam Properties
       </div>
     </div>
