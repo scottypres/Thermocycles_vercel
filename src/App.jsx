@@ -792,9 +792,9 @@ function SchematicDiagram({ cycle }) {
       <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       {/* TURBINE */}
       <path d="M282,122 L322,142 L322,202 L282,222 Z" fill="none" stroke={K.workOut} strokeWidth={1.5} strokeLinejoin="round" />
-      {[148,160,172,184,196,208].map(y => {
-        const x2 = y > 202 ? 322 - (y - 202) / 20 * 40 - 4 : 318;
-        return <line key={y} x1={286} y1={y} x2={x2} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
+      {[132, 145, 158, 171, 184, 197, 212].map(y => {
+        const xr = y < 142 ? 282 + (y - 122) / 20 * 40 : y > 202 ? 322 - (y - 202) / 20 * 40 : 322;
+        return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
       })}
       <text x={302} y={170} fill={K.workOut} fontSize={10} textAnchor="middle" fontFamily={FD}>Turbine</text>
       <text x={302} y={183} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
