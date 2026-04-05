@@ -828,50 +828,55 @@ function SchematicDiagram({ cycle }) {
 
 /* ───────── Info Modal ───────── */
 function InfoModal({ open, onClose }) {
+  const isWide = useIsDesktop();
   if (!open) return null;
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: 420, width: "100%", padding: "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontFamily: FD, color: K.ink }}>The Rankine Cycle</h2>
-          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "3px 12px", fontFamily: FM }}>Close</button>
+      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: isWide ? 720 : 420, width: "100%", padding: isWide ? "32px 36px" : "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 20 : 16, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
+          <h2 style={{ margin: 0, fontSize: isWide ? 24 : 18, fontFamily: FD, color: K.ink }}>The Rankine Cycle</h2>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 12 : 11, cursor: "pointer", padding: isWide ? "5px 16px" : "3px 12px", fontFamily: FM }}>Close</button>
         </div>
-        <p style={{ fontSize: 11, lineHeight: 1.9, color: K.inkMed, marginBottom: 16 }}>
+        <p style={{ fontSize: isWide ? 14 : 11, lineHeight: 1.9, color: K.inkMed, marginBottom: isWide ? 20 : 16 }}>
           The Rankine cycle is the fundamental thermodynamic cycle used in steam power plants. It converts heat into mechanical work using water as the working fluid, undergoing phase changes between liquid and vapor.
         </p>
-        <div style={{ borderLeft: `3px solid ${K.accent}`, paddingLeft: 12, marginBottom: 16 }}>
-          <div style={{ fontFamily: FD, fontSize: 13, marginBottom: 10, color: K.ink }}>Four Processes</div>
-          {[
-            { r: "1 → 2", l: "Pump — Isentropic Compression", c: K.workIn, d: "Saturated liquid at condenser pressure is compressed to boiler pressure." },
-            { r: "2 → 3", l: "Boiler — Const-P Heat Addition", c: K.heatIn, d: "Compressed liquid is heated, vaporized, and superheated at constant pressure." },
-            { r: "3 → 4", l: "Turbine — Isentropic Expansion", c: K.workOut, d: "Superheated steam expands through the turbine, producing work." },
-            { r: "4 → 1", l: "Condenser — Const-P Heat Rejection", c: K.heatOut, d: "Wet steam is condensed to saturated liquid, rejecting heat." },
-          ].map((p, i) => (
-            <div key={i} style={{ marginBottom: 8, fontSize: 10.5, lineHeight: 1.7 }}>
-              <span style={{ color: p.c, fontWeight: 700 }}>{p.r}</span>{" "}<span style={{ color: p.c, fontWeight: 500 }}>{p.l}</span><br />
-              <span style={{ color: K.inkLight }}>{p.d}</span>
+        <div style={isWide ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 } : {}}>
+          <div style={{ borderLeft: `3px solid ${K.accent}`, paddingLeft: 12, marginBottom: isWide ? 0 : 16 }}>
+            <div style={{ fontFamily: FD, fontSize: isWide ? 15 : 13, marginBottom: 10, color: K.ink }}>Four Processes</div>
+            {[
+              { r: "1 → 2", l: "Pump — Isentropic Compression", c: K.workIn, d: "Saturated liquid at condenser pressure is compressed to boiler pressure." },
+              { r: "2 → 3", l: "Boiler — Const-P Heat Addition", c: K.heatIn, d: "Compressed liquid is heated, vaporized, and superheated at constant pressure." },
+              { r: "3 → 4", l: "Turbine — Isentropic Expansion", c: K.workOut, d: "Superheated steam expands through the turbine, producing work." },
+              { r: "4 → 1", l: "Condenser — Const-P Heat Rejection", c: K.heatOut, d: "Wet steam is condensed to saturated liquid, rejecting heat." },
+            ].map((p, i) => (
+              <div key={i} style={{ marginBottom: isWide ? 12 : 8, fontSize: isWide ? 12 : 10.5, lineHeight: 1.7 }}>
+                <span style={{ color: p.c, fontWeight: 700 }}>{p.r}</span>{" "}<span style={{ color: p.c, fontWeight: 500 }}>{p.l}</span><br />
+                <span style={{ color: K.inkLight }}>{p.d}</span>
+              </div>
+            ))}
+          </div>
+          <div>
+            <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px" : "14px", marginBottom: 14, fontSize: isWide ? 12 : 10.5, lineHeight: 2.3 }}>
+              <div style={{ fontFamily: FD, fontSize: isWide ? 15 : 13, marginBottom: 6, color: K.ink }}>Key Equations</div>
+              <div>{"η_th = W_net / Q_in = (W_t − W_p) / Q_in"}</div>
+              <div style={{ color: K.workOut }}>{"W_turbine = h₃ − h₄"}</div>
+              <div style={{ color: K.workIn }}>{"W_pump = h₂ − h₁ ≈ v_f·(P_H − P_L)"}</div>
+              <div style={{ color: K.heatIn }}>{"Q_in = h₃ − h₂"}</div>
+              <div style={{ color: K.heatOut }}>{"Q_out = h₄ − h₁"}</div>
+              <div>BWR = W_pump / W_turbine</div>
+              <div style={{ borderTop: `1px solid ${K.border}`, marginTop: 6, paddingTop: 6, color: K.inkLight }}>Quality at turbine exit:</div>
+              <div>{"x₄ = (s₄ − s_f) / s_fg"}</div>
+              <div>{"h₄ = h_f + x₄ · h_fg"}</div>
             </div>
-          ))}
+            <div style={{ borderLeft: `3px solid ${K.workOut}`, paddingLeft: 12, marginBottom: isWide ? 0 : 16 }}>
+              <div style={{ fontFamily: FD, fontSize: isWide ? 15 : 13, marginBottom: 6, color: K.ink }}>Improving Efficiency</div>
+              {["Increase boiler pressure — raises average T of heat addition","Increase superheat temperature — better quality at turbine exit","Lower condenser pressure — lowers T of heat rejection","Reheat & regeneration — advanced cycle modifications"].map((t,i) => (
+                <div key={i} style={{ fontSize: isWide ? 12 : 10.5, color: K.inkMed, marginBottom: 3 }}>{"▸ " + t}</div>
+              ))}
+            </div>
+          </div>
         </div>
-        <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: "14px", marginBottom: 14, fontSize: 10.5, lineHeight: 2.3 }}>
-          <div style={{ fontFamily: FD, fontSize: 13, marginBottom: 6, color: K.ink }}>Key Equations</div>
-          <div>{"η_th = W_net / Q_in = (W_t − W_p) / Q_in"}</div>
-          <div style={{ color: K.workOut }}>{"W_turbine = h₃ − h₄"}</div>
-          <div style={{ color: K.workIn }}>{"W_pump = h₂ − h₁ ≈ v_f·(P_H − P_L)"}</div>
-          <div style={{ color: K.heatIn }}>{"Q_in = h₃ − h₂"}</div>
-          <div style={{ color: K.heatOut }}>{"Q_out = h₄ − h₁"}</div>
-          <div>BWR = W_pump / W_turbine</div>
-          <div style={{ borderTop: `1px solid ${K.border}`, marginTop: 6, paddingTop: 6, color: K.inkLight }}>Quality at turbine exit:</div>
-          <div>{"x₄ = (s₄ − s_f) / s_fg"}</div>
-          <div>{"h₄ = h_f + x₄ · h_fg"}</div>
-        </div>
-        <div style={{ borderLeft: `3px solid ${K.workOut}`, paddingLeft: 12, marginBottom: 16 }}>
-          <div style={{ fontFamily: FD, fontSize: 13, marginBottom: 6, color: K.ink }}>Improving Efficiency</div>
-          {["Increase boiler pressure — raises average T of heat addition","Increase superheat temperature — better quality at turbine exit","Lower condenser pressure — lowers T of heat rejection","Reheat & regeneration — advanced cycle modifications"].map((t,i) => (
-            <div key={i} style={{ fontSize: 10.5, color: K.inkMed, marginBottom: 3 }}>{"▸ " + t}</div>
-          ))}
-        </div>
-        <button onClick={onClose} style={{ width: "100%", padding: "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: 12, fontFamily: FD, cursor: "pointer" }}>Close</button>
+        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "12px" : "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 14 : 12, fontFamily: FD, cursor: "pointer" }}>Close</button>
       </div>
     </div>
   );
@@ -892,6 +897,7 @@ const EQ_TOPICS = [
 
 function EquationsModal({ open, onClose, cycle }) {
   const [topic, setTopic] = useState("wt");
+  const isWide = useIsDesktop();
   if (!open) return null;
 
   const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
@@ -1093,17 +1099,17 @@ function EquationsModal({ open, onClose, cycle }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: 420, width: "100%", padding: "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: "#fff", border: `1.5px solid ${K.border}`, maxWidth: isWide ? 680 : 420, width: "100%", padding: isWide ? "28px 32px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontFamily: FD, color: K.ink }}>Solve: <span style={{ color: sel.color }}>{sel.title}</span></h2>
-          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "3px 12px", fontFamily: FM }}>Close</button>
+          <h2 style={{ margin: 0, fontSize: isWide ? 20 : 16, fontFamily: FD, color: K.ink }}>Solve: <span style={{ color: sel.color }}>{sel.title}</span></h2>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 12 : 11, cursor: "pointer", padding: isWide ? "5px 16px" : "3px 12px", fontFamily: FM }}>Close</button>
         </div>
 
         {/* Topic selector pills */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 14 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isWide ? 6 : 5, marginBottom: 14 }}>
           {EQ_TOPICS.map(t => (
             <button key={t.id} onClick={() => setTopic(t.id)} style={{
-              padding: "4px 10px", fontSize: 9, fontFamily: FM,
+              padding: isWide ? "5px 14px" : "4px 10px", fontSize: isWide ? 10 : 9, fontFamily: FM,
               background: topic === t.id ? t.color : K.cardAlt,
               color: topic === t.id ? "#fff" : K.inkMed,
               border: `1px solid ${topic === t.id ? t.color : K.border}`,
@@ -1116,7 +1122,7 @@ function EquationsModal({ open, onClose, cycle }) {
         {/* Content */}
         {renderContent()}
 
-        <button onClick={onClose} style={{ width: "100%", padding: "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: 12, fontFamily: FD, cursor: "pointer", marginTop: 12 }}>Close</button>
+        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "12px" : "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 14 : 12, fontFamily: FD, cursor: "pointer", marginTop: 12 }}>Close</button>
       </div>
     </div>
   );
