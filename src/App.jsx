@@ -153,7 +153,7 @@ function tempColor(T, quality) {
   return `rgb(${r},${g},${b})`;
 }
 
-function ParticleVisualizer({ phaseInfo, temperature }) {
+function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
   const canvasRef = useRef(null);
   const particlesRef = useRef(null);
   const animRef = useRef(null);
@@ -299,9 +299,9 @@ function ParticleVisualizer({ phaseInfo, temperature }) {
     phase === "superheated" ? "Superheated Vapor" : "Supercritical";
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", ...(fillHeight ? { flex: 1, display: "flex", flexDirection: "column" } : {}) }}>
       <canvas ref={canvasRef} width={W} height={H}
-        style={{ width: "100%", height: "auto", display: "block", border: `1.5px solid ${K.ink}`, background: "#f8f7f4" }} />
+        style={{ width: "100%", display: "block", border: `1.5px solid ${K.ink}`, background: "#f8f7f4", ...(fillHeight ? { flex: 1, height: 0 } : { height: "auto" }) }} />
       {/* Overlay info */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
@@ -1281,9 +1281,9 @@ export default function App() {
           <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— Dwg. 001</span></h3>
           <SchematicDiagram cycle={cycle} />
         </div>
-        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
+        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
-          <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} />
+          <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} fillHeight={desktop} />
         </div>
       </div>
 
