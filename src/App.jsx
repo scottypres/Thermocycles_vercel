@@ -621,7 +621,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
             {/* Q_out */}
             <g onClick={() => toggle("qOut")} style={{ cursor: "pointer" }} opacity={areaToggles.qOut ? 1 : 0.35}>
               <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
-              <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={8} fontFamily={FM}>Q_out (4→1) = {fmt(cycle.qOut)} kJ/kg</text>
+              <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={8} fontFamily={FM}>Q_out (4→1) = −{fmt(cycle.qOut)} kJ/kg</text>
             </g>
             {/* W_net */}
             <g onClick={() => toggle("wNet")} style={{ cursor: "pointer" }} opacity={areaToggles.wNet ? 1 : 0.35}>
@@ -999,7 +999,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
             {/* W_pump */}
             <g onClick={() => toggle("wPump")} style={{ cursor: "pointer" }} opacity={areaToggles.wPump ? 1 : 0.35}>
               <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.workIn}30`} stroke={K.workIn} strokeWidth={0.6} />
-              <text x={lx + 17} y={ly + 25} fill={K.workIn} fontSize={8} fontFamily={FM}>W_pump (1→2) = {fmt(cycle.wPump)} kJ/kg</text>
+              <text x={lx + 17} y={ly + 25} fill={K.workIn} fontSize={8} fontFamily={FM}>W_pump (1→2) = −{fmt(cycle.wPump)} kJ/kg</text>
             </g>
             {/* W_net */}
             <g onClick={() => toggle("wNet")} style={{ cursor: "pointer" }} opacity={areaToggles.wNet ? 1 : 0.35}>
@@ -1114,8 +1114,8 @@ function ComponentModal({ component, cycle, onClose }) {
   const liveValues = {
     boiler: { main: `Q_in = ${f(cycle.qIn)} kJ/kg`, detail: `h₃ − h₂ = ${f(cycle.h3)} − ${f(cycle.h2)}` },
     turbine: { main: `W_t = ${f(cycle.wTurbine)} kJ/kg`, detail: `h₃ − h₄ = ${f(cycle.h3)} − ${f(cycle.h4)}, x₄ = ${cycle.x4.toFixed(4)}` },
-    condenser: { main: `Q_out = ${f(cycle.qOut)} kJ/kg`, detail: `h₄ − h₁ = ${f(cycle.h4)} − ${f(cycle.h1)}` },
-    pump: { main: `W_p = ${f(cycle.wPump)} kJ/kg`, detail: `v_f·(P_H − P_L) = 0.001 × (${f(cycle.states[2].P)} − ${f(cycle.states[0].P)}), BWR = ${(cycle.bwr * 100).toFixed(2)}%` },
+    condenser: { main: `Q_out = −${f(cycle.qOut)} kJ/kg`, detail: `−(h₄ − h₁) = −(${f(cycle.h4)} − ${f(cycle.h1)})` },
+    pump: { main: `W_p = −${f(cycle.wPump)} kJ/kg`, detail: `−v_f·(P_H − P_L) = −0.001 × (${f(cycle.states[2].P)} − ${f(cycle.states[0].P)}), BWR = ${(cycle.bwr * 100).toFixed(2)}%` },
   };
   const live = liveValues[component];
 
@@ -1244,14 +1244,14 @@ function SchematicDiagram({ cycle }) {
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#mO)" />
       <text x={180} y={8} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_in = {fmt(cycle.qIn)} kJ/kg</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
-      <text x={180} y={324} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_out = {fmt(cycle.qOut)} kJ/kg</text>
+      <text x={180} y={324} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cycle.qOut)} kJ/kg</text>
       <line x1={321} y1={172} x2={338} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
       <text x={343} y={166} fill={K.workOut} fontSize={7.5} textAnchor="start" fontFamily={FM} fontWeight="700">W_t</text>
       <text x={343} y={177} fill={K.workOut} fontSize={7} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cycle.wTurbine)}</text>
       <text x={343} y={187} fill={K.workOut} fontSize={6} textAnchor="start" fontFamily={FM} fontWeight="700">kJ/kg</text>
       <line x1={28} y1={172} x2={8} y2={172} stroke={K.workIn} strokeWidth={1.8} markerEnd="url(#mY)" />
       <text x={4} y={162} fill={K.workIn} fontSize={7.5} textAnchor="end" fontFamily={FM} fontWeight="700">W_p</text>
-      <text x={4} y={173} fill={K.workIn} fontSize={7} textAnchor="end" fontFamily={FM} fontWeight="700">{fmt(cycle.wPump)}</text>
+      <text x={4} y={173} fill={K.workIn} fontSize={7} textAnchor="end" fontFamily={FM} fontWeight="700">−{fmt(cycle.wPump)}</text>
       <text x={4} y={183} fill={K.workIn} fontSize={6} textAnchor="end" fontFamily={FM} fontWeight="700">kJ/kg</text>
     </svg>
     <ComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
@@ -1264,51 +1264,51 @@ function InfoModal({ open, onClose }) {
   if (!open) return null;
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 720 : 420, width: "100%", padding: isWide ? "32px 36px" : "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 780 : 420, width: "100%", padding: isWide ? "36px 40px" : "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 20 : 16, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
-          <h2 style={{ margin: 0, fontSize: isWide ? 24 : 18, fontFamily: FD, color: K.ink }}>The Rankine Cycle</h2>
-          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 12 : 11, cursor: "pointer", padding: isWide ? "5px 16px" : "3px 12px", fontFamily: FM }}>Close</button>
+          <h2 style={{ margin: 0, fontSize: isWide ? 28 : 18, fontFamily: FD, color: K.ink }}>The Rankine Cycle</h2>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 14 : 11, cursor: "pointer", padding: isWide ? "5px 16px" : "3px 12px", fontFamily: FM }}>Close</button>
         </div>
-        <p style={{ fontSize: isWide ? 14 : 11, lineHeight: 1.9, color: K.inkMed, marginBottom: isWide ? 20 : 16 }}>
+        <p style={{ fontSize: isWide ? 16 : 11, lineHeight: 1.9, color: K.inkMed, marginBottom: isWide ? 20 : 16 }}>
           The Rankine cycle is the fundamental thermodynamic cycle used in steam power plants. It converts heat into mechanical work using water as the working fluid, undergoing phase changes between liquid and vapor.
         </p>
         <div style={isWide ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 } : {}}>
           <div style={{ borderLeft: `3px solid ${K.accent}`, paddingLeft: 12, marginBottom: isWide ? 0 : 16 }}>
-            <div style={{ fontFamily: FD, fontSize: isWide ? 15 : 13, marginBottom: 10, color: K.ink }}>Four Processes</div>
+            <div style={{ fontFamily: FD, fontSize: isWide ? 18 : 13, marginBottom: 10, color: K.ink }}>Four Processes</div>
             {[
               { r: "1 → 2", l: "Pump — Isentropic Compression", c: K.workIn, d: "Saturated liquid at condenser pressure is compressed to boiler pressure." },
               { r: "2 → 3", l: "Boiler — Const-P Heat Addition", c: K.heatIn, d: "Compressed liquid is heated, vaporized, and superheated at constant pressure." },
               { r: "3 → 4", l: "Turbine — Isentropic Expansion", c: K.workOut, d: "Superheated steam expands through the turbine, producing work." },
               { r: "4 → 1", l: "Condenser — Const-P Heat Rejection", c: K.heatOut, d: "Wet steam is condensed to saturated liquid, rejecting heat." },
             ].map((p, i) => (
-              <div key={i} style={{ marginBottom: isWide ? 12 : 8, fontSize: isWide ? 12 : 10.5, lineHeight: 1.7 }}>
+              <div key={i} style={{ marginBottom: isWide ? 12 : 8, fontSize: isWide ? 15 : 10.5, lineHeight: 1.7 }}>
                 <span style={{ color: p.c, fontWeight: 700 }}>{p.r}</span>{" "}<span style={{ color: p.c, fontWeight: 500 }}>{p.l}</span><br />
                 <span style={{ color: K.inkLight }}>{p.d}</span>
               </div>
             ))}
           </div>
           <div>
-            <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px" : "14px", marginBottom: 14, fontSize: isWide ? 12 : 10.5, lineHeight: 2.3 }}>
-              <div style={{ fontFamily: FD, fontSize: isWide ? 15 : 13, marginBottom: 6, color: K.ink }}>Key Equations</div>
-              <div>{"η_th = W_net / Q_in = (W_t − W_p) / Q_in"}</div>
-              <div style={{ color: K.workOut }}>{"W_turbine = h₃ − h₄"}</div>
-              <div style={{ color: K.workIn }}>{"W_pump = h₂ − h₁ ≈ v_f·(P_H − P_L)"}</div>
-              <div style={{ color: K.heatIn }}>{"Q_in = h₃ − h₂"}</div>
-              <div style={{ color: K.heatOut }}>{"Q_out = h₄ − h₁"}</div>
-              <div>BWR = W_pump / W_turbine</div>
+            <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px" : "14px", marginBottom: 14, fontSize: isWide ? 15 : 10.5, lineHeight: 2.3 }}>
+              <div style={{ fontFamily: FD, fontSize: isWide ? 18 : 13, marginBottom: 6, color: K.ink }}>Key Equations</div>
+              <div>{"η_th = W_net / Q_in = (W_t + W_p) / Q_in"}</div>
+              <div style={{ color: K.workOut }}>{"W_turbine = h₃ − h₄  (+, work out)"}</div>
+              <div style={{ color: K.workIn }}>{"W_pump = −v_f·(P_H − P_L)  (−, work in)"}</div>
+              <div style={{ color: K.heatIn }}>{"Q_in = h₃ − h₂  (+, heat in)"}</div>
+              <div style={{ color: K.heatOut }}>{"Q_out = −(h₄ − h₁)  (−, heat out)"}</div>
+              <div>BWR = |W_pump| / W_turbine</div>
               <div style={{ borderTop: `1px solid ${K.border}`, marginTop: 6, paddingTop: 6, color: K.inkLight }}>Quality at turbine exit:</div>
               <div>{"x₄ = (s₄ − s_f) / s_fg"}</div>
               <div>{"h₄ = h_f + x₄ · h_fg"}</div>
             </div>
             <div style={{ borderLeft: `3px solid ${K.workOut}`, paddingLeft: 12, marginBottom: isWide ? 0 : 16 }}>
-              <div style={{ fontFamily: FD, fontSize: isWide ? 15 : 13, marginBottom: 6, color: K.ink }}>Improving Efficiency</div>
+              <div style={{ fontFamily: FD, fontSize: isWide ? 18 : 13, marginBottom: 6, color: K.ink }}>Improving Efficiency</div>
               {["Increase boiler pressure — raises average T of heat addition","Increase superheat temperature — better quality at turbine exit","Lower condenser pressure — lowers T of heat rejection","Reheat & regeneration — advanced cycle modifications"].map((t,i) => (
-                <div key={i} style={{ fontSize: isWide ? 12 : 10.5, color: K.inkMed, marginBottom: 3 }}>{"▸ " + t}</div>
+                <div key={i} style={{ fontSize: isWide ? 15 : 10.5, color: K.inkMed, marginBottom: 3 }}>{"▸ " + t}</div>
               ))}
             </div>
           </div>
         </div>
-        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "12px" : "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 14 : 12, fontFamily: FD, cursor: "pointer" }}>Close</button>
+        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "12px" : "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 16 : 12, fontFamily: FD, cursor: "pointer" }}>Close</button>
       </div>
     </div>
   );
@@ -1370,9 +1370,9 @@ function EquationsModal({ open, onClose, cycle }) {
       </>);
       case "wp": return (<>
         <div style={stepStyle}>
-          <div style={labelStyle}>FORMULA</div>
-          <div>W_pump = h₂ − h₁ ≈ v_f · (P_high − P_low)</div>
-          <div style={noteStyle}>For incompressible liquid, pump work is well approximated by the specific volume times the pressure difference.</div>
+          <div style={labelStyle}>FORMULA (sign convention: work in is negative)</div>
+          <div>W_pump = −v_f · (P_high − P_low)</div>
+          <div style={noteStyle}>Pump work is energy consumed by the system (work input), so it carries a negative sign. The magnitude is approximated using specific volume × pressure rise.</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 1 — Find h₁ (saturated liquid at condenser pressure)</div>
@@ -1380,18 +1380,17 @@ function EquationsModal({ open, onClose, cycle }) {
           <div>h₁ = h_f = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
-          <div style={labelStyle}>STEP 2 — Calculate pump work</div>
+          <div style={labelStyle}>STEP 2 — Calculate pump work magnitude</div>
           <div>v_f ≈ 0.001 m³/kg</div>
-          <div>W_pump = 0.001 × ({f(cycle.states[2].P)} − {f(cycle.states[0].P)})</div>
-          <div>W_pump = <span style={numStyle}>{f(cycle.wPump)}</span> kJ/kg</div>
+          <div>|W_pump| = 0.001 × ({f(cycle.states[2].P)} − {f(cycle.states[0].P)}) = {f(cycle.wPump)} kJ/kg</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 3 — Find h₂</div>
-          <div>h₂ = h₁ + W_pump = {f(cycle.h1)} + {f(cycle.wPump)} = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg</div>
+          <div>h₂ = h₁ + |W_pump| = {f(cycle.h1)} + {f(cycle.wPump)} = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>W_pump = <strong>{f(cycle.wPump)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>W_pump = <strong>−{f(cycle.wPump)}</strong> kJ/kg</div>
         </div>
       </>);
       case "qin": return (<>
@@ -1412,9 +1411,9 @@ function EquationsModal({ open, onClose, cycle }) {
       </>);
       case "qout": return (<>
         <div style={stepStyle}>
-          <div style={labelStyle}>FORMULA</div>
-          <div>Q_out = h₄ − h₁</div>
-          <div style={noteStyle}>Heat is rejected at constant pressure in the condenser as wet steam is cooled to saturated liquid.</div>
+          <div style={labelStyle}>FORMULA (sign convention: heat out is negative)</div>
+          <div>Q_out = −(h₄ − h₁)</div>
+          <div style={noteStyle}>Heat is rejected from the system in the condenser, so it carries a negative sign. The magnitude equals h₄ − h₁.</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>VALUES</div>
@@ -1423,18 +1422,18 @@ function EquationsModal({ open, onClose, cycle }) {
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>Q_out = {f(cycle.h4)} − {f(cycle.h1)} = <strong>{f(cycle.qOut)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>Q_out = −({f(cycle.h4)} − {f(cycle.h1)}) = <strong>−{f(cycle.qOut)}</strong> kJ/kg</div>
         </div>
       </>);
       case "eta": return (<>
         <div style={stepStyle}>
           <div style={labelStyle}>FORMULA</div>
-          <div>η_th = W_net / Q_in = (W_t − W_p) / Q_in</div>
-          <div style={noteStyle}>Also: η_th = 1 − Q_out / Q_in</div>
+          <div>η_th = W_net / Q_in = (W_t + W_p) / Q_in</div>
+          <div style={noteStyle}>Also: η_th = 1 + Q_out / Q_in  (Q_out is negative)</div>
         </div>
         <div style={stepStyle}>
-          <div style={labelStyle}>STEP 1 — Net work</div>
-          <div>W_net = W_t − W_p = {f(cycle.wTurbine)} − {f(cycle.wPump)} = <span style={numStyle}>{f(cycle.wNet)}</span> kJ/kg</div>
+          <div style={labelStyle}>STEP 1 — Net work (W_p is negative)</div>
+          <div>W_net = W_t + W_p = {f(cycle.wTurbine)} + (−{f(cycle.wPump)}) = <span style={numStyle}>{f(cycle.wNet)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 2 — Divide by heat input</div>
@@ -1448,16 +1447,16 @@ function EquationsModal({ open, onClose, cycle }) {
       case "wnet": return (<>
         <div style={stepStyle}>
           <div style={labelStyle}>FORMULA</div>
-          <div>W_net = W_turbine − W_pump</div>
-          <div style={noteStyle}>Also: W_net = Q_in − Q_out (energy balance)</div>
+          <div>W_net = W_turbine + W_pump  (W_pump is negative)</div>
+          <div style={noteStyle}>Also: W_net = Q_in + Q_out  (Q_out is negative, energy balance)</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>METHOD 1 — From work terms</div>
-          <div>W_net = {f(cycle.wTurbine)} − {f(cycle.wPump)} = <span style={numStyle}>{f(cycle.wNet)}</span> kJ/kg</div>
+          <div>W_net = {f(cycle.wTurbine)} + (−{f(cycle.wPump)}) = <span style={numStyle}>{f(cycle.wNet)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>METHOD 2 — From heat terms (verify)</div>
-          <div>W_net = {f(cycle.qIn)} − {f(cycle.qOut)} = <span style={numStyle}>{f(cycle.qIn - cycle.qOut)}</span> kJ/kg</div>
+          <div>W_net = {f(cycle.qIn)} + (−{f(cycle.qOut)}) = <span style={numStyle}>{f(cycle.qIn - cycle.qOut)}</span> kJ/kg</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
@@ -1500,7 +1499,7 @@ function EquationsModal({ open, onClose, cycle }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>CALCULATION</div>
-          <div>BWR = {f(cycle.wPump)} / {f(cycle.wTurbine)}</div>
+          <div>BWR = |W_pump| / W_turbine = {f(cycle.wPump)} / {f(cycle.wTurbine)}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
@@ -1569,17 +1568,17 @@ function ParamSlider({ label, unit, value, min, max, step, onChange, color }) {
   const isWide = useIsDesktop();
   const pct = ((value - min) / (max - min)) * 100;
   return (
-    <div style={{ marginBottom: isWide ? 22 : 18 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-        <span style={{ fontSize: isWide ? 14 : 10, fontFamily: FM, color: K.inkMed }}>{label}</span>
-        <span style={{ fontSize: isWide ? 20 : 14, fontFamily: FD, color: color || K.accent }}>{value.toFixed(0)} <span style={{ fontSize: isWide ? 13 : 10, fontFamily: FM, color: K.inkLight }}>{unit}</span></span>
+    <div style={{ marginBottom: isWide ? 26 : 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+        <span style={{ fontSize: isWide ? 18 : 10, fontFamily: FM, color: K.inkMed }}>{label}</span>
+        <span style={{ fontSize: isWide ? 26 : 14, fontFamily: FD, color: color || K.accent }}>{value.toFixed(0)} <span style={{ fontSize: isWide ? 16 : 10, fontFamily: FM, color: K.inkLight }}>{unit}</span></span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
-        style={{ width: "100%", height: isWide ? 5 : 3, appearance: "none", WebkitAppearance: "none", background: `linear-gradient(to right, ${color || K.accent} 0%, ${color || K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`, borderRadius: 0, outline: "none", cursor: "pointer" }} />
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3 }}>
-        <span style={{ fontSize: isWide ? 11 : 8, color: K.inkLight, fontFamily: FM }}>{min}</span>
-        <span style={{ fontSize: isWide ? 11 : 8, color: K.inkLight, fontFamily: FM }}>{max}</span>
+        style={{ width: "100%", height: isWide ? 6 : 3, appearance: "none", WebkitAppearance: "none", background: `linear-gradient(to right, ${color || K.accent} 0%, ${color || K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`, borderRadius: 0, outline: "none", cursor: "pointer" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+        <span style={{ fontSize: isWide ? 13 : 8, color: K.inkLight, fontFamily: FM }}>{min}</span>
+        <span style={{ fontSize: isWide ? 13 : 8, color: K.inkLight, fontFamily: FM }}>{max}</span>
       </div>
     </div>
   );
@@ -1822,7 +1821,7 @@ export default function App() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
                 { l: "Q in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn },
-                { l: "Q out (Cond.)", v: fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut },
+                { l: "Q out (Cond.)", v: "−" + fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut },
               ].map((e, i) => (
                 <div key={i} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center" }}>
                   <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
@@ -1838,7 +1837,7 @@ export default function App() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
                 { l: "W turbine", v: fmt(cycle.wTurbine), u: "kJ/kg", c: K.workOut },
-                { l: "W pump", v: fmt(cycle.wPump), u: "kJ/kg", c: K.workIn },
+                { l: "W pump", v: "−" + fmt(cycle.wPump), u: "kJ/kg", c: K.workIn },
               ].map((e, i) => (
                 <div key={i} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center" }}>
                   <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
@@ -1851,11 +1850,11 @@ export default function App() {
         </div>
         <div style={{ marginTop: desktop ? 15 : 8, display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: 8 }}>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
-            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_in − Q_out</div>
+            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_in + Q_out (Q_out &lt; 0)</div>
             <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</div>
           </div>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
-            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>W_net = W_t − W_p</div>
+            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>W_net = W_t + W_p (W_p &lt; 0)</div>
             <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</div>
           </div>
         </div>
