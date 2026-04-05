@@ -390,13 +390,13 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
       <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 6 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.liquidBlue }} />
-          <span style={{ fontSize: 18, fontFamily: FM, color: K.inkLight }}>Liquid</span>
+          <span style={{ fontSize: fillHeight ? 18 : 10, fontFamily: FM, color: K.inkLight }}>Liquid</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.vaporRed }} />
-          <span style={{ fontSize: 18, fontFamily: FM, color: K.inkLight }}>Vapor</span>
+          <span style={{ fontSize: fillHeight ? 18 : 10, fontFamily: FM, color: K.inkLight }}>Vapor</span>
         </div>
-        <div style={{ fontSize: 18, fontFamily: FM, color: K.inkLight }}>
+        <div style={{ fontSize: fillHeight ? 18 : 10, fontFamily: FM, color: K.inkLight }}>
           T = {temperature.toFixed(0)}°C
         </div>
       </div>
