@@ -770,7 +770,7 @@ function SchematicDiagram({ cycle }) {
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
   return (
-    <svg viewBox="0 0 360 330" style={{ width: "100%" }}>
+    <svg viewBox="-40 0 440 330" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -778,8 +778,8 @@ function SchematicDiagram({ cycle }) {
           </marker>
         ))}
       </defs>
-      {Array.from({ length: 18 }, (_, i) => Array.from({ length: 16 }, (_, j) => (
-        <circle key={`${i}-${j}`} cx={i * 20 + 10} cy={j * 20 + 10} r={0.6} fill={K.gridMajor} />
+      {Array.from({ length: 22 }, (_, i) => Array.from({ length: 16 }, (_, j) => (
+        <circle key={`${i}-${j}`} cx={i * 20 - 30} cy={j * 20 + 10} r={0.6} fill={K.gridMajor} />
       )))}
       {/* BOILER */}
       <rect x={110} y={32} width={140} height={50} fill="none" stroke={K.heatIn} strokeWidth={1.5} />
@@ -821,12 +821,12 @@ function SchematicDiagram({ cycle }) {
       <text x={180} y={8} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_in = {fmt(cycle.qIn)} kJ/kg</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
       <text x={180} y={324} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
-      <line x1={321} y1={172} x2={348} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
-      <text x={337} y={164} fill={K.workOut} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_t</text>
-      <text x={337} y={188} fill={K.workOut} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wTurbine)} kJ/kg</text>
-      <line x1={28} y1={172} x2={12} y2={172} stroke={K.workIn} strokeWidth={1.8} />
-      <text x={20} y={164} fill={K.workIn} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_p</text>
-      <text x={20} y={188} fill={K.workIn} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wPump)} kJ/kg</text>
+      <line x1={321} y1={172} x2={355} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
+      <text x={370} y={168} fill={K.workOut} fontSize={7.5} textAnchor="start" fontFamily={FM} fontWeight="500">W_t</text>
+      <text x={370} y={180} fill={K.workOut} fontSize={7} textAnchor="start" fontFamily={FM}>{fmt(cycle.wTurbine)} kJ/kg</text>
+      <line x1={28} y1={172} x2={-6} y2={172} stroke={K.workIn} strokeWidth={1.8} />
+      <text x={-10} y={168} fill={K.workIn} fontSize={7.5} textAnchor="end" fontFamily={FM} fontWeight="500">W_p</text>
+      <text x={-10} y={180} fill={K.workIn} fontSize={7} textAnchor="end" fontFamily={FM}>{fmt(cycle.wPump)} kJ/kg</text>
     </svg>
   );
 }
