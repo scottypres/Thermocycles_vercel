@@ -800,7 +800,7 @@ function SchematicDiagram({ cycle }) {
       <text x={180} y={292} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       {/* PUMP */}
       <circle cx={60} cy={172} r={28} fill="none" stroke={K.workIn} strokeWidth={1.5} />
-      <path d="M46,185 L60,155 L74,185 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+      <path d="M50,180 L60,160 L70,180 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
       <text x={60} y={197} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
       {/* Pipes */}
       <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
@@ -814,7 +814,7 @@ function SchematicDiagram({ cycle }) {
       {/* Energy */}
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#mO)" />
       <text x={180} y={8} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_in = {fmt(cycle.qIn)} kJ/kg</text>
-      <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
+      <line x1={180} y1={302} x2={180} y2={314} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
       <text x={180} y={318} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
       <line x1={326} y1={172} x2={348} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
       <text x={337} y={164} fill={K.workOut} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_t</text>
