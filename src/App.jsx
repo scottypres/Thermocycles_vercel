@@ -1871,7 +1871,7 @@ export default function App() {
       </div>
       <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", borderTop: `1px solid ${K.border}`, marginTop: desktop ? 8 : 4, marginLeft: desktop ? 40 : 16, marginRight: desktop ? 40 : 16 }}>
         <div style={{ fontSize: desktop ? 14 : 9, color: K.inkMed, fontFamily: FM, marginBottom: 4 }}>Built by <span style={{ fontWeight: 600, color: K.ink }}>Scott Presbrey</span></div>
-        <a href="mailto:scottypres@gmail.com" style={{ fontSize: desktop ? 13 : 8, color: K.accent, fontFamily: FM, textDecoration: "none" }}>scottypres@gmail.com</a>
+        <span onClick={() => { const u="scottypres",d="gmail",t="com"; window.location.href="mailto:"+u+"\u0040"+d+"."+t; }} style={{ fontSize: desktop ? 13 : 8, color: K.accent, fontFamily: FM, textDecoration: "underline", cursor: "pointer" }}>{"scottypres" + "\u0040" + "gmail.com"}</span>
       </div>
     </div>
   );
