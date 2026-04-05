@@ -800,8 +800,8 @@ function SchematicDiagram({ cycle }) {
       <text x={180} y={292} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       {/* PUMP */}
       <circle cx={60} cy={172} r={28} fill="none" stroke={K.workIn} strokeWidth={1.5} />
-      <path d="M50,180 L60,160 L70,180 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-      <text x={60} y={197} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
+      <path d="M46,181 L60,151 L74,181 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+      <text x={60} y={193} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
       {/* Pipes */}
       <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="250,57 282,57 282,122" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
