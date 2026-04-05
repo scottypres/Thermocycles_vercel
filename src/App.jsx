@@ -202,7 +202,9 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
-    const liquidLevel = H * (1 - quality); // y position of liquid surface
+    // y position of liquid surface (0 = top, H = bottom)
+    // quality is vapor mass fraction, so higher quality => less liquid => lower level (toward bottom).
+    const liquidLevel = phase === "subcooled" ? 0 : H * quality;
     const speedBase = 0.6 + tNorm * 6;
     const vaporSpeed = speedBase * 1.5;
     const liquidSpeed = speedBase * 0.06;
@@ -239,14 +241,18 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
         const isVapor = i < Math.floor(quality * NUM_PARTICLES);
 
         if (phase === "subcooled") {
-          // All liquid - very slow suspended drift (no settling)
-          const targetY = H * 0.55;
-          p.vx *= 0.985;
-          p.vy *= 0.985;
-          const speed = liquidSpeed;
-          p.vx += (Math.random() - 0.5) * speed * 0.18;
-          p.vy += (Math.random() - 0.5) * speed * 0.18;
-          p.vy += (targetY - p.y) * 0.002;
+          // All liquid (subcooled): evenly distributed, extremely slow motion.
+          const minY = p.r + 2;
+          const maxY = H - p.r - 2;
+          const span = Math.max(1, maxY - minY);
+          const depthFrac = ((p.id * 0.61803398875) % 1);
+          const targetY = minY + depthFrac * span;
+          p.vx *= 0.99;
+          p.vy *= 0.99;
+          const speed = liquidSpeed * 0.45;
+          p.vx += (Math.random() - 0.5) * speed * 0.12;
+          p.vy += (Math.random() - 0.5) * speed * 0.12;
+          p.vy += (targetY - p.y) * 0.0012;
         } else if (phase === "superheated" || phase === "supercritical") {
           // All vapor - fast, spread out
           p.vx += (Math.random() - 0.5) * vaporSpeed * 0.5;
