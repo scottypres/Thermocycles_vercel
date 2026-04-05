@@ -113,7 +113,7 @@ const K = {
   border: "#d4d0c8", ink: "#1a1a2e", inkMed: "#3a3a5c", inkLight: "#5c5c78",
   gridFine: "#e8e6e0", gridMajor: "#d4d0c8",
   accent: "#c0392b", accentLight: "#c0392b22",
-  heatIn: "#c0392b", heatOut: "#2471a3", workOut: "#1e8449", workIn: "#b7950b",
+  heatIn: "#c0392b", heatOut: "#2471a3", workOut: "#1e8449", workIn: "#B8860B",
   dome: "#2471a322", domeLine: "#2471a366",
   stateCircle: "#1a1a2e", stateFill: "#c0392b",
   liquidBlue: "#2471a3", vaporRed: "#c0392b",
@@ -933,7 +933,7 @@ function SchematicDiagram({ cycle }) {
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
   return (<>
-    <svg viewBox="-20 -5 400 340" style={{ width: "100%" }}>
+    <svg viewBox="-15 0 380 328" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -975,8 +975,8 @@ function SchematicDiagram({ cycle }) {
       {/* PUMP */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("pump")}>
         <circle cx={60} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
-        <path d="M46,181 L60,151 L74,181 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-        <text x={60} y={193} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
+        <path d="M46,179 L60,149 L74,179 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <text x={60} y={191} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
       </g>
       {/* Pipes */}
       <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
