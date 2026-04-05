@@ -788,6 +788,7 @@ function SchematicDiagram({ cycle }) {
       ))}
       <rect x={152} y={40} width={56} height={16} fill="#fff" />
       <text x={180} y={53} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Boiler</text>
+      <rect x={148} y={58} width={64} height={12} fill="#fff" />
       <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       {/* TURBINE */}
       <path d="M282,122 L322,142 L322,202 L282,222 Z" fill="none" stroke={K.workOut} strokeWidth={1.5} strokeLinejoin="round" />
@@ -806,7 +807,7 @@ function SchematicDiagram({ cycle }) {
       {/* Pipes */}
       <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="250,57 282,57 282,122" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
-      <polyline points="302,222 302,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points="302,212 302,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="110,273 60,273 60,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       {/* State markers */}
       {[{ n:"2",x:80,y:76 },{ n:"3",x:268,y:102 },{ n:"4",x:314,y:242 },{ n:"1",x:80,y:252 }].map((p,i) => (
