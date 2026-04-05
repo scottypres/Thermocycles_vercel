@@ -41,6 +41,17 @@ function interpSteam(P, prop) {
   return STEAM_TABLE[STEAM_TABLE.length - 1][prop];
 }
 
+/* Reverse lookup: saturation temperature → pressure */
+function satTempToPressure(T) {
+  if (T <= STEAM_TABLE[0].T) return STEAM_TABLE[0].P;
+  if (T >= STEAM_TABLE[STEAM_TABLE.length - 1].T) return STEAM_TABLE[STEAM_TABLE.length - 1].P;
+  for (let i = 0; i < STEAM_TABLE.length - 1; i++) {
+    if (T >= STEAM_TABLE[i].T && T <= STEAM_TABLE[i + 1].T)
+      return lerp(T, STEAM_TABLE[i].T, STEAM_TABLE[i + 1].T, STEAM_TABLE[i].P, STEAM_TABLE[i + 1].P);
+  }
+  return STEAM_TABLE[STEAM_TABLE.length - 1].P;
+}
+
 /* Get sf and sg at a given temperature by interpolating the dome */
 function getDomeBounds(T) {
   if (T <= STEAM_TABLE[0].T || T >= 374.0) return null;
@@ -102,7 +113,7 @@ function calculateCycle(pHigh, pLow, tSuperheat) {
       { label: "3", T: T3, s: s3, h: h3, P: pHigh, desc: "Superheated" },
       { label: "4", T: T4, s: s4, h: h4, P: pLow, desc: "Wet Steam" },
     ],
-    Tsat_high, Tsat_low, wTurbine, wPump, wNet, qIn, qOut, eta, bwr, x4,
+    Tsat_high, Tsat_low, pHigh, pLow, wTurbine, wPump, wNet, qIn, qOut, eta, bwr, x4,
     boilerPath, h1, h2, h3, h4, s1, s2, s3, s4, T1, T2, T3, T4,
   };
 }
@@ -355,14 +366,26 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
 }
 
 /* ───────── Interactive T-s Diagram ───────── */
-function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
+function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange }) {
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
+  const lineDragRef = useRef(null); // "boiler" | "condenser" | null
+  const [lineDragP, setLineDragP] = useState(null);
 
   const domePathD = domeCurve.map((p, i) => `${i === 0 ? "M" : "L"}${mapS(p.s).toFixed(1)},${mapT(p.T).toFixed(1)}`).join(" ") + " Z";
   const boilerD = cycle.boilerPath.map((p, i) => `${i === 0 ? "M" : "L"}${mapS(p.s).toFixed(1)},${mapT(p.T).toFixed(1)}`).join(" ");
   const st = cycle.states;
   const cycleFillD = [boilerD, `L${mapS(st[3].s).toFixed(1)},${mapT(st[3].T).toFixed(1)}`, `L${mapS(st[0].s).toFixed(1)},${mapT(st[0].T).toFixed(1)}`, "Z"].join(" ");
+
+  const getSvgY = useCallback((e) => {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const rect = svg.getBoundingClientRect();
+    if (rect.height === 0) return null;
+    const scaleY = TS_H / rect.height;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return Math.max(TS_PLOT.y, Math.min(TS_PLOT.y + TS_PLOT.h, (clientY - rect.top) * scaleY));
+  }, []);
 
   const getSvgPoint = useCallback((e) => {
     const svg = svgRef.current;
@@ -383,21 +406,52 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
 
   const handleStart = useCallback((e) => {
     if (e.touches && e.touches.length === 0) return;
+    // Check if click is near boiler or condenser line
+    const py = getSvgY(e);
+    if (py != null) {
+      const boilerLineY = mapT(cycle.Tsat_high);
+      const condLineY = mapT(cycle.Tsat_low);
+      if (Math.abs(py - boilerLineY) < 8) {
+        lineDragRef.current = "boiler";
+        setLineDragP(cycle.pHigh);
+        e.preventDefault();
+        return;
+      }
+      if (Math.abs(py - condLineY) < 8) {
+        lineDragRef.current = "condenser";
+        setLineDragP(cycle.pLow);
+        e.preventDefault();
+        return;
+      }
+    }
     draggingRef.current = true;
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgPoint, onDrag]);
+  }, [getSvgPoint, getSvgY, onDrag, cycle.Tsat_high, cycle.Tsat_low, cycle.pHigh, cycle.pLow]);
 
   const handleMove = useCallback((e) => {
+    if (lineDragRef.current) {
+      e.preventDefault();
+      const py = getSvgY(e);
+      if (py == null) return;
+      const T = Math.max(5, Math.min(370, unmapT(py)));
+      const P = satTempToPressure(T);
+      setLineDragP(Math.round(P));
+      if (lineDragRef.current === "boiler" && onPHighChange) onPHighChange(Math.max(500, Math.min(10000, Math.round(P / 100) * 100)));
+      if (lineDragRef.current === "condenser" && onPLowChange) onPLowChange(Math.max(5, Math.min(100, Math.round(P))));
+      return;
+    }
     if (!draggingRef.current) return;
     if (e.touches && e.touches.length === 0) return;
     e.preventDefault();
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgPoint, onDrag]);
+  }, [getSvgPoint, getSvgY, onDrag, onPHighChange, onPLowChange]);
 
   const handleEnd = useCallback(() => {
     draggingRef.current = false;
+    lineDragRef.current = null;
+    setLineDragP(null);
   }, []);
 
   const dpx = mapS(dragPoint.s);
@@ -473,6 +527,23 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas }) {
       <path d={boilerD} fill="none" stroke={K.heatIn} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
       <line x1={mapS(st[2].s)} y1={mapT(st[2].T)} x2={mapS(st[3].s)} y2={mapT(st[3].T)} stroke={K.workOut} strokeWidth={2.2} strokeLinecap="round" />
       <line x1={mapS(st[3].s)} y1={mapT(st[3].T)} x2={mapS(st[0].s)} y2={mapT(st[0].T)} stroke={K.heatOut} strokeWidth={2.2} strokeLinecap="round" />
+      {/* Draggable boiler line hit area */}
+      <line x1={TS_PLOT.x} y1={mapT(cycle.Tsat_high)} x2={TS_PLOT.x + TS_PLOT.w} y2={mapT(cycle.Tsat_high)} stroke="transparent" strokeWidth={16} style={{ cursor: "ns-resize" }} />
+      {/* Draggable condenser line hit area */}
+      <line x1={TS_PLOT.x} y1={mapT(cycle.Tsat_low)} x2={TS_PLOT.x + TS_PLOT.w} y2={mapT(cycle.Tsat_low)} stroke="transparent" strokeWidth={16} style={{ cursor: "ns-resize" }} />
+      {/* Temperature popup while dragging */}
+      {lineDragP != null && (() => {
+        const isBoiler = lineDragRef.current === "boiler";
+        const lineY = isBoiler ? mapT(cycle.Tsat_high) : mapT(cycle.Tsat_low);
+        const color = isBoiler ? K.heatIn : K.heatOut;
+        const T = isBoiler ? cycle.Tsat_high : cycle.Tsat_low;
+        const label = isBoiler ? "T_sat(high)" : "T_sat(low)";
+        return (<>
+          <line x1={TS_PLOT.x} y1={lineY} x2={TS_PLOT.x + TS_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+          <rect x={TS_PLOT.x + TS_PLOT.w / 2 - 52} y={lineY - 22} width={104} height={18} rx={2} fill="#fff" stroke={color} strokeWidth={0.8} />
+          <text x={TS_PLOT.x + TS_PLOT.w / 2} y={lineY - 10} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{label} = {T.toFixed(1)}°C</text>
+        </>);
+      })()}
       {!showAreas && <>
         {/* Dimension lines for drag point - solid when locked */}
         <line x1={dpx} y1={dpy} x2={dpx} y2={TS_PLOT.y + TS_PLOT.h} stroke={lockS ? K.accent : K.inkLight} strokeWidth={lockS ? 1.2 : 0.5} strokeDasharray={lockS ? "none" : "2 2"} />
@@ -628,11 +699,13 @@ const pvDomeLeft = STEAM_TABLE.filter(r => r.P <= 22064).map(r => ({ v: r.vf, P:
 const pvDomeRight = [...STEAM_TABLE].filter(r => r.P <= 22064).reverse().map(r => ({ v: r.vg, P: r.P }));
 const pvDomeCurve = [...pvDomeLeft, ...pvDomeRight];
 
-function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
+function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPLowChange }) {
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lockedVRef = useRef(null);
   const lockedPRef = useRef(null);
+  const lineDragRef = useRef(null);
+  const [lineDragP, setLineDragP] = useState(null);
 
   // Capture exact lock values when locks activate
   useEffect(() => {
@@ -644,6 +717,16 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
     if (lockP) lockedPRef.current = stToP(dragPoint.s, dragPoint.T);
     else lockedPRef.current = null;
   }, [lockP]);
+
+  const getSvgY = useCallback((e) => {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const rect = svg.getBoundingClientRect();
+    if (rect.height === 0) return null;
+    const scaleY = PV_H / rect.height;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return Math.max(PV_PLOT.y, Math.min(PV_PLOT.y + PV_PLOT.h, (clientY - rect.top) * scaleY));
+  }, []);
 
   const getSvgPoint = useCallback((e) => {
     const svg = svgRef.current;
@@ -665,18 +748,45 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
 
   const handleStart = useCallback((e) => {
     if (e.touches && e.touches.length === 0) return;
+    const py = getSvgY(e);
+    if (py != null) {
+      const boilerLineY = mapP(cycle.pHigh);
+      const condLineY = mapP(cycle.pLow);
+      if (Math.abs(py - boilerLineY) < 8) {
+        lineDragRef.current = "boiler";
+        setLineDragP(cycle.pHigh);
+        e.preventDefault();
+        return;
+      }
+      if (Math.abs(py - condLineY) < 8) {
+        lineDragRef.current = "condenser";
+        setLineDragP(cycle.pLow);
+        e.preventDefault();
+        return;
+      }
+    }
     draggingRef.current = true;
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgPoint, onDrag]);
+  }, [getSvgPoint, getSvgY, onDrag, cycle.pHigh, cycle.pLow]);
   const handleMove = useCallback((e) => {
+    if (lineDragRef.current) {
+      e.preventDefault();
+      const py = getSvgY(e);
+      if (py == null) return;
+      const P = unmapP(py);
+      setLineDragP(Math.round(P));
+      if (lineDragRef.current === "boiler" && onPHighChange) onPHighChange(Math.max(500, Math.min(10000, Math.round(P / 100) * 100)));
+      if (lineDragRef.current === "condenser" && onPLowChange) onPLowChange(Math.max(5, Math.min(100, Math.round(P))));
+      return;
+    }
     if (!draggingRef.current) return;
     if (e.touches && e.touches.length === 0) return;
     e.preventDefault();
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgPoint, onDrag]);
-  const handleEnd = useCallback(() => { draggingRef.current = false; }, []);
+  }, [getSvgPoint, getSvgY, onDrag, onPHighChange, onPLowChange]);
+  const handleEnd = useCallback(() => { draggingRef.current = false; lineDragRef.current = null; setLineDragP(null); }, []);
 
   const domePathD = pvDomeCurve.map((p, i) => `${i === 0 ? "M" : "L"}${mapV(p.v).toFixed(1)},${mapP(p.P).toFixed(1)}`).join(" ") + " Z";
 
@@ -736,6 +846,20 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV }) {
       <text x={(mapV(stateV[1]) + mapV(stateV[2])) / 2} y={mapP(stateP[1]) - 7} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle">Boiler</text>
       <text x={(mapV(stateV[2]) + mapV(stateV[3])) / 2 + 14} y={(mapP(stateP[2]) + mapP(stateP[3])) / 2} fill={K.workOut} fontSize={7} fontFamily={FM} fontWeight="500">Turbine</text>
       <text x={(mapV(stateV[3]) + mapV(stateV[0])) / 2} y={mapP(stateP[0]) + 12} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle">Condenser</text>
+      {/* Draggable boiler/condenser line hit areas */}
+      <line x1={PV_PLOT.x} y1={mapP(cycle.pHigh)} x2={PV_PLOT.x + PV_PLOT.w} y2={mapP(cycle.pHigh)} stroke="transparent" strokeWidth={16} style={{ cursor: "ns-resize" }} />
+      <line x1={PV_PLOT.x} y1={mapP(cycle.pLow)} x2={PV_PLOT.x + PV_PLOT.w} y2={mapP(cycle.pLow)} stroke="transparent" strokeWidth={16} style={{ cursor: "ns-resize" }} />
+      {lineDragP != null && (() => {
+        const isBoiler = lineDragRef.current === "boiler";
+        const lineY = isBoiler ? mapP(cycle.pHigh) : mapP(cycle.pLow);
+        const color = isBoiler ? K.heatIn : K.heatOut;
+        const label = isBoiler ? "P_high" : "P_low";
+        return (<>
+          <line x1={PV_PLOT.x} y1={lineY} x2={PV_PLOT.x + PV_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+          <rect x={PV_PLOT.x + PV_PLOT.w / 2 - 48} y={lineY - 22} width={96} height={18} rx={2} fill="#fff" stroke={color} strokeWidth={0.8} />
+          <text x={PV_PLOT.x + PV_PLOT.w / 2} y={lineY - 10} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{label} = {lineDragP} kPa</text>
+        </>);
+      })()}
       {/* Dimension lines - solid when locked */}
       <line x1={dpx} y1={dpy} x2={dpx} y2={PV_PLOT.y + PV_PLOT.h} stroke={lockV ? K.accent : K.inkLight} strokeWidth={lockV ? 1.2 : 0.5} strokeDasharray={lockV ? "none" : "2 2"} />
       <line x1={dpx} y1={dpy} x2={PV_PLOT.x} y2={dpy} stroke={lockP ? K.accent : K.inkLight} strokeWidth={lockP ? 1.2 : 0.5} strokeDasharray={lockP ? "none" : "2 2"} />
@@ -1496,7 +1620,7 @@ export default function App() {
               {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
             </button>
           </div>
-          <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} showAreas={showAreas} />
+          <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} showAreas={showAreas} onPHighChange={setPHigh} onPLowChange={setPLow} />
         </div>
 
         {/* P-v Diagram */}
@@ -1514,7 +1638,7 @@ export default function App() {
               {lockV ? "🔒" : "🔓"} Lock v = {(dragPoint.v != null ? dragPoint.v : stToV(dragPoint.s, dragPoint.T)).toFixed(4)} m³/kg
             </button>
           </div>
-          <PvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockP={lockP} lockV={lockV} />
+          <PvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockP={lockP} lockV={lockV} onPHighChange={setPHigh} onPLowChange={setPLow} />
         </div>
       </div>
       <EquationsModal open={showEqs} onClose={() => setShowEqs(false)} cycle={cycle} />
