@@ -924,16 +924,56 @@ function ComponentModal({ component, cycle, onClose }) {
   );
 }
 
+/* ───────── Schematic Default Layout ───────── */
+const SCHEMATIC_DEFAULTS = {
+  // ViewBox
+  vbX: -20, vbY: -5, vbW: 420, vbH: 340,
+  // Boiler
+  boilerX: 110, boilerY: 32, boilerW: 140, boilerH: 50,
+  // Turbine (trapezoid corners)
+  turbLX: 282, turbTY: 122, turbRX: 322, turbTRY: 142, turbBRY: 202, turbBY: 222,
+  // Condenser
+  condX: 110, condY: 248, condW: 140, condH: 50,
+  // Pump
+  pumpCX: 60, pumpCY: 172, pumpR: 28,
+  // State markers
+  s2x: 80, s2y: 76, s3x: 268, s3y: 102, s4x: 314, s4y: 242, s1x: 80, s1y: 252,
+  // Q_in arrow
+  qinX: 180, qinY1: 10, qinY2: 30, qinTextY: 8,
+  // Q_out arrow
+  qoutX: 180, qoutY1: 298, qoutY2: 312, qoutTextY: 324,
+  // W_t arrow
+  wtX1: 321, wtX2: 340, wtY: 172, wtTextX: 345,
+  // W_p arrow
+  wpX1: 28, wpX2: 8, wpY: 172, wpTextX: 4,
+  // Font sizes
+  compFont: 11, subFont: 7, energyFont: 8, workFont: 7.5, workValFont: 7, stateFont: 12, stateR: 11,
+};
+
 /* ───────── Schematic ───────── */
-function SchematicDiagram({ cycle }) {
+function SchematicDiagram({ cycle, layout }) {
+  const L = { ...SCHEMATIC_DEFAULTS, ...layout };
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
   const mk = [
     { id: "mO", c: K.heatIn }, { id: "mB", c: K.heatOut }, { id: "mG", c: K.workOut },
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
+  const boilerCX = L.boilerX + L.boilerW / 2;
+  const boilerCY = L.boilerY + L.boilerH / 2;
+  const condCX = L.condX + L.condW / 2;
+  const condCY = L.condY + L.condH / 2;
+  const turbCX = (L.turbLX + L.turbRX) / 2;
+  const turbCY = (L.turbTY + L.turbBY) / 2;
+  // Turbine horizontal decoration lines
+  const turbLineCount = 7;
+  const turbLines = Array.from({ length: turbLineCount }, (_, i) => {
+    const t = (i + 0.5) / turbLineCount;
+    return L.turbTY + t * (L.turbBY - L.turbTY);
+  });
+
   return (<>
-    <svg viewBox="-20 -5 420 340" style={{ width: "100%" }}>
+    <svg viewBox={`${L.vbX} ${L.vbY} ${L.vbW} ${L.vbH}`} style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -941,66 +981,197 @@ function SchematicDiagram({ cycle }) {
           </marker>
         ))}
       </defs>
-      {Array.from({ length: 21 }, (_, i) => Array.from({ length: 17 }, (_, j) => (
-        <circle key={`${i}-${j}`} cx={i * 20 - 10} cy={j * 20} r={0.6} fill={K.gridMajor} />
+      {Array.from({ length: Math.ceil(L.vbW / 20) + 1 }, (_, i) => Array.from({ length: Math.ceil(L.vbH / 20) + 1 }, (_, j) => (
+        <circle key={`${i}-${j}`} cx={L.vbX + i * 20} cy={L.vbY + j * 20} r={0.6} fill={K.gridMajor} />
       )))}
       {/* BOILER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("boiler")}>
-        <rect x={110} y={32} width={140} height={50} fill="rgba(255,255,255,0.01)" stroke={K.heatIn} strokeWidth={1.5} />
-        {[130,150,170,190,210,230].map(x => (
-          <g key={x}><line x1={x} y1={42} x2={x} y2={72} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},72 L${x},76 L${x+3},72`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
-        ))}
-        <rect x={152} y={40} width={56} height={16} fill="#fff" />
-        <text x={180} y={53} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Boiler</text>
-        <rect x={148} y={58} width={64} height={12} fill="#fff" />
-        <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+        <rect x={L.boilerX} y={L.boilerY} width={L.boilerW} height={L.boilerH} fill="rgba(255,255,255,0.01)" stroke={K.heatIn} strokeWidth={1.5} />
+        {Array.from({ length: 6 }, (_, i) => {
+          const x = L.boilerX + 20 + i * ((L.boilerW - 40) / 5);
+          return (<g key={i}><line x1={x} y1={L.boilerY + 10} x2={x} y2={L.boilerY + L.boilerH - 10} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},${L.boilerY+L.boilerH-10} L${x},${L.boilerY+L.boilerH-6} L${x+3},${L.boilerY+L.boilerH-10}`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>);
+        })}
+        <rect x={boilerCX - 28} y={L.boilerY + 8} width={56} height={16} fill="#fff" />
+        <text x={boilerCX} y={L.boilerY + 21} fill={K.heatIn} fontSize={L.compFont} textAnchor="middle" fontFamily={FD}>Boiler</text>
+        <rect x={boilerCX - 32} y={L.boilerY + 26} width={64} height={12} fill="#fff" />
+        <text x={boilerCX} y={L.boilerY + 35} fill={K.inkLight} fontSize={L.subFont} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* TURBINE */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("turbine")}>
-        <path d="M282,122 L322,142 L322,202 L282,222 Z" fill="rgba(255,255,255,0.01)" stroke={K.workOut} strokeWidth={1.5} strokeLinejoin="round" />
-        {[132, 145, 158, 171, 184, 197, 212].map(y => {
-          const xr = y < 142 ? 282 + (y - 122) / 20 * 40 : y > 202 ? 322 - (y - 202) / 20 * 40 : 322;
-          return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
+        <path d={`M${L.turbLX},${L.turbTY} L${L.turbRX},${L.turbTRY} L${L.turbRX},${L.turbBRY} L${L.turbLX},${L.turbBY} Z`} fill="rgba(255,255,255,0.01)" stroke={K.workOut} strokeWidth={1.5} strokeLinejoin="round" />
+        {turbLines.map(y => {
+          const xr = y < L.turbTRY ? L.turbLX + (y - L.turbTY) / (L.turbTRY - L.turbTY) * (L.turbRX - L.turbLX)
+            : y > L.turbBRY ? L.turbRX - (y - L.turbBRY) / (L.turbBY - L.turbBRY) * (L.turbRX - L.turbLX) : L.turbRX;
+          return <line key={y} x1={L.turbLX + 4} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
         })}
-        <text x={302} y={170} fill={K.workOut} fontSize={10} textAnchor="middle" fontFamily={FD}>Turbine</text>
-        <text x={302} y={183} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+        <text x={turbCX + 10} y={turbCY - 2} fill={K.workOut} fontSize={L.compFont - 1} textAnchor="middle" fontFamily={FD}>Turbine</text>
+        <text x={turbCX + 10} y={turbCY + 11} fill={K.inkLight} fontSize={L.subFont - 1} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
-        <rect x={110} y={248} width={140} height={50} fill="rgba(255,255,255,0.01)" stroke={K.heatOut} strokeWidth={1.5} />
-        <path d="M125,275 Q135,265 145,275 Q155,285 165,275 Q175,265 185,275 Q195,285 205,275 Q215,265 225,275 Q235,285 240,278" fill="none" stroke={K.heatOut} strokeWidth={0.7} />
-        <text x={180} y={265} fill={K.heatOut} fontSize={11} textAnchor="middle" fontFamily={FD}>Condenser</text>
-        <text x={180} y={292} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+        <rect x={L.condX} y={L.condY} width={L.condW} height={L.condH} fill="rgba(255,255,255,0.01)" stroke={K.heatOut} strokeWidth={1.5} />
+        <path d={`M${L.condX+15},${condCY+3} Q${L.condX+25},${condCY-7} ${L.condX+35},${condCY+3} Q${L.condX+45},${condCY+13} ${L.condX+55},${condCY+3} Q${L.condX+65},${condCY-7} ${L.condX+75},${condCY+3} Q${L.condX+85},${condCY+13} ${L.condX+95},${condCY+3} Q${L.condX+105},${condCY-7} ${L.condX+115},${condCY+3} Q${L.condX+125},${condCY+13} ${L.condX+130},${condCY+6}`} fill="none" stroke={K.heatOut} strokeWidth={0.7} />
+        <text x={condCX} y={condCY - 6} fill={K.heatOut} fontSize={L.compFont} textAnchor="middle" fontFamily={FD}>Condenser</text>
+        <text x={condCX} y={condCY + 20} fill={K.inkLight} fontSize={L.subFont} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* PUMP */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("pump")}>
-        <circle cx={60} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
-        <path d="M46,181 L60,151 L74,181 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-        <text x={60} y={193} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Pump</text>
+        <circle cx={L.pumpCX} cy={L.pumpCY} r={L.pumpR} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
+        <path d={`M${L.pumpCX-14},${L.pumpCY+9} L${L.pumpCX},${L.pumpCY-21} L${L.pumpCX+14},${L.pumpCY+9} Z`} fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <text x={L.pumpCX} y={L.pumpCY + 21} fill={K.workIn} fontSize={L.compFont - 1} textAnchor="middle" fontFamily={FD}>Pump</text>
       </g>
       {/* Pipes */}
-      <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
-      <polyline points="250,57 282,57 282,122" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
-      <polyline points="302,212 302,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
-      <polyline points="110,273 60,273 60,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points={`${L.pumpCX},${L.pumpCY - L.pumpR} ${L.pumpCX},${L.boilerY + L.boilerH / 2} ${L.boilerX},${boilerCY}`} fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points={`${L.boilerX + L.boilerW},${boilerCY} ${L.turbLX},${boilerCY} ${L.turbLX},${L.turbTY}`} fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points={`${turbCX + 10},${L.turbBY - (L.turbBY - L.turbBRY) * ((turbCX + 10 - L.turbLX) / (L.turbRX - L.turbLX))} ${turbCX + 10},${condCY} ${L.condX + L.condW},${condCY}`} fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points={`${L.condX},${condCY} ${L.pumpCX},${condCY} ${L.pumpCX},${L.pumpCY + L.pumpR}`} fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       {/* State markers */}
-      {[{ n:"2",x:80,y:76 },{ n:"3",x:268,y:102 },{ n:"4",x:314,y:242 },{ n:"1",x:80,y:252 }].map((p,i) => (
-        <g key={i}><circle cx={p.x} cy={p.y} r={11} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={12} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
+      {[{ n:"2",x:L.s2x,y:L.s2y },{ n:"3",x:L.s3x,y:L.s3y },{ n:"4",x:L.s4x,y:L.s4y },{ n:"1",x:L.s1x,y:L.s1y }].map((p,i) => (
+        <g key={i}><circle cx={p.x} cy={p.y} r={L.stateR} fill="#fff" stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={L.stateFont} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy */}
-      <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#mO)" />
-      <text x={180} y={8} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_in = {fmt(cycle.qIn)} kJ/kg</text>
-      <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
-      <text x={180} y={324} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
-      <line x1={321} y1={172} x2={340} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
-      <text x={345} y={168} fill={K.workOut} fontSize={7.5} textAnchor="start" fontFamily={FM} fontWeight="500">W_t</text>
-      <text x={345} y={180} fill={K.workOut} fontSize={7} textAnchor="start" fontFamily={FM}>{fmt(cycle.wTurbine)} kJ/kg</text>
-      <line x1={28} y1={172} x2={8} y2={172} stroke={K.workIn} strokeWidth={1.8} markerEnd="url(#mY)" />
-      <text x={4} y={168} fill={K.workIn} fontSize={7.5} textAnchor="end" fontFamily={FM} fontWeight="500">W_p</text>
-      <text x={4} y={180} fill={K.workIn} fontSize={7} textAnchor="end" fontFamily={FM}>{fmt(cycle.wPump)} kJ/kg</text>
+      <line x1={L.qinX} y1={L.qinY1} x2={L.qinX} y2={L.qinY2} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#mO)" />
+      <text x={L.qinX} y={L.qinTextY} fill={K.heatIn} fontSize={L.energyFont} textAnchor="middle" fontFamily={FM}>Q_in = {fmt(cycle.qIn)} kJ/kg</text>
+      <line x1={L.qoutX} y1={L.qoutY1} x2={L.qoutX} y2={L.qoutY2} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
+      <text x={L.qoutX} y={L.qoutTextY} fill={K.heatOut} fontSize={L.energyFont} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
+      <line x1={L.wtX1} y1={L.wtY} x2={L.wtX2} y2={L.wtY} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
+      <text x={L.wtTextX} y={L.wtY - 4} fill={K.workOut} fontSize={L.workFont} textAnchor="start" fontFamily={FM} fontWeight="500">W_t</text>
+      <text x={L.wtTextX} y={L.wtY + 8} fill={K.workOut} fontSize={L.workValFont} textAnchor="start" fontFamily={FM}>{fmt(cycle.wTurbine)} kJ/kg</text>
+      <line x1={L.wpX1} y1={L.wpY} x2={L.wpX2} y2={L.wpY} stroke={K.workIn} strokeWidth={1.8} markerEnd="url(#mY)" />
+      <text x={L.wpTextX} y={L.wpY - 4} fill={K.workIn} fontSize={L.workFont} textAnchor="end" fontFamily={FM} fontWeight="500">W_p</text>
+      <text x={L.wpTextX} y={L.wpY + 8} fill={K.workIn} fontSize={L.workValFont} textAnchor="end" fontFamily={FM}>{fmt(cycle.wPump)} kJ/kg</text>
     </svg>
     <ComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);
+}
+
+/* ───────── Schematic Layout Editor (popup window) ───────── */
+function openSchematicEditor(layout, setLayout) {
+  const w = window.open("", "SchematicEditor", "width=480,height=800,scrollbars=yes,resizable=yes");
+  if (!w) { alert("Popup blocked — please allow popups for this site."); return; }
+
+  const groups = [
+    { title: "ViewBox", keys: [
+      { k: "vbX", label: "Min X", min: -100, max: 50 }, { k: "vbY", label: "Min Y", min: -50, max: 50 },
+      { k: "vbW", label: "Width", min: 300, max: 600 }, { k: "vbH", label: "Height", min: 250, max: 500 },
+    ]},
+    { title: "Boiler", keys: [
+      { k: "boilerX", label: "X", min: 0, max: 300 }, { k: "boilerY", label: "Y", min: 0, max: 200 },
+      { k: "boilerW", label: "Width", min: 60, max: 250 }, { k: "boilerH", label: "Height", min: 30, max: 120 },
+    ]},
+    { title: "Turbine", keys: [
+      { k: "turbLX", label: "Left X", min: 200, max: 350 }, { k: "turbTY", label: "Top Y", min: 50, max: 200 },
+      { k: "turbRX", label: "Right X", min: 250, max: 400 }, { k: "turbTRY", label: "Top-Right Y", min: 60, max: 220 },
+      { k: "turbBRY", label: "Bot-Right Y", min: 140, max: 280 }, { k: "turbBY", label: "Bot Y", min: 160, max: 300 },
+    ]},
+    { title: "Condenser", keys: [
+      { k: "condX", label: "X", min: 0, max: 300 }, { k: "condY", label: "Y", min: 150, max: 350 },
+      { k: "condW", label: "Width", min: 60, max: 250 }, { k: "condH", label: "Height", min: 30, max: 120 },
+    ]},
+    { title: "Pump", keys: [
+      { k: "pumpCX", label: "Center X", min: 0, max: 200 }, { k: "pumpCY", label: "Center Y", min: 80, max: 280 },
+      { k: "pumpR", label: "Radius", min: 15, max: 50 },
+    ]},
+    { title: "State Markers", keys: [
+      { k: "s1x", label: "①  X", min: 0, max: 300 }, { k: "s1y", label: "①  Y", min: 100, max: 350 },
+      { k: "s2x", label: "②  X", min: 0, max: 300 }, { k: "s2y", label: "②  Y", min: 0, max: 200 },
+      { k: "s3x", label: "③  X", min: 150, max: 400 }, { k: "s3y", label: "③  Y", min: 0, max: 200 },
+      { k: "s4x", label: "④  X", min: 200, max: 400 }, { k: "s4y", label: "④  Y", min: 150, max: 350 },
+      { k: "stateR", label: "Circle R", min: 6, max: 20 }, { k: "stateFont", label: "Font", min: 6, max: 20 },
+    ]},
+    { title: "Q_in Arrow", keys: [
+      { k: "qinX", label: "X", min: 50, max: 350 }, { k: "qinY1", label: "Start Y", min: -20, max: 60 },
+      { k: "qinY2", label: "End Y", min: 0, max: 80 }, { k: "qinTextY", label: "Text Y", min: -20, max: 60 },
+    ]},
+    { title: "Q_out Arrow", keys: [
+      { k: "qoutX", label: "X", min: 50, max: 350 }, { k: "qoutY1", label: "Start Y", min: 250, max: 350 },
+      { k: "qoutY2", label: "End Y", min: 260, max: 370 }, { k: "qoutTextY", label: "Text Y", min: 270, max: 380 },
+    ]},
+    { title: "W_t Arrow", keys: [
+      { k: "wtX1", label: "Start X", min: 280, max: 380 }, { k: "wtX2", label: "End X", min: 300, max: 400 },
+      { k: "wtY", label: "Y", min: 100, max: 260 }, { k: "wtTextX", label: "Text X", min: 300, max: 420 },
+    ]},
+    { title: "W_p Arrow", keys: [
+      { k: "wpX1", label: "Start X", min: -20, max: 80 }, { k: "wpX2", label: "End X", min: -40, max: 60 },
+      { k: "wpY", label: "Y", min: 100, max: 260 }, { k: "wpTextX", label: "Text X", min: -40, max: 40 },
+    ]},
+    { title: "Font Sizes", keys: [
+      { k: "compFont", label: "Component", min: 6, max: 20 }, { k: "subFont", label: "Subtitle", min: 4, max: 14 },
+      { k: "energyFont", label: "Energy", min: 5, max: 16 }, { k: "workFont", label: "Work Label", min: 4, max: 14 },
+      { k: "workValFont", label: "Work Value", min: 4, max: 14 },
+    ]},
+  ];
+
+  const cur = { ...SCHEMATIC_DEFAULTS, ...layout };
+
+  let html = `<!DOCTYPE html><html><head><title>Schematic Layout Editor</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Mono',monospace;font-size:12px;background:#f5f3ee;color:#1a1a2e;padding:16px}
+  h1{font-size:16px;margin-bottom:12px;border-bottom:2px solid #1a1a2e;padding-bottom:8px}
+  h2{font-size:13px;margin:16px 0 8px;color:#6b4c3b;border-bottom:1px solid #d4d0c8;padding-bottom:4px}
+  .row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  label{width:90px;flex-shrink:0;font-size:11px;color:#3a3a5c}
+  input[type=range]{flex:1;height:4px;cursor:pointer}
+  .val{width:50px;text-align:right;font-size:12px;font-weight:700;color:#6b4c3b}
+  button{padding:8px 16px;font-size:12px;cursor:pointer;border:1px solid #d4d0c8;background:#fff;margin-right:8px}
+  button.primary{background:#6b4c3b;color:#fff;border-color:#6b4c3b}
+  .actions{position:sticky;top:0;background:#f5f3ee;padding:8px 0 12px;border-bottom:1px solid #d4d0c8;margin-bottom:8px;z-index:10}
+  pre{background:#fff;border:1px solid #d4d0c8;padding:10px;font-size:10px;margin-top:12px;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow:auto}
+</style></head><body>
+<h1>Schematic Layout Editor</h1>
+<div class="actions">
+  <button class="primary" onclick="apply()">Apply Changes</button>
+  <button onclick="reset()">Reset to Defaults</button>
+  <button onclick="copyJSON()">Copy JSON</button>
+</div>`;
+
+  for (const g of groups) {
+    html += `<h2>${g.title}</h2>`;
+    for (const s of g.keys) {
+      const v = cur[s.k];
+      html += `<div class="row"><label>${s.label}</label><input type="range" id="r_${s.k}" min="${s.min}" max="${s.max}" step="1" value="${v}" oninput="upd('${s.k}',this.value)"><span class="val" id="v_${s.k}">${v}</span></div>`;
+    }
+  }
+
+  html += `<pre id="jsonOut"></pre>
+<script>
+  const defs = ${JSON.stringify(SCHEMATIC_DEFAULTS)};
+  const cur = ${JSON.stringify(cur)};
+
+  function upd(k, v) {
+    cur[k] = Number(v);
+    document.getElementById('v_' + k).textContent = v;
+  }
+
+  function apply() {
+    const diff = {};
+    for (const k in cur) { if (cur[k] !== defs[k]) diff[k] = cur[k]; }
+    window.opener.postMessage({ type: 'schematic-layout', layout: diff }, '*');
+  }
+
+  function reset() {
+    for (const k in defs) {
+      cur[k] = defs[k];
+      const r = document.getElementById('r_' + k);
+      const v = document.getElementById('v_' + k);
+      if (r) { r.value = defs[k]; v.textContent = defs[k]; }
+    }
+    apply();
+  }
+
+  function copyJSON() {
+    const diff = {};
+    for (const k in cur) { if (cur[k] !== defs[k]) diff[k] = cur[k]; }
+    const text = JSON.stringify(diff, null, 2);
+    document.getElementById('jsonOut').textContent = text || '{ } (no changes from defaults)';
+    navigator.clipboard.writeText(text).catch(() => {});
+  }
+<\/script></body></html>`;
+
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
 }
 
 /* ───────── Info Modal ───────── */
@@ -1401,6 +1572,15 @@ export default function App() {
   const [lockT, setLockT] = useState(false);
   const [lockP, setLockP] = useState(false);
   const [lockV, setLockV] = useState(false);
+  const [schematicLayout, setSchematicLayout] = useState({});
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data && e.data.type === "schematic-layout") setSchematicLayout(e.data.layout);
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
 
   const tSatHigh = interpSteam(pHigh, "T");
   const minTSup = Math.ceil(tSatHigh + 10);
@@ -1458,7 +1638,7 @@ export default function App() {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>System Schematic</h3>
-          <SchematicDiagram cycle={cycle} />
+          <SchematicDiagram cycle={cycle} layout={schematicLayout} />
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 12 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
@@ -1584,6 +1764,14 @@ export default function App() {
 
       <div style={{ textAlign: "center", padding: desktop ? "20px 12px 36px" : "14px 12px 28px", fontSize: desktop ? 12 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
         Ideal Rankine Cycle · Simplified Steam Properties
+      </div>
+
+      {/* Temporary: Schematic Layout Editor */}
+      <div style={{ textAlign: "center", padding: "0 12px 32px" }}>
+        <button onClick={() => openSchematicEditor(schematicLayout, setSchematicLayout)} style={{
+          padding: "10px 20px", fontSize: 12, fontFamily: FM, background: "#fff", border: `1px solid ${K.border}`,
+          color: K.inkMed, cursor: "pointer",
+        }}>Open Schematic Layout Editor</button>
       </div>
     </div>
   );
