@@ -770,7 +770,7 @@ function SchematicDiagram({ cycle }) {
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
   return (
-    <svg viewBox="0 0 360 320" style={{ width: "100%" }}>
+    <svg viewBox="0 0 360 330" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -817,7 +817,7 @@ function SchematicDiagram({ cycle }) {
       <text x={180} y={8} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_in = {fmt(cycle.qIn)} kJ/kg</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
       <text x={180} y={320} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
-      <line x1={322} y1={172} x2={348} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
+      <line x1={323} y1={172} x2={348} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
       <text x={337} y={164} fill={K.workOut} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_t</text>
       <text x={337} y={188} fill={K.workOut} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wTurbine)}</text>
       <line x1={28} y1={172} x2={12} y2={172} stroke={K.workIn} strokeWidth={1.8} />
@@ -1279,7 +1279,7 @@ export default function App() {
       {/* Row: Schematic + Phase Visualizer (side by side on desktop) */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— Dwg. 001</span></h3>
+          <h3 style={sec}>System Schematic</h3>
           <SchematicDiagram cycle={cycle} />
         </div>
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
