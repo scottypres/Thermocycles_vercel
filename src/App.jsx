@@ -1355,9 +1355,103 @@ export default function App() {
         </div>
       </div>
 
-      {/* Energy */}
+      {/* Energy — Option A: Centered with large values */}
+      <div style={{ ...card }}>
+        <h3 style={sec}>Energy Balance · Option A <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— centered, large values</span></h3>
+        <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr 1fr 1fr" : "1fr 1fr", gap: 8 }}>
+          {[
+            { l: "Q in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn },
+            { l: "Q out (Cond.)", v: fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut },
+            { l: "W turbine", v: fmt(cycle.wTurbine), u: "kJ/kg", c: K.workOut },
+            { l: "W pump", v: fmt(cycle.wPump), u: "kJ/kg", c: K.workIn },
+          ].map((e, i) => (
+            <div key={i} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "12px 14px" : "8px 10px", textAlign: "center" }}>
+              <div style={{ fontSize: 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
+              <div style={{ fontSize: desktop ? 22 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
+              <div style={{ fontSize: 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: 8 }}>
+          <div style={{ padding: desktop ? "10px 14px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
+            <div style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_in − Q_out</div>
+            <div style={{ fontSize: desktop ? 16 : 12, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</div>
+          </div>
+          <div style={{ padding: desktop ? "10px 14px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
+            <div style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>W_net = W_t − W_p</div>
+            <div style={{ fontSize: desktop ? 16 : 12, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Energy — Option B: Two-column grouped layout */}
+      <div style={{ ...card }}>
+        <h3 style={sec}>Energy Balance · Option B <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— grouped heat/work</span></h3>
+        <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? 16 : 8 }}>
+          {/* Heat column */}
+          <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px" : "10px" }}>
+            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10, borderBottom: `1px solid ${K.border}`, paddingBottom: 6 }}>Heat Transfer</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+              <span style={{ fontSize: 10, fontFamily: FM, color: K.inkMed }}>Q_in (Boiler)</span>
+              <span style={{ fontSize: desktop ? 18 : 16, fontFamily: FD, color: K.heatIn }}>{fmt(cycle.qIn)} <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>kJ/kg</span></span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+              <span style={{ fontSize: 10, fontFamily: FM, color: K.inkMed }}>Q_out (Cond.)</span>
+              <span style={{ fontSize: desktop ? 18 : 16, fontFamily: FD, color: K.heatOut }}>{fmt(cycle.qOut)} <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>kJ/kg</span></span>
+            </div>
+            <div style={{ borderTop: `1px solid ${K.border}`, paddingTop: 6, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight, fontStyle: "italic" }}>Q_in − Q_out</span>
+              <span style={{ fontSize: desktop ? 14 : 12, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</span>
+            </div>
+          </div>
+          {/* Work column */}
+          <div style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px" : "10px" }}>
+            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10, borderBottom: `1px solid ${K.border}`, paddingBottom: 6 }}>Work</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+              <span style={{ fontSize: 10, fontFamily: FM, color: K.inkMed }}>W_turbine</span>
+              <span style={{ fontSize: desktop ? 18 : 16, fontFamily: FD, color: K.workOut }}>{fmt(cycle.wTurbine)} <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>kJ/kg</span></span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+              <span style={{ fontSize: 10, fontFamily: FM, color: K.inkMed }}>W_pump</span>
+              <span style={{ fontSize: desktop ? 18 : 16, fontFamily: FD, color: K.workIn }}>{fmt(cycle.wPump)} <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>kJ/kg</span></span>
+            </div>
+            <div style={{ borderTop: `1px solid ${K.border}`, paddingTop: 6, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight, fontStyle: "italic" }}>W_net = W_t − W_p</span>
+              <span style={{ fontSize: desktop ? 14 : 12, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Energy — Option C: Inline table-like rows */}
+      <div style={{ ...card }}>
+        <h3 style={sec}>Energy Balance · Option C <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— compact rows</span></h3>
+        <div style={{ border: `1px solid ${K.border}` }}>
+          {[
+            { l: "Q_in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn },
+            { l: "Q_out (Condenser)", v: fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut },
+            { l: "W_turbine", v: fmt(cycle.wTurbine), u: "kJ/kg", c: K.workOut },
+            { l: "W_pump", v: fmt(cycle.wPump), u: "kJ/kg", c: K.workIn },
+          ].map((e, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: desktop ? "10px 20px" : "8px 10px", borderBottom: `1px solid ${K.gridFine}`, background: i % 2 === 0 ? K.cardAlt : "#fff" }}>
+              <span style={{ fontSize: desktop ? 11 : 10, fontFamily: FM, color: K.inkMed }}>{e.l}</span>
+              <span style={{ fontSize: desktop ? 18 : 14, fontFamily: FD, color: e.c }}>{e.v} <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>{e.u}</span></span>
+            </div>
+          ))}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: desktop ? "10px 20px" : "8px 10px", borderBottom: `1px solid ${K.gridFine}`, background: K.cardAlt }}>
+            <span style={{ fontSize: desktop ? 11 : 10, fontFamily: FM, color: K.inkMed, fontWeight: 500 }}>Q_in − Q_out</span>
+            <span style={{ fontSize: desktop ? 18 : 14, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: desktop ? "10px 20px" : "8px 10px", background: "#fff" }}>
+            <span style={{ fontSize: desktop ? 11 : 10, fontFamily: FM, color: K.inkMed, fontWeight: 500 }}>W_net = W_t − W_p</span>
+            <span style={{ fontSize: desktop ? 18 : 14, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Energy — Original */}
       <div style={{ ...card, marginBottom: 0 }}>
-        <h3 style={sec}>Energy Balance <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— per unit mass</span></h3>
+        <h3 style={sec}>Energy Balance · Original <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— current layout</span></h3>
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr 1fr 1fr" : "1fr 1fr", gap: 8 }}>
           {[
             { l: "Q in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn },
