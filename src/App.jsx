@@ -814,8 +814,8 @@ function SchematicDiagram({ cycle }) {
       {/* Energy */}
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#mO)" />
       <text x={180} y={8} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_in = {fmt(cycle.qIn)} kJ/kg</text>
-      <line x1={180} y1={302} x2={180} y2={314} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
-      <text x={180} y={318} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
+      <line x1={180} y1={304} x2={180} y2={316} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
+      <text x={180} y={320} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_out = {fmt(cycle.qOut)} kJ/kg</text>
       <line x1={326} y1={172} x2={348} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
       <text x={337} y={164} fill={K.workOut} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_t</text>
       <text x={337} y={188} fill={K.workOut} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wTurbine)}</text>
