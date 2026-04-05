@@ -158,7 +158,7 @@ function ParticleVisualizer({ phaseInfo, temperature }) {
   const particlesRef = useRef(null);
   const animRef = useRef(null);
 
-  const W = 680, H = 300;
+  const W = 680, H = 480;
   const quality = phaseInfo.quality !== null ? phaseInfo.quality : (phaseInfo.phase === "superheated" || phaseInfo.phase === "supercritical" ? 1 : 0);
   const phase = phaseInfo.phase;
   const tNorm = Math.min(1, Math.max(0, temperature / 500));
@@ -1365,11 +1365,11 @@ export default function App() {
           ))}
         </div>
         <div style={{ marginTop: 8, display: desktop ? "grid" : "block", gridTemplateColumns: desktop ? "1fr 1fr" : undefined, gap: desktop ? 8 : undefined }}>
-          <div style={{ padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: desktop ? "center" : "space-between", alignItems: "center", gap: desktop ? 12 : undefined }}>
             <span style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>Verify: Q_in − Q_out</span>
             <span style={{ fontSize: 12, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</span>
           </div>
-          <div style={{ marginTop: desktop ? 0 : 4, padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ marginTop: desktop ? 0 : 4, padding: "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, display: "flex", justifyContent: desktop ? "center" : "space-between", alignItems: "center", gap: desktop ? 12 : undefined }}>
             <span style={{ fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>W_net = W_t − W_p</span>
             <span style={{ fontSize: 12, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</span>
           </div>
