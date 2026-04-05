@@ -786,6 +786,7 @@ function SchematicDiagram({ cycle }) {
       {[130,150,170,190,210,230].map(x => (
         <g key={x}><line x1={x} y1={42} x2={x} y2={72} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},72 L${x},76 L${x+3},72`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
       ))}
+      <rect x={152} y={40} width={56} height={16} fill="#fff" />
       <text x={180} y={53} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Boiler</text>
       <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       {/* TURBINE */}
