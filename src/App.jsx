@@ -1003,8 +1003,8 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {/* Labels — Boiler and Condenser are draggable */}
-        <rect x={mapV(stateV[0]) - sz(40)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2 - sz(8)} width={sz(30)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={mapV(stateV[0]) - sz(10)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
+        <rect x={mapV(stateV[0]) + sz(8)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2 - sz(8)} width={sz(30)} height={sz(11)} rx={2} fill={K.card} />
+        <text x={mapV(stateV[0]) + sz(10)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="start">Pump</text>
         <rect x={boilerTextX - sz(18)} y={boilerTextY - sz(8)} width={sz(36)} height={sz(11)} rx={2} fill={K.card} />
         <text x={boilerTextX} y={boilerTextY} fill={K.heatIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Boiler</text>
         <rect x={(mapV(stateV[2]) + mapV(stateV[3])) / 2 + sz(12)} y={(mapP(stateP[2]) + mapP(stateP[3])) / 2 - sz(8)} width={sz(34)} height={sz(11)} rx={2} fill={K.card} />
@@ -1248,9 +1248,9 @@ function SchematicDiagram({ cycle, textScale }) {
           const xr = y < 142 ? 282 + (y - 122) / 20 * 40 : y > 202 ? 322 - (y - 202) / 20 * 40 : 322;
           return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
         })}
-        <rect x={302 - sz(24)} y={170 - sz(12)} width={sz(48)} height={sz(16)} fill={K.card} />
+        <rect x={302 - sz(20)} y={170 - sz(12)} width={sz(40)} height={sz(16)} fill={K.card} />
         <text x={302} y={170} fill={K.workOut} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Turbine</text>
-        <rect x={302 - sz(28)} y={181 - sz(8)} width={sz(56)} height={sz(12)} fill={K.card} />
+        <rect x={302 - sz(20)} y={181 - sz(8)} width={sz(40)} height={sz(12)} fill={K.card} />
         <text x={302} y={181} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
@@ -1262,17 +1262,17 @@ function SchematicDiagram({ cycle, textScale }) {
       </g>
       {/* PUMP */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("pump")}>
-        <circle cx={60} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
-        <path d="M46,181 L60,151 L74,181 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-        <text x={60} y={191} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Pump</text>
+        <circle cx={85} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
+        <path d="M71,181 L85,151 L99,181 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <text x={85} y={191} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Pump</text>
       </g>
       {/* Pipes */}
-      <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points="85,144 85,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="250,57 302,57 302,132" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="302,212 302,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
-      <polyline points="110,273 60,273 60,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points="110,273 85,273 85,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       {/* State markers */}
-      {[{ n:"2",x:60,y:82 },{ n:"3",x:302,y:57 },{ n:"4",x:302,y:273 },{ n:"1",x:60,y:273 }].map((p,i) => (
+      {[{ n:"2",x:85,y:82 },{ n:"3",x:302,y:57 },{ n:"4",x:302,y:273 },{ n:"1",x:85,y:273 }].map((p,i) => (
         <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={sz(12)} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy */}
@@ -1284,10 +1284,10 @@ function SchematicDiagram({ cycle, textScale }) {
       <text x={343} y={166} fill={K.workOut} fontSize={sz(7.5)} textAnchor="start" fontFamily={FM} fontWeight="700">W_t</text>
       <text x={343} y={177} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cycle.wTurbine)}</text>
       <text x={343} y={187} fill={K.workOut} fontSize={sz(6)} textAnchor="start" fontFamily={FM} fontWeight="700">kJ/kg</text>
-      <line x1={28} y1={172} x2={8} y2={172} stroke={K.workIn} strokeWidth={1.8} markerEnd="url(#mY)" />
-      <text x={4} y={162} fill={K.workIn} fontSize={sz(7.5)} textAnchor="end" fontFamily={FM} fontWeight="700">W_p</text>
-      <text x={4} y={173} fill={K.workIn} fontSize={sz(7)} textAnchor="end" fontFamily={FM} fontWeight="700">−{fmt(cycle.wPump)}</text>
-      <text x={4} y={183} fill={K.workIn} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontWeight="700">kJ/kg</text>
+      <line x1={53} y1={172} x2={33} y2={172} stroke={K.workIn} strokeWidth={1.8} markerEnd="url(#mY)" />
+      <text x={29} y={162} fill={K.workIn} fontSize={sz(7.5)} textAnchor="end" fontFamily={FM} fontWeight="700">W_p</text>
+      <text x={29} y={173} fill={K.workIn} fontSize={sz(7)} textAnchor="end" fontFamily={FM} fontWeight="700">−{fmt(cycle.wPump)}</text>
+      <text x={29} y={183} fill={K.workIn} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontWeight="700">kJ/kg</text>
     </svg>
     <ComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);

@@ -962,8 +962,8 @@ function RefSchematicDiagram({ cycle, textScale }) {
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("compressor")}>
         <circle cx={68} cy={172} r={35} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
         <path d="M39,189 L68,139 L97,189 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-        <rect x={68 - sz(32)} y={178 - sz(11)} width={sz(64)} height={sz(14)} fill={K.card} />
-        <text x={68} y={178} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Compressor</text>
+        <rect x={68 - sz(32)} y={176 - sz(11)} width={sz(64)} height={sz(14)} fill={K.card} />
+        <text x={68} y={176} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Compressor</text>
       </g>
       {/* CONDENSER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
@@ -975,9 +975,9 @@ function RefSchematicDiagram({ cycle, textScale }) {
       </g>
       {/* EXPANSION VALVE */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("expvalve")}>
-        <path d="M295,148 L319,172 L295,196 L271,172 Z" fill="rgba(255,255,255,0.01)" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
-        <text x={295} y={170} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Exp.</text>
-        <text x={295} y={181} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Valve</text>
+        <path d="M273,148 L297,172 L273,196 L249,172 Z" fill="rgba(255,255,255,0.01)" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
+        <text x={273} y={170} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Exp.</text>
+        <text x={273} y={181} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Valve</text>
       </g>
       {/* EVAPORATOR */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("evaporator")}>
@@ -992,16 +992,16 @@ function RefSchematicDiagram({ cycle, textScale }) {
       </g>
       {/* Pipes */}
       <polyline points="68,137 68,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
-      <polyline points="250,57 295,57 295,152" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
-      <polyline points="295,192 295,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
+      <polyline points="250,57 273,57 273,152" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
+      <polyline points="273,192 273,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       <polyline points="110,273 68,273 68,207" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       {/* Labels rendered after pipes so white boxes cover arrows */}
       <rect x={68 - sz(28)} y={225 - sz(8)} width={sz(56)} height={sz(12)} fill={K.card} />
       <text x={68} y={225} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
-      <rect x={295 - sz(28)} y={204 - sz(8)} width={sz(56)} height={sz(12)} fill={K.card} />
-      <text x={295} y={204} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
+      <rect x={273 - sz(28)} y={204 - sz(8)} width={sz(56)} height={sz(12)} fill={K.card} />
+      <text x={273} y={204} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
       {/* State markers */}
-      {[{ n:"2",x:68,y:82 },{ n:"3",x:295,y:57 },{ n:"4",x:295,y:273 },{ n:"1",x:68,y:273 }].map((p,i) => (
+      {[{ n:"2",x:68,y:82 },{ n:"3",x:273,y:57 },{ n:"4",x:273,y:273 },{ n:"1",x:68,y:273 }].map((p,i) => (
         <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={sz(12)} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy labels */}
