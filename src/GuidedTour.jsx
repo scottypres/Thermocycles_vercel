@@ -27,9 +27,25 @@ function SizingPanel({ textScale, onScaleChange, K }) {
       </div>
       <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${K.border}` }}>
         <div style={{ fontSize: 9, fontFamily: FM, color: K.inkLight, marginBottom: 6, fontStyle: "italic" }}>Preview at current size:</div>
-        <div style={{ fontSize: 12, fontFamily: FD, color: K.ink, marginBottom: 4 }}>Section Header</div>
-        <div style={{ fontSize: 8, fontFamily: FM, color: K.inkLight, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1, fontStyle: "italic" }}>Label text · units</div>
-        <div style={{ fontSize: 16, fontFamily: FD, color: K.accent }}>123.4 <span style={{ fontSize: 8, fontFamily: FM, color: K.inkLight }}>kJ/kg</span></div>
+        <div style={{ fontSize: 12 * textScale, fontFamily: FD, color: K.ink, marginBottom: 4 }}>Section Header</div>
+        <div style={{ fontSize: 8 * textScale, fontFamily: FM, color: K.inkLight, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1, fontStyle: "italic" }}>Label text · units</div>
+        <div style={{ fontSize: 16 * textScale, fontFamily: FD, color: K.accent }}>123.4 <span style={{ fontSize: 8 * textScale, fontFamily: FM, color: K.inkLight }}>kJ/kg</span></div>
+        <svg viewBox="0 0 220 70" style={{ width: "100%", maxWidth: 220, marginTop: 8 }}>
+          {/* Mini schematic preview */}
+          <rect x={0} y={0} width={220} height={70} fill={K.cardAlt} rx={2} />
+          <circle cx={30} cy={35} r={14 * (1 + (textScale - 1) * 0.4)} fill="none" stroke={K.workIn} strokeWidth={1} />
+          <rect x={70} y={10} width={60} height={22} fill="none" stroke={K.heatIn} strokeWidth={1} />
+          <text x={100} y={24} fill={K.heatIn} fontSize={7 * (1 + (textScale - 1) * 0.4)} textAnchor="middle" fontFamily={FD}>Boiler</text>
+          <path d="M145,14 L160,22 L160,48 L145,56 Z" fill="none" stroke={K.workOut} strokeWidth={1} strokeLinejoin="round" />
+          <text x={152} y={38} fill={K.workOut} fontSize={5.5 * (1 + (textScale - 1) * 0.4)} textAnchor="middle" fontFamily={FD}>Turbine</text>
+          <rect x={70} y={40} width={60} height={22} fill="none" stroke={K.heatOut} strokeWidth={1} />
+          <text x={100} y={54} fill={K.heatOut} fontSize={7 * (1 + (textScale - 1) * 0.4)} textAnchor="middle" fontFamily={FD}>Condenser</text>
+          {/* Mini diagram labels */}
+          <text x={185} y={20} fill={K.ink} fontSize={7 * textScale} fontFamily={FM}>T</text>
+          <text x={195} y={20} fill={K.inkLight} fontSize={5 * textScale} fontFamily={FM}>(°C)</text>
+          <text x={185} y={55} fill={K.accent} fontSize={8 * textScale} fontFamily={FD}>456.7</text>
+          <text x={185} y={64} fill={K.inkLight} fontSize={5 * textScale} fontFamily={FM}>kJ/kg</text>
+        </svg>
       </div>
     </div>
   );
