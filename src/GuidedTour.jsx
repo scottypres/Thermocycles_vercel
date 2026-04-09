@@ -147,15 +147,15 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
   const isSizing = step.type === "sizing";
 
   const pct = ((textScale - 0.8) / 0.8) * 100;
+  const sliderBtnStyle = {
+    width: 38, height: 38, fontSize: 18, fontFamily: FM, fontWeight: 700,
+    background: K.card, border: `2px solid ${K.border}`, color: K.ink,
+    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+    borderRadius: 4, flexShrink: 0,
+  };
 
-  /* ── Sizing step: slim fixed top bar, no overlay ── */
+  /* ── Sizing step: welcome card with semi-transparent backdrop ── */
   if (isSizing) {
-    const smallBtn = {
-      width: 32, height: 32, fontSize: 18, fontFamily: FM, fontWeight: 700,
-      background: K.card, border: `1.5px solid ${K.border}`, color: K.ink,
-      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-      borderRadius: 4, flexShrink: 0,
-    };
     return (
       <>
         <style>{`
@@ -167,33 +167,41 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
             width:16px;height:16px;border-radius:50%;background:${accent};border:2px solid ${K.card};cursor:pointer;
           }
         `}</style>
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, zIndex: 10000,
-          background: K.card, borderBottom: `2px solid ${accent}`,
-          padding: "10px 16px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-          display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+        {/* Semi-transparent backdrop — page visible so user sees live changes */}
+        <div style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.25)" }}
+          onClick={forced ? undefined : onClose} />
+        {/* Welcome card */}
+        <div onClick={e => e.stopPropagation()} style={{
+          position: "fixed", zIndex: 10000,
+          top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+          background: K.card, border: `2px solid ${accent}`,
+          padding: "24px 24px 20px", maxWidth: 360, width: "calc(100% - 32px)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.3)", textAlign: "center",
         }}>
-          <div style={{ fontSize: 10, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap" }}>
-            Display Size — {Math.round(textScale * 100)}%
+          <h2 style={{ fontFamily: FD, color: K.ink, margin: "0 0 6px", fontSize: 22 }}>Welcome</h2>
+          <p style={{ fontFamily: FM, color: K.inkMed, fontSize: 12, lineHeight: 1.5, margin: "0 0 16px" }}>
+            Adjust the display size to your preference.
+            <br /><span style={{ color: K.inkLight, fontSize: 10 }}>The page updates behind this card as you drag.</span>
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+            <button onClick={() => onScaleChange(Math.max(0.8, Math.round((textScale - 0.1) * 100) / 100))} style={sliderBtnStyle}>−</button>
+            <input type="range" min={0.8} max={1.6} step={0.05} value={textScale}
+              className="tour-slider"
+              onChange={e => onScaleChange(Number(e.target.value))}
+              style={{ flex: 1, height: 6, appearance: "none", WebkitAppearance: "none",
+                background: `linear-gradient(to right, ${accent} 0%, ${accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`,
+                borderRadius: 0, outline: "none", cursor: "pointer" }} />
+            <button onClick={() => onScaleChange(Math.min(1.6, Math.round((textScale + 0.1) * 100) / 100))} style={sliderBtnStyle}>+</button>
+            <span style={{ fontFamily: FM, fontSize: 12, color: K.inkMed, minWidth: 36, textAlign: "right" }}>{Math.round(textScale * 100)}%</span>
           </div>
-          <button onClick={() => onScaleChange(Math.max(0.8, Math.round((textScale - 0.1) * 100) / 100))} style={smallBtn}>−</button>
-          <input type="range" min={0.8} max={1.6} step={0.05} value={textScale}
-            className="tour-slider"
-            onChange={e => onScaleChange(Number(e.target.value))}
-            style={{ flex: 1, minWidth: 80, height: 6, appearance: "none", WebkitAppearance: "none",
-              background: `linear-gradient(to right, ${accent} 0%, ${accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`,
-              borderRadius: 0, outline: "none", cursor: "pointer" }} />
-          <button onClick={() => onScaleChange(Math.min(1.6, Math.round((textScale + 0.1) * 100) / 100))} style={smallBtn}>+</button>
-          <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
-            {!forced && <button onClick={onClose} style={{
-              background: "none", border: "none", color: K.inkLight,
-              fontSize: 10, fontFamily: FM, cursor: "pointer", padding: "4px 8px",
-            }}>Exit</button>}
-            <button onClick={() => setStepIdx(i => i + 1)} style={{
-              background: accent, border: "none", padding: "6px 16px",
-              color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer", whiteSpace: "nowrap",
-            }}>Next →</button>
-          </div>
+          <button onClick={() => setStepIdx(i => i + 1)} style={{
+            background: accent, border: "none", padding: "10px 28px",
+            color: "#fff", fontSize: 14, fontFamily: FD, cursor: "pointer", width: "100%",
+          }}>Start Tour</button>
+          {!forced && <button onClick={onClose} style={{
+            background: "none", border: "none", color: K.inkLight, marginTop: 10,
+            fontSize: 11, fontFamily: FM, cursor: "pointer", padding: "4px 8px",
+          }}>Skip</button>}
         </div>
       </>
     );
