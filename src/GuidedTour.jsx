@@ -89,16 +89,25 @@ function getTooltipPos(rect) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const maxW = Math.min(320, vw - 16);
-  const estH = 180;
+  const estH = 150;
   const gap = 12;
   const style = { maxWidth: maxW };
 
-  if (rect.bottom + gap + estH < vh) {
+  const spaceBelow = vh - rect.bottom - gap;
+  const spaceAbove = rect.top - gap;
+
+  if (spaceBelow >= estH) {
+    // Fits below the element
     style.top = rect.bottom + gap;
-  } else if (rect.top - gap - estH > 0) {
-    style.bottom = vh - rect.top + gap;
+  } else if (spaceAbove >= estH) {
+    // Fits above the element
+    style.top = spaceAbove - estH + gap;
+  } else if (spaceAbove > spaceBelow) {
+    // More room above — pin to top of viewport
+    style.top = 8;
   } else {
-    style.top = Math.max(8, (vh - estH) / 2);
+    // More room below — pin to bottom of viewport
+    style.bottom = 8;
   }
 
   const cx = rect.left + rect.width / 2;
@@ -170,10 +179,10 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         {/* Semi-transparent backdrop — page visible so user sees live changes */}
         <div style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.25)" }}
           onClick={forced ? undefined : onClose} />
-        {/* Welcome card */}
+        {/* Welcome card — pinned to top so page elements visible below */}
         <div onClick={e => e.stopPropagation()} style={{
           position: "fixed", zIndex: 10000,
-          top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+          top: 16, left: "50%", transform: "translateX(-50%)",
           background: K.card, border: `2px solid ${accent}`,
           padding: "24px 24px 20px", maxWidth: 360, width: "calc(100% - 32px)",
           boxShadow: "0 8px 32px rgba(0,0,0,0.3)", textAlign: "center",
