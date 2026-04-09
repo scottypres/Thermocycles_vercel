@@ -1001,7 +1001,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
       <rect x={267} y={196} width={56} height={12} fill={K.card} />
       <text x={295} y={204} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
       {/* State markers */}
-      {[{ n:"2",x:88,y:76 },{ n:"3",x:265,y:40 },{ n:"4",x:308,y:242 },{ n:"1",x:88,y:252 }].map((p,i) => (
+      {[{ n:"2",x:68,y:82 },{ n:"3",x:295,y:57 },{ n:"4",x:295,y:273 },{ n:"1",x:68,y:273 }].map((p,i) => (
         <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={sz(12)} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy labels */}
