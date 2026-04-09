@@ -90,24 +90,21 @@ function getTooltipPos(rect) {
   const vh = window.innerHeight;
   const maxW = Math.min(320, vw - 16);
   const estH = 150;
-  const gap = 12;
+  const gap = 14;
   const style = { maxWidth: maxW };
 
-  const spaceBelow = vh - rect.bottom - gap;
   const spaceAbove = rect.top - gap;
+  const spaceBelow = vh - (rect.bottom || (rect.top + rect.height)) - gap;
 
-  if (spaceBelow >= estH) {
-    // Fits below the element
-    style.top = rect.bottom + gap;
-  } else if (spaceAbove >= estH) {
-    // Fits above the element
-    style.top = spaceAbove - estH + gap;
-  } else if (spaceAbove > spaceBelow) {
-    // More room above — pin to top of viewport
-    style.top = 8;
+  if (spaceAbove >= estH) {
+    // Prefer above — we scrolled to guarantee this space
+    style.top = Math.max(8, rect.top - gap - estH);
+  } else if (spaceBelow >= estH) {
+    // Fits below
+    style.top = (rect.bottom || (rect.top + rect.height)) + gap;
   } else {
-    // More room below — pin to bottom of viewport
-    style.bottom = 8;
+    // Neither fits — pin to top of viewport
+    style.top = 8;
   }
 
   const cx = rect.left + rect.width / 2;
@@ -131,13 +128,18 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
     const el = document.querySelector(`[data-tour="${step.target}"]`);
     if (!el) { setRect(null); return; }
 
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Scroll so there's guaranteed space above the element for the tooltip
+    const tooltipSpace = 180;
+    const elRect = el.getBoundingClientRect();
+    const absTop = elRect.top + window.scrollY;
+    const targetScroll = Math.max(0, absTop - tooltipSpace);
+    window.scrollTo({ top: targetScroll, behavior: "smooth" });
 
     const measure = () => {
       const r = el.getBoundingClientRect();
-      setRect({ left: r.left, top: r.top, width: r.width, height: r.height });
+      setRect({ left: r.left, top: r.top, width: r.width, height: r.height, bottom: r.bottom });
     };
-    const t = setTimeout(measure, 400);
+    const t = setTimeout(measure, 450);
 
     window.addEventListener("scroll", measure, true);
     window.addEventListener("resize", measure);
