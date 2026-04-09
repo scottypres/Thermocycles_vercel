@@ -963,6 +963,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
         <circle cx={68} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
         <path d="M54,185 L68,158 L82,185 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
         <text x={68} y={175} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Compressor</text>
+        <rect x={40} y={197} width={56} height={12} fill={K.card} />
         <text x={68} y={205} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
@@ -970,6 +971,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
         <rect x={110} y={32} width={140} height={50} fill="rgba(255,255,255,0.01)" stroke={K.heatOut} strokeWidth={1.5} />
         <path d="M125,63 Q135,53 145,63 Q155,73 165,63 Q175,53 185,63 Q195,73 205,63 Q215,53 225,63 Q235,73 240,66" fill="none" stroke={K.heatOut} strokeWidth={0.7} />
         <text x={180} y={53} fill={K.heatOut} fontSize={sz(11)} textAnchor="middle" fontFamily={FD}>Condenser</text>
+        <rect x={148} y={58} width={64} height={12} fill={K.card} />
         <text x={180} y={67} fill={K.inkLight} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* EXPANSION VALVE */}
@@ -977,6 +979,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
         <path d="M295,152 L315,172 L295,192 L275,172 Z" fill="rgba(255,255,255,0.01)" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
         <text x={295} y={170} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Exp.</text>
         <text x={295} y={181} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Valve</text>
+        <rect x={267} y={190} width={56} height={12} fill={K.card} />
         <text x={295} y={198} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
       </g>
       {/* EVAPORATOR */}
@@ -985,7 +988,9 @@ function RefSchematicDiagram({ cycle, textScale }) {
         {[130,150,170,190,210,230].map(x => (
           <g key={x}><line x1={x} y1={258} x2={x} y2={288} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},258 L${x},254 L${x+3},258`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
         ))}
+        <rect x={148} y={260} width={64} height={16} fill={K.card} />
         <text x={180} y={272} fill={K.heatIn} fontSize={sz(11)} textAnchor="middle" fontFamily={FD}>Evaporator</text>
+        <rect x={148} y={278} width={64} height={12} fill={K.card} />
         <text x={180} y={286} fill={K.inkLight} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* Pipes */}

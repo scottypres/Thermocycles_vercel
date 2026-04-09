@@ -1248,7 +1248,9 @@ function SchematicDiagram({ cycle, textScale }) {
           const xr = y < 142 ? 282 + (y - 122) / 20 * 40 : y > 202 ? 322 - (y - 202) / 20 * 40 : 322;
           return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
         })}
+        <rect x={278} y={158} width={48} height={16} fill={K.card} />
         <text x={302} y={170} fill={K.workOut} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Turbine</text>
+        <rect x={274} y={173} width={56} height={12} fill={K.card} />
         <text x={302} y={181} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
