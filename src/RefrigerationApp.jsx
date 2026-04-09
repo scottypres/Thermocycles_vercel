@@ -961,10 +961,8 @@ function RefSchematicDiagram({ cycle, textScale }) {
       {/* COMPRESSOR */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("compressor")}>
         <circle cx={68} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
-        <path d="M51,189 L68,155 L85,189 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <path d="M45,186 L68,145 L91,186 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
         <text x={68} y={175} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Compressor</text>
-        <rect x={40} y={203} width={56} height={12} fill={K.card} />
-        <text x={68} y={211} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
@@ -979,8 +977,6 @@ function RefSchematicDiagram({ cycle, textScale }) {
         <path d="M295,152 L315,172 L295,192 L275,172 Z" fill="rgba(255,255,255,0.01)" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
         <text x={295} y={170} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Exp.</text>
         <text x={295} y={181} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Valve</text>
-        <rect x={267} y={196} width={56} height={12} fill={K.card} />
-        <text x={295} y={204} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
       </g>
       {/* EVAPORATOR */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("evaporator")}>
@@ -998,6 +994,11 @@ function RefSchematicDiagram({ cycle, textScale }) {
       <polyline points="250,57 295,57 295,152" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       <polyline points="295,192 295,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       <polyline points="110,273 68,273 68,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
+      {/* Labels rendered after pipes so white boxes cover arrows */}
+      <rect x={40} y={208} width={56} height={12} fill={K.card} />
+      <text x={68} y={216} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+      <rect x={267} y={196} width={56} height={12} fill={K.card} />
+      <text x={295} y={204} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
       {/* State markers */}
       {[{ n:"2",x:88,y:76 },{ n:"3",x:265,y:40 },{ n:"4",x:308,y:242 },{ n:"1",x:88,y:252 }].map((p,i) => (
         <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={sz(12)} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
