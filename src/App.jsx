@@ -1728,7 +1728,7 @@ function RankinePage({ onBack }) {
   const sec = { margin: "0 0 14px 0", fontSize: desktop ? 22.50 : 12, fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   return (
-    <div style={{ zoom: textScale, minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: (desktop ? 1750 : 480) / textScale, margin: "0 auto" }}>
+    <div style={{ zoom: textScale, minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1737,10 +1737,13 @@ function RankinePage({ onBack }) {
         }
         input[type="range"]::-moz-range-thumb { width:16px;height:16px;border-radius:50%;background:${K.accent};border:2px solid ${K.card};cursor:pointer; }
         *{box-sizing:border-box}body{margin:0;background:${K.bg}}
+        svg text{transform-box:fill-box;transform-origin:0% 50%;transform:scale(${textScale})}
+        svg text[text-anchor="middle"]{transform-origin:50% 50%}
+        svg text[text-anchor="end"]{transform-origin:100% 50%}
       `}</style>
 
       {/* Header */}
-      <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 10px", color: K.inkMed, fontSize: 10, cursor: "pointer", fontFamily: FM }}>← Back</button>}
         <div>

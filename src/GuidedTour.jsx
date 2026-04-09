@@ -3,22 +3,29 @@ import { FD, FM } from "./shared.jsx";
 
 /* ───────── Sizing Preview Panel ───────── */
 function SizingPanel({ textScale, onScaleChange, K }) {
+  const pct = ((textScale - 0.8) / 0.8) * 100;
+  const btnStyle = {
+    width: 44, height: 44, fontSize: 20, fontFamily: FM, fontWeight: 700,
+    background: K.card, border: `2px solid ${K.border}`, color: K.ink,
+    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+    borderRadius: 4, flexShrink: 0,
+  };
   return (
-    <div style={{ textAlign: "left", padding: "12px", background: K.cardAlt, border: `1px solid ${K.border}`, marginBottom: 14 }}>
-      <div style={{ fontSize: 10, fontFamily: FM, color: K.inkLight, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>
-        Adjust Display Size
+    <div style={{ textAlign: "left", padding: "14px", background: K.cardAlt, border: `1px solid ${K.border}`, marginBottom: 14 }}>
+      <div style={{ fontSize: 10, fontFamily: FM, color: K.inkLight, marginBottom: 10, letterSpacing: 1, textTransform: "uppercase" }}>
+        Adjust Display Size — {Math.round(textScale * 100)}%
       </div>
-      <input type="range" min={0.8} max={1.6} step={0.05} value={textScale}
-        onChange={e => onScaleChange(Number(e.target.value))}
-        style={{ width: "100%", height: 3, appearance: "none", WebkitAppearance: "none",
-          background: `linear-gradient(to right, ${K.accent} 0%, ${K.accent} ${((textScale - 0.8) / 0.8) * 100}%, ${K.border} ${((textScale - 0.8) / 0.8) * 100}%, ${K.border} 100%)`,
-          borderRadius: 0, outline: "none", cursor: "pointer" }} />
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 8, fontFamily: FM, color: K.inkLight }}>
-        <span>Smaller</span>
-        <span style={{ color: K.accent, fontWeight: 600 }}>{Math.round(textScale * 100)}%</span>
-        <span>Larger</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <button onClick={() => onScaleChange(Math.max(0.8, Math.round((textScale - 0.1) * 100) / 100))} style={btnStyle}>−</button>
+        <input type="range" min={0.8} max={1.6} step={0.05} value={textScale}
+          className="tour-slider"
+          onChange={e => onScaleChange(Number(e.target.value))}
+          style={{ flex: 1, height: 6, appearance: "none", WebkitAppearance: "none",
+            background: `linear-gradient(to right, ${K.accent} 0%, ${K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`,
+            borderRadius: 0, outline: "none", cursor: "pointer", padding: "10px 0" }} />
+        <button onClick={() => onScaleChange(Math.min(1.6, Math.round((textScale + 0.1) * 100) / 100))} style={btnStyle}>+</button>
       </div>
-      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${K.border}` }}>
+      <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${K.border}` }}>
         <div style={{ fontSize: 9, fontFamily: FM, color: K.inkLight, marginBottom: 6, fontStyle: "italic" }}>Preview at current size:</div>
         <div style={{ fontSize: 12, fontFamily: FD, color: K.ink, marginBottom: 4 }}>Section Header</div>
         <div style={{ fontSize: 8, fontFamily: FM, color: K.inkLight, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1, fontStyle: "italic" }}>Label text · units</div>
