@@ -84,33 +84,8 @@ export function WelcomePopup({ open, onStart, onDismiss, K, textScale, onScaleCh
   );
 }
 
-/* ───────── Tooltip positioning ───────── */
-function getTooltipPos(rect) {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const maxW = Math.min(320, vw - 16);
-  const estH = 150;
-  const gap = 14;
-  const style = { maxWidth: maxW };
-
-  const spaceAbove = rect.top - gap;
-  const spaceBelow = vh - (rect.bottom || (rect.top + rect.height)) - gap;
-
-  if (spaceAbove >= estH) {
-    // Prefer above — we scrolled to guarantee this space
-    style.top = Math.max(8, rect.top - gap - estH);
-  } else if (spaceBelow >= estH) {
-    // Fits below
-    style.top = (rect.bottom || (rect.top + rect.height)) + gap;
-  } else {
-    // Neither fits — pin to top of viewport
-    style.top = 8;
-  }
-
-  const cx = rect.left + rect.width / 2;
-  style.left = Math.max(8, Math.min(cx - maxW / 2, vw - maxW - 8));
-  return style;
-}
+/* ───────── Bottom sheet height (fraction of viewport) ───────── */
+const SHEET_HEIGHT_VH = 35; // bottom sheet takes ~35% of viewport
 
 /* ───────── Guided Tour ───────── */
 export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange, forced }) {
@@ -128,11 +103,16 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
     const el = document.querySelector(`[data-tour="${step.target}"]`);
     if (!el) { setRect(null); return; }
 
-    // Scroll so there's guaranteed space above the element for the tooltip
-    const tooltipSpace = 180;
+    // Scroll so the highlighted element sits in the upper portion of the viewport
+    // (above the bottom sheet which occupies the lower ~35%)
+    const vh = window.innerHeight;
+    const sheetH = vh * SHEET_HEIGHT_VH / 100;
+    const safeZone = vh - sheetH - 20; // visible area above bottom sheet
     const elRect = el.getBoundingClientRect();
     const absTop = elRect.top + window.scrollY;
-    const targetScroll = Math.max(0, absTop - tooltipSpace);
+    // Center the element in the safe zone (upper portion), with some top margin
+    const topMargin = Math.max(20, (safeZone - elRect.height) / 3);
+    const targetScroll = Math.max(0, absTop - topMargin);
     window.scrollTo({ top: targetScroll, behavior: "smooth" });
 
     const measure = () => {
@@ -249,46 +229,49 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         }} />}
       </div>
 
+      {/* ── Fixed bottom sheet ── */}
       <div onClick={e => e.stopPropagation()} style={{
         position: "fixed", zIndex: 10000,
-        ...(!rect
-          ? { top: "50%", left: "50%", transform: "translate(-50%,-50%)", maxWidth: 340 }
-          : getTooltipPos(rect)),
-        background: K.card, border: `2px solid ${accent}`,
-        padding: "16px 20px",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+        bottom: 0, left: 0, right: 0,
+        background: K.card, borderTop: `2px solid ${accent}`,
+        padding: "18px 20px 24px",
+        boxShadow: "0 -4px 24px rgba(0,0,0,0.25)",
+        maxHeight: `${SHEET_HEIGHT_VH}vh`,
+        overflowY: "auto",
       }}>
-        <div style={{ fontSize: 10, fontFamily: FM, color: K.inkLight, marginBottom: 4 }}>
-          Step {stepIdx + 1} of {steps.length}
-        </div>
-        <div style={{ fontSize: 16, fontFamily: FD, color: K.ink, marginBottom: 6 }}>
-          {step.title}
-        </div>
-        <div style={{ fontSize: 12, fontFamily: FM, color: K.inkMed, lineHeight: 1.5, marginBottom: 14 }}>
-          {step.description}
-        </div>
+        <div style={{ maxWidth: 480, margin: "0 auto" }}>
+          <div style={{ fontSize: 10, fontFamily: FM, color: K.inkLight, marginBottom: 4 }}>
+            Step {stepIdx + 1} of {steps.length}
+          </div>
+          <div style={{ fontSize: 16, fontFamily: FD, color: K.ink, marginBottom: 6 }}>
+            {step.title}
+          </div>
+          <div style={{ fontSize: 12, fontFamily: FM, color: K.inkMed, lineHeight: 1.5, marginBottom: 14 }}>
+            {step.description}
+          </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          {!forced && <button onClick={onClose} style={{
-            background: "none", border: "none", color: K.inkLight,
-            fontSize: 10, fontFamily: FM, cursor: "pointer", padding: "4px 8px",
-          }}>Exit Tour</button>}
-          <div style={{ display: "flex", gap: 8, marginLeft: forced ? "auto" : 0 }}>
-            {stepIdx > 0 && <button onClick={() => setStepIdx(i => i - 1)} style={{
-              background: "none", border: `1px solid ${K.border}`,
-              padding: "6px 14px", color: K.inkMed, fontSize: 11, fontFamily: FM, cursor: "pointer",
-            }}>Back</button>}
-            {stepIdx < steps.length - 1 ? (
-              <button onClick={() => setStepIdx(i => i + 1)} style={{
-                background: accent, border: "none", padding: "6px 14px",
-                color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer",
-              }}>Next</button>
-            ) : (
-              <button onClick={onClose} style={{
-                background: accent, border: "none", padding: "6px 14px",
-                color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer",
-              }}>Finish</button>
-            )}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {!forced && <button onClick={onClose} style={{
+              background: "none", border: "none", color: K.inkLight,
+              fontSize: 10, fontFamily: FM, cursor: "pointer", padding: "4px 8px",
+            }}>Exit Tour</button>}
+            <div style={{ display: "flex", gap: 8, marginLeft: forced ? "auto" : 0 }}>
+              {stepIdx > 0 && <button onClick={() => setStepIdx(i => i - 1)} style={{
+                background: "none", border: `1px solid ${K.border}`,
+                padding: "6px 14px", color: K.inkMed, fontSize: 11, fontFamily: FM, cursor: "pointer",
+              }}>Back</button>}
+              {stepIdx < steps.length - 1 ? (
+                <button onClick={() => setStepIdx(i => i + 1)} style={{
+                  background: accent, border: "none", padding: "6px 14px",
+                  color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer",
+                }}>Next</button>
+              ) : (
+                <button onClick={onClose} style={{
+                  background: accent, border: "none", padding: "6px 14px",
+                  color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer",
+                }}>Finish</button>
+              )}
+            </div>
           </div>
         </div>
       </div>
