@@ -1236,9 +1236,9 @@ function SchematicDiagram({ cycle, textScale }) {
         {[130,150,170,190,210,230].map(x => (
           <g key={x}><line x1={x} y1={42} x2={x} y2={72} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},72 L${x},76 L${x+3},72`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
         ))}
-        <rect x={152} y={40} width={56} height={16} fill={K.card} />
+        <rect x={180 - sz(28)} y={53 - sz(13)} width={sz(56)} height={sz(16)} fill={K.card} />
         <text x={180} y={53} fill={K.heatIn} fontSize={sz(11)} textAnchor="middle" fontFamily={FD}>Boiler</text>
-        <rect x={148} y={58} width={64} height={12} fill={K.card} />
+        <rect x={180 - sz(32)} y={67 - sz(9)} width={sz(64)} height={sz(12)} fill={K.card} />
         <text x={180} y={67} fill={K.inkLight} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* TURBINE */}
@@ -1248,9 +1248,9 @@ function SchematicDiagram({ cycle, textScale }) {
           const xr = y < 142 ? 282 + (y - 122) / 20 * 40 : y > 202 ? 322 - (y - 202) / 20 * 40 : 322;
           return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
         })}
-        <rect x={278} y={158} width={48} height={16} fill={K.card} />
+        <rect x={302 - sz(24)} y={170 - sz(12)} width={sz(48)} height={sz(16)} fill={K.card} />
         <text x={302} y={170} fill={K.workOut} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Turbine</text>
-        <rect x={274} y={173} width={56} height={12} fill={K.card} />
+        <rect x={302 - sz(28)} y={181 - sz(8)} width={sz(56)} height={sz(12)} fill={K.card} />
         <text x={302} y={181} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
@@ -1268,11 +1268,11 @@ function SchematicDiagram({ cycle, textScale }) {
       </g>
       {/* Pipes */}
       <polyline points="60,144 60,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
-      <polyline points="250,57 282,57 282,122" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points="250,57 302,57 302,132" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="302,212 302,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="110,273 60,273 60,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       {/* State markers */}
-      {[{ n:"2",x:60,y:82 },{ n:"3",x:282,y:57 },{ n:"4",x:302,y:273 },{ n:"1",x:60,y:273 }].map((p,i) => (
+      {[{ n:"2",x:60,y:82 },{ n:"3",x:302,y:57 },{ n:"4",x:302,y:273 },{ n:"1",x:60,y:273 }].map((p,i) => (
         <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={sz(12)} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy */}

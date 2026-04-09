@@ -960,22 +960,22 @@ function RefSchematicDiagram({ cycle, textScale }) {
       )))}
       {/* COMPRESSOR */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("compressor")}>
-        <circle cx={68} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
-        <path d="M45,186 L68,145 L91,186 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-        <rect x={36} y={164} width={64} height={14} fill={K.card} />
-        <text x={68} y={175} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Compressor</text>
+        <circle cx={68} cy={172} r={35} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
+        <path d="M39,189 L68,139 L97,189 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <rect x={68 - sz(32)} y={178 - sz(11)} width={sz(64)} height={sz(14)} fill={K.card} />
+        <text x={68} y={178} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Compressor</text>
       </g>
       {/* CONDENSER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
         <rect x={110} y={32} width={140} height={60} fill="rgba(255,255,255,0.01)" stroke={K.heatOut} strokeWidth={1.5} />
         <path d="M125,63 Q135,53 145,63 Q155,73 165,63 Q175,53 185,63 Q195,73 205,63 Q215,53 225,63 Q235,73 240,66" fill="none" stroke={K.heatOut} strokeWidth={0.7} />
         <text x={180} y={53} fill={K.heatOut} fontSize={sz(11)} textAnchor="middle" fontFamily={FD}>Condenser</text>
-        <rect x={148} y={74} width={64} height={12} fill={K.card} />
+        <rect x={180 - sz(32)} y={82 - sz(8)} width={sz(64)} height={sz(12)} fill={K.card} />
         <text x={180} y={82} fill={K.inkLight} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* EXPANSION VALVE */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("expvalve")}>
-        <path d="M295,152 L315,172 L295,192 L275,172 Z" fill="rgba(255,255,255,0.01)" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
+        <path d="M295,148 L319,172 L295,196 L271,172 Z" fill="rgba(255,255,255,0.01)" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
         <text x={295} y={170} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Exp.</text>
         <text x={295} y={181} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Valve</text>
       </g>
@@ -985,20 +985,20 @@ function RefSchematicDiagram({ cycle, textScale }) {
         {[130,150,170,190,210,230].map(x => (
           <g key={x}><line x1={x} y1={258} x2={x} y2={288} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},258 L${x},254 L${x+3},258`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
         ))}
-        <rect x={148} y={260} width={64} height={16} fill={K.card} />
+        <rect x={180 - sz(32)} y={272 - sz(12)} width={sz(64)} height={sz(16)} fill={K.card} />
         <text x={180} y={272} fill={K.heatIn} fontSize={sz(11)} textAnchor="middle" fontFamily={FD}>Evaporator</text>
-        <rect x={148} y={278} width={64} height={12} fill={K.card} />
+        <rect x={180 - sz(32)} y={286 - sz(8)} width={sz(64)} height={sz(12)} fill={K.card} />
         <text x={180} y={286} fill={K.inkLight} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* Pipes */}
-      <polyline points="68,144 68,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
+      <polyline points="68,137 68,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       <polyline points="250,57 295,57 295,152" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       <polyline points="295,192 295,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
-      <polyline points="110,273 68,273 68,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
+      <polyline points="110,273 68,273 68,207" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       {/* Labels rendered after pipes so white boxes cover arrows */}
-      <rect x={40} y={208} width={56} height={12} fill={K.card} />
-      <text x={68} y={216} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
-      <rect x={267} y={196} width={56} height={12} fill={K.card} />
+      <rect x={68 - sz(28)} y={225 - sz(8)} width={sz(56)} height={sz(12)} fill={K.card} />
+      <text x={68} y={225} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+      <rect x={295 - sz(28)} y={204 - sz(8)} width={sz(56)} height={sz(12)} fill={K.card} />
       <text x={295} y={204} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
       {/* State markers */}
       {[{ n:"2",x:68,y:82 },{ n:"3",x:295,y:57 },{ n:"4",x:295,y:273 },{ n:"1",x:68,y:273 }].map((p,i) => (
@@ -1009,12 +1009,13 @@ function RefSchematicDiagram({ cycle, textScale }) {
       <text x={180} y={8} fill={K.heatOut} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_cond = {fmt(cycle.qCond)} kJ/kg</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatIn} strokeWidth={1.8} />
       <path d="M176,302 L180,298 L184,302" fill="none" stroke={K.heatIn} strokeWidth={1.5} />
-      <rect x={110} y={310} width={140} height={14} fill={K.card} />
+      <rect x={180 - sz(70)} y={318 - sz(8)} width={sz(140)} height={sz(14)} fill={K.card} />
       <text x={180} y={318} fill={K.heatIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_evap = {fmt(cycle.qEvap)} kJ/kg</text>
-      <line x1={36} y1={172} x2={18} y2={172} stroke={K.workIn} strokeWidth={1.8} />
-      <path d="M40,168 L36,172 L40,176" fill="none" stroke={K.workIn} strokeWidth={1.5} />
-      <text x={27} y={160} fill={K.workIn} fontSize={sz(7.5)} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
-      <text x={27} y={188} fill={K.workIn} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
+      <line x1={8} y1={172} x2={33} y2={172} stroke={K.workIn} strokeWidth={1.8} />
+      <path d="M29,168 L33,172 L29,176" fill="none" stroke={K.workIn} strokeWidth={1.5} />
+      <text x={20} y={160} fill={K.workIn} fontSize={sz(7.5)} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
+      <text x={20} y={188} fill={K.workIn} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
+      <text x={20} y={198} fill={K.workIn} fontSize={sz(6)} textAnchor="middle" fontFamily={FM}>kJ/kg</text>
     </svg>
     <RefComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);
