@@ -955,7 +955,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
     { id: "rM", c: K.inkMed }, { id: "rK", c: K.ink },
   ];
   return (<>
-    <svg viewBox="-28 0 360 320" style={{ width: "100%", maxWidth: 420 }}>
+    <svg viewBox="-28 0 360 320" style={{ width: "100%", maxWidth: 420, display: "block", margin: "0 auto" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
