@@ -469,9 +469,13 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
         </>);
       })()}
       {!showAreas && <>
+        <rect x={mapS(st[0].s) + 4} y={(mapT(st[0].T) + mapT(st[1].T)) / 2 - 8} width={52} height={11} rx={2} fill={K.card} />
         <text x={mapS(st[0].s) + 8} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500">Compressor</text>
+        <rect x={mapS((st[1].s + st[2].s) / 2) - 24} y={mapT(cycle.Tsat_high) - 16} width={48} height={11} rx={2} fill={K.card} />
         <text x={mapS((st[1].s + st[2].s) / 2)} y={mapT(cycle.Tsat_high) - 8} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Condenser</text>
+        <rect x={mapS((st[2].s + st[3].s) / 2) - 16 - 44} y={(mapT(st[2].T) + mapT(st[3].T)) / 2 - 8} width={44} height={11} rx={2} fill={K.card} />
         <text x={mapS((st[2].s + st[3].s) / 2) - 16} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.inkMed} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Exp. Valve</text>
+        <rect x={mapS((st[3].s + st[0].s) / 2) - 26} y={mapT(st[0].T) + 5} width={52} height={11} rx={2} fill={K.card} />
         <text x={mapS((st[3].s + st[0].s) / 2)} y={mapT(st[0].T) + 13} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Evaporator</text>
         <line x1={dpx} y1={dpy} x2={dpx} y2={TS_PLOT.y + TS_PLOT.h} stroke={lockS ? K.accent : K.inkLight} strokeWidth={lockS ? 1.2 : 0.5} strokeDasharray={lockS ? "none" : "2 2"} />
         <line x1={dpx} y1={dpy} x2={TS_PLOT.x} y2={dpy} stroke={lockT ? K.accent : K.inkLight} strokeWidth={lockT ? 1.2 : 0.5} strokeDasharray={lockT ? "none" : "2 2"} />
@@ -738,9 +742,13 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
         </>);
       })()}
       {!showAreas && <>
+        <rect x={(mapH(cycle.h1) + mapH(cycle.h2)) / 2 + 6} y={(mapP(st[0].P) + mapP(st[1].P)) / 2 - 8} width={52} height={11} rx={2} fill={K.card} />
         <text x={(mapH(cycle.h1) + mapH(cycle.h2)) / 2 + 10} y={(mapP(st[0].P) + mapP(st[1].P)) / 2} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500">Compressor</text>
+        <rect x={(mapH(cycle.h2) + mapH(cycle.h3)) / 2 - 24} y={mapP(st[1].P) - 15} width={48} height={11} rx={2} fill={K.card} />
         <text x={(mapH(cycle.h2) + mapH(cycle.h3)) / 2} y={mapP(st[1].P) - 7} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Condenser</text>
+        <rect x={mapH(cycle.h3) - 10 - 44} y={(mapP(st[2].P) + mapP(st[3].P)) / 2 - 8} width={44} height={11} rx={2} fill={K.card} />
         <text x={mapH(cycle.h3) - 10} y={(mapP(st[2].P) + mapP(st[3].P)) / 2} fill={K.inkMed} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Exp. Valve</text>
+        <rect x={(mapH(cycle.h4) + mapH(cycle.h1)) / 2 - 26} y={mapP(st[0].P) + 5} width={52} height={11} rx={2} fill={K.card} />
         <text x={(mapH(cycle.h4) + mapH(cycle.h1)) / 2} y={mapP(st[0].P) + 13} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Evaporator</text>
         <line x1={dpx} y1={dpy} x2={dpx} y2={PH_PLOT.y + PH_PLOT.h} stroke={lockH ? K.accent : K.inkLight} strokeWidth={lockH ? 1.2 : 0.5} strokeDasharray={lockH ? "none" : "2 2"} />
         <line x1={dpx} y1={dpy} x2={PH_PLOT.x} y2={dpy} stroke={lockP ? K.accent : K.inkLight} strokeWidth={lockP ? 1.2 : 0.5} strokeDasharray={lockP ? "none" : "2 2"} />
