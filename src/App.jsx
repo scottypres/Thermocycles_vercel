@@ -616,14 +616,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         );
       })}
       {!showAreas && <>
-        {/* Draggable point */}
-        <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
-        <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
-        {/* Drag point label */}
-        <rect x={dpx + sz(12)} y={dpy - sz(22)} width={sz(70)} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-        <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>
-          {dragPoint.T.toFixed(0)}°C, {dragPoint.s.toFixed(2)}
-        </text>
+        {/* Draggable point — rendered last for top z-order */}
         {/* Labels — Boiler and Condenser are draggable (hitbox around text) */}
         <rect x={mapS((st[2].s + st[3].s) / 2) + sz(14)} y={mapT((st[2].T + st[3].T) / 2) - sz(8)} width={sz(34)} height={sz(11)} rx={2} fill={K.card} />
         <text x={mapS((st[2].s + st[3].s) / 2) + sz(16)} y={mapT((st[2].T + st[3].T) / 2)} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Turbine</text>
@@ -633,6 +626,13 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         <text x={mapS(st[0].s) - sz(10)} y={mapT((st[0].T + st[1].T) / 2)} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
         <rect x={boilerTextX - sz(18)} y={boilerTextY - sz(8)} width={sz(36)} height={sz(11)} rx={2} fill={K.card} />
         <text x={boilerTextX} y={boilerTextY} fill={K.heatIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Boiler</text>
+        {/* Drag point + value box on top */}
+        <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
+        <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
+        <rect x={dpx + sz(12)} y={dpy - sz(22)} width={sz(70)} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
+        <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>
+          {dragPoint.T.toFixed(0)}°C, {dragPoint.s.toFixed(2)}
+        </text>
         {/* Instruction hint */}
         <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
       </>}
@@ -999,9 +999,6 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         );
       })}
       {!showPvAreas && <>
-        {/* Drag point */}
-        <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
-        <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {/* Labels — Boiler and Condenser are draggable */}
         <rect x={mapV(stateV[0]) + sz(8)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2 - sz(8)} width={sz(25)} height={sz(11)} rx={2} fill={K.card} />
         <text x={mapV(stateV[0]) + sz(10)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="start">Pump</text>
@@ -1011,6 +1008,13 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         <text x={(mapV(stateV[2]) + mapV(stateV[3])) / 2 + sz(14)} y={(mapP(stateP[2]) + mapP(stateP[3])) / 2} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Turbine</text>
         <rect x={condTextX - sz(24)} y={condTextY - sz(8)} width={sz(48)} height={sz(11)} rx={2} fill={K.card} />
         <text x={condTextX} y={condTextY} fill={K.heatOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Condenser</text>
+        {/* Drag point + value box on top */}
+        <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
+        <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
+        <rect x={dpx + sz(12)} y={dpy - sz(22)} width={sz(80)} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
+        <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>
+          {(dpP).toFixed(0)} kPa, {dpV.toFixed(4)}
+        </text>
         {/* Instruction hint */}
         <text x={PV_W - 8} y={PV_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockV ? "v locked" : "tap & drag"}</text>
       </>}

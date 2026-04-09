@@ -36,8 +36,8 @@ function SizingPanel({ textScale, onScaleChange, K }) {
           <circle cx={30} cy={35} r={14 * (1 + (textScale - 1) * 0.4)} fill="none" stroke={K.workIn} strokeWidth={1} />
           <rect x={70} y={10} width={60} height={22} fill="none" stroke={K.heatIn} strokeWidth={1} />
           <text x={100} y={24} fill={K.heatIn} fontSize={7 * (1 + (textScale - 1) * 0.4)} textAnchor="middle" fontFamily={FD}>Boiler</text>
-          <path d="M145,14 L160,22 L160,48 L145,56 Z" fill="none" stroke={K.workOut} strokeWidth={1} strokeLinejoin="round" />
-          <text x={152} y={38} fill={K.workOut} fontSize={5.5 * (1 + (textScale - 1) * 0.4)} textAnchor="middle" fontFamily={FD}>Turbine</text>
+          <path d="M140,10 L162,22 L162,48 L140,60 Z" fill="none" stroke={K.workOut} strokeWidth={1} strokeLinejoin="round" />
+          <text x={151} y={39} fill={K.workOut} fontSize={6.5 * (1 + (textScale - 1) * 0.4)} textAnchor="middle" fontFamily={FD}>Turbine</text>
           <rect x={70} y={40} width={60} height={22} fill="none" stroke={K.heatOut} strokeWidth={1} />
           <text x={100} y={54} fill={K.heatOut} fontSize={7 * (1 + (textScale - 1) * 0.4)} textAnchor="middle" fontFamily={FD}>Condenser</text>
           {/* Mini diagram labels */}

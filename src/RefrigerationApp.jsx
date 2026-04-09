@@ -499,6 +499,10 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
       {!showAreas && <>
         <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
+        <rect x={dpx + sz(12)} y={dpy - sz(22)} width={sz(70)} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
+        <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>
+          {dragPoint.T.toFixed(0)}°C, {dragPoint.s.toFixed(2)}
+        </text>
         <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
       </>}
       {showAreas && (() => {
@@ -773,6 +777,10 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
       {!showAreas && <>
         <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
+        <rect x={dpx + sz(12)} y={dpy - sz(22)} width={sz(85)} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
+        <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>
+          {(dragPoint.P || cycle.states[0].P).toFixed(0)} kPa, {(dragPoint.h || cycle.h1).toFixed(1)}
+        </text>
         <text x={PH_W - 8} y={PH_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockH ? "h locked" : "tap & drag"}</text>
       </>}
       {showAreas && (() => {
