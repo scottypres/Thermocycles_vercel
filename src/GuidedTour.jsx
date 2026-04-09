@@ -199,8 +199,8 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
             color: "#fff", fontSize: 14, fontFamily: FD, cursor: "pointer", width: "100%",
           }}>Start Tour</button>
           {!forced && <button onClick={onClose} style={{
-            background: "none", border: "none", color: K.inkLight, marginTop: 10,
-            fontSize: 11, fontFamily: FM, cursor: "pointer", padding: "4px 8px",
+            background: "none", border: `1px solid ${K.border}`, color: K.inkMed, marginTop: 10,
+            fontSize: 11, fontFamily: FM, cursor: "pointer", padding: "6px 16px",
           }}>Skip</button>}
         </div>
       </>
@@ -262,8 +262,8 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             {!forced && <button onClick={onClose} style={{
-              background: "none", border: "none", color: K.inkLight,
-              fontSize: 10, fontFamily: FM, cursor: "pointer", padding: "4px 8px",
+              background: "none", border: `1px solid ${K.border}`, color: K.inkMed,
+              fontSize: 10, fontFamily: FM, cursor: "pointer", padding: "6px 14px",
             }}>Exit Tour</button>}
             <div style={{ display: "flex", gap: 8, marginLeft: forced ? "auto" : 0 }}>
               {stepIdx > 0 && <button onClick={() => setStepIdx(i => i - 1)} style={{
