@@ -1367,6 +1367,7 @@ export default function RefrigerationPage({ onBack }) {
     try { const v = parseFloat(document.cookie.split('; ').find(c => c.startsWith('textScale='))?.split('=')[1]); return isNaN(v) ? 1 : Math.max(0.8, Math.min(1.6, v)); } catch { return 1; }
   });
   const handleScaleChange = useCallback((s) => { setTextScale(s); document.cookie = `textScale=${s};path=/;max-age=31536000`; }, []);
+  const sz = (px) => Math.round(px * textScale);
 
   const [refIdx, setRefIdx] = useState(0);
   const refData = REFRIGERANTS[refIdx];
@@ -1415,7 +1416,7 @@ export default function RefrigerationPage({ onBack }) {
   const desktop = useIsDesktop();
   const gap = desktop ? 16 : 12;
   const card = { margin: `${gap}px ${gap}px 0`, padding: desktop ? "18px" : "14px", background: K.card, border: `1px solid ${K.border}` };
-  const sec = { margin: "0 0 10px 0", fontSize: desktop ? 14 : 12, fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 6 };
+  const sec = { margin: "0 0 10px 0", fontSize: sz(desktop ? 14 : 12), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 6 };
 
   // Sync drag from T-s
   const handleTsDrag = useCallback((pt) => {
@@ -1451,7 +1452,7 @@ export default function RefrigerationPage({ onBack }) {
   }, []);
 
   return (
-    <div style={{ zoom: textScale, minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1100 : 480, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1100 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1471,24 +1472,24 @@ export default function RefrigerationPage({ onBack }) {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 10px", color: K.inkMed, fontSize: 10, cursor: "pointer", fontFamily: FM }}>← Back</button>}
             <div>
-              <div style={{ fontSize: 8, color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
-              <h1 style={{ margin: 0, fontSize: 20, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
+              <div style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
+              <h1 style={{ margin: 0, fontSize: sz(20), fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
                 Refrigeration <span style={{ color: K.heatOut, fontStyle: "italic" }}>Studio</span>
               </h1>
-              <div style={{ fontSize: 8, color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Vapor-Compression Cycle Analysis</div>
+              <div style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Vapor-Compression Cycle Analysis</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
-            <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: "7px 14px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: FD }}>Theory</button>
-            <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: "7px 14px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
-            <button onClick={() => setShowTour(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: "7px 14px", color: K.inkMed, fontSize: 11, cursor: "pointer", fontFamily: FD }}>Instructions</button>
+            <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: "7px 14px", color: "#fff", fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Theory</button>
+            <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: "7px 14px", color: "#fff", fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
+            <button onClick={() => setShowTour(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: "7px 14px", color: K.inkMed, fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
         {/* Refrigerant selector */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
           {REFRIGERANTS.map((r, i) => (
             <button key={r.id} onClick={() => setRefIdx(i)} style={{
-              padding: "4px 10px", fontSize: 9, fontFamily: FM,
+              padding: "4px 10px", fontSize: sz(9), fontFamily: FM,
               background: i === refIdx ? K.heatOut : K.cardAlt,
               color: i === refIdx ? "#fff" : K.inkMed,
               border: `1px solid ${i === refIdx ? K.heatOut : K.border}`,
@@ -1512,9 +1513,9 @@ export default function RefrigerationPage({ onBack }) {
           { l: "W comp", v: fmt(cycle.wComp), c: K.workIn, s: "kJ/kg" },
         ].map((m, i) => (
           <div key={i} style={{ textAlign: "center", padding: "4px 0" }}>
-            <div style={{ fontSize: 8, color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
-            <div style={{ fontSize: desktop ? 24 : 20, fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
-            {m.s && <div style={{ fontSize: 8, color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
+            <div style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
+            <div style={{ fontSize: sz(desktop ? 24 : 20), fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
+            {m.s && <div style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
           </div>
         ))}
       </div>
@@ -1540,21 +1541,21 @@ export default function RefrigerationPage({ onBack }) {
             <div style={{ display: "flex", gap: 6 }}>
               <button data-tour="ref-cop-areas" onClick={() => setShowTsAreas(a => !a)} style={{
                 background: showTsAreas ? K.workIn : "none", border: `1px solid ${showTsAreas ? K.workIn : K.border}`, padding: "3px 8px",
-                color: showTsAreas ? "#fff" : K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+                color: showTsAreas ? "#fff" : K.inkMed, fontSize: sz(9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
               }}>COP areas</button>
               <button data-tour="ref-fx" onClick={() => setShowEqs(true)} style={{
                 background: "none", border: `1px solid ${K.border}`, padding: "3px 8px",
-                color: K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
+                color: K.inkMed, fontSize: sz(9), fontFamily: FM, cursor: "pointer", borderRadius: 4,
               }}>f(x)</button>
             </div>
           </div>
           <div data-tour="ref-lock-buttons" style={{ display: "flex", gap: 8, marginBottom: 8 }}>
             <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockH(false); } }}
-              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: "5px 0", fontSize: sz(9), fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
               {lockS ? "\u{1F512}" : "\u{1F513}"} Lock s = {dragPoint.s.toFixed(2)}
             </button>
             <button onClick={() => { setLockT(l => !l); if (!lockT) { setLockS(false); setLockP(false); setLockH(false); } }}
-              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: "5px 0", fontSize: sz(9), fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
               {lockT ? "\u{1F512}" : "\u{1F513}"} Lock T = {dragPoint.T.toFixed(0)}°C
             </button>
           </div>
@@ -1569,16 +1570,16 @@ export default function RefrigerationPage({ onBack }) {
             <span>P–h Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <button data-tour="ref-energy-areas" onClick={() => setShowPhAreas(a => !a)} style={{
               background: showPhAreas ? K.workIn : "none", border: `1px solid ${showPhAreas ? K.workIn : K.border}`, padding: "3px 8px",
-              color: showPhAreas ? "#fff" : K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              color: showPhAreas ? "#fff" : K.inkMed, fontSize: sz(9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
             }}>Energy areas</button>
           </div>
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
             <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockH(false); setLockS(false); setLockT(false); } }}
-              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: "5px 0", fontSize: sz(9), fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
               {lockP ? "\u{1F512}" : "\u{1F513}"} Lock P = {(dragPoint.P || effectivePLow).toFixed(0)} kPa
             </button>
             <button onClick={() => { setLockH(l => !l); if (!lockH) { setLockP(false); setLockS(false); setLockT(false); } }}
-              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockH ? K.accent : K.cardAlt, color: lockH ? "#fff" : K.inkMed, border: `1px solid ${lockH ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockH ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: "5px 0", fontSize: sz(9), fontFamily: FM, background: lockH ? K.accent : K.cardAlt, color: lockH ? "#fff" : K.inkMed, border: `1px solid ${lockH ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockH ? 700 : 400, transition: "all 0.15s" }}>
               {lockH ? "\u{1F512}" : "\u{1F513}"} Lock h = {(dragPoint.h || cycle.h1).toFixed(0)} kJ/kg
             </button>
           </div>
@@ -1595,12 +1596,12 @@ export default function RefrigerationPage({ onBack }) {
           <h3 style={sec}>Cycle Parameters</h3>
           <ParamSlider label="Condenser Pressure (P high)" unit="kPa" color={K.heatOut} value={effectivePHigh} min={Math.round(pMin + (pMax - pMin) * 0.2)} max={pMax} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPHigh} />
           <ParamSlider label="Evaporator Pressure (P low)" unit="kPa" color={K.heatIn} value={effectivePLow} min={pMin} max={Math.round(pMin + (pMax - pMin) * 0.6)} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPLow} />
-          <div style={{ marginTop: 6, fontSize: 9, color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
+          <div style={{ marginTop: 6, fontSize: sz(9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
             T_evap = {cycle.Tsat_low.toFixed(1)}°C &nbsp;|&nbsp; T_cond = {cycle.Tsat_high.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
         </div>
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
+          <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: sz(9), color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
           <RefStateTable cycle={cycle} refData={refData} onSelectState={setDragPoint} />
         </div>
       </div>
@@ -1611,40 +1612,40 @@ export default function RefrigerationPage({ onBack }) {
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? 16 : 8 }}>
           {/* Heat Transfer group */}
           <div>
-            <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
+            <div style={{ fontSize: sz(desktop ? 15 : 9), fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
                 { l: "Q evap (Cooling)", v: fmt(cycle.qEvap), u: "kJ/kg", c: K.heatIn, topic: "qe" },
                 { l: "Q cond (Rejected)", v: fmt(cycle.qCond), u: "kJ/kg", c: K.heatOut, topic: "qc" },
               ].map((e, i) => (
                 <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
-                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
-                  <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
-                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
+                  <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
+                  <div style={{ fontSize: sz(desktop ? 35 : 16), fontFamily: FD, color: e.c }}>{e.v}</div>
+                  <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
                 </div>
               ))}
             </div>
           </div>
           {/* Work group */}
           <div>
-            <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Work</div>
+            <div style={{ fontSize: sz(desktop ? 15 : 9), fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Work</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
               <div onClick={() => { setEqTopic("wc"); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
-                <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>W compressor</div>
-                <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: K.workIn }}>{fmt(cycle.wComp)}</div>
-                <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>kJ/kg</div>
+                <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>W compressor</div>
+                <div style={{ fontSize: sz(desktop ? 35 : 16), fontFamily: FD, color: K.workIn }}>{fmt(cycle.wComp)}</div>
+                <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, marginTop: 2 }}>kJ/kg</div>
               </div>
             </div>
           </div>
         </div>
         <div style={{ marginTop: desktop ? 15 : 8, display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: 8 }}>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
-            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Verify: Q_evap + W_comp</div>
-            <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.accent }}>= {fmt(cycle.qEvap + cycle.wComp)} kJ/kg</div>
+            <div style={{ fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Verify: Q_evap + W_comp</div>
+            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.accent }}>= {fmt(cycle.qEvap + cycle.wComp)} kJ/kg</div>
           </div>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
-            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_cond (should match)</div>
-            <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.heatOut }}>= {fmt(cycle.qCond)} kJ/kg</div>
+            <div style={{ fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_cond (should match)</div>
+            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.heatOut }}>= {fmt(cycle.qCond)} kJ/kg</div>
           </div>
         </div>
       </div>
@@ -1652,15 +1653,15 @@ export default function RefrigerationPage({ onBack }) {
       <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px" }}>
         <button data-tour="ref-dark-mode" onClick={toggleDarkMode} style={{
           background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
-          color: K.inkMed, fontSize: desktop ? 13 : 10, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
+          color: K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{darkMode ? "\u2600 Light Mode" : "\u263E Dark Mode"}</button>
       </div>
-      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: desktop ? 15 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
+      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
         Vapor-Compression Refrigeration · {refData.name} ({refData.formula})
       </div>
       <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", borderTop: `1px solid ${K.border}`, marginTop: desktop ? 8 : 4, marginLeft: desktop ? 40 : 16, marginRight: desktop ? 40 : 16 }}>
-        <div style={{ fontSize: desktop ? 14 : 9, color: K.inkMed, fontFamily: FM, marginBottom: 4 }}>Built by <span style={{ fontWeight: 600, color: K.ink }}>Scott Presbrey</span></div>
-        <span onClick={() => { const u="scottypres",d="gmail",t="com"; window.location.href="mailto:"+u+"\u0040"+d+"."+t; }} style={{ fontSize: desktop ? 13 : 8, color: K.accent, fontFamily: FM, textDecoration: "underline", cursor: "pointer" }}>{"scottypres" + "\u0040" + "gmail.com"}</span>
+        <div style={{ fontSize: sz(desktop ? 14 : 9), color: K.inkMed, fontFamily: FM, marginBottom: 4 }}>Built by <span style={{ fontWeight: 600, color: K.ink }}>Scott Presbrey</span></div>
+        <span onClick={() => { const u="scottypres",d="gmail",t="com"; window.location.href="mailto:"+u+"\u0040"+d+"."+t; }} style={{ fontSize: sz(desktop ? 13 : 8), color: K.accent, fontFamily: FM, textDecoration: "underline", cursor: "pointer" }}>{"scottypres" + "\u0040" + "gmail.com"}</span>
       </div>
     </div>
   );

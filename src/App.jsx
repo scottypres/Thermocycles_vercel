@@ -1695,6 +1695,7 @@ function RankinePage({ onBack }) {
     try { const v = parseFloat(document.cookie.split('; ').find(c => c.startsWith('textScale='))?.split('=')[1]); return isNaN(v) ? 1 : Math.max(0.8, Math.min(1.6, v)); } catch { return 1; }
   });
   const handleScaleChange = useCallback((s) => { setTextScale(s); document.cookie = `textScale=${s};path=/;max-age=31536000`; }, []);
+  const sz = (px) => Math.round(px * textScale);
 
   const [pHigh, setPHigh] = useState(4000);
   const [pLow, setPLow] = useState(20);
@@ -1725,10 +1726,10 @@ function RankinePage({ onBack }) {
   const desktop = useIsDesktop();
   const gap = desktop ? 25 : 12;
   const card = { margin: `${gap}px ${gap}px 0`, padding: desktop ? "24px" : "14px", background: K.card, border: `1px solid ${K.border}` };
-  const sec = { margin: "0 0 14px 0", fontSize: desktop ? 22.50 : 12, fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
+  const sec = { margin: "0 0 14px 0", fontSize: sz(desktop ? 22.50 : 12), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   return (
-    <div style={{ zoom: textScale, minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1747,16 +1748,16 @@ function RankinePage({ onBack }) {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 10px", color: K.inkMed, fontSize: 10, cursor: "pointer", fontFamily: FM }}>← Back</button>}
         <div>
-          <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
-          <h1 style={{ margin: 0, fontSize: desktop ? 35 : 20, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
+          <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
+          <h1 style={{ margin: 0, fontSize: sz(desktop ? 35 : 20), fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
             SteamCycle <span style={{ color: K.accent, fontStyle: "italic" }}>Studio</span>
           </h1>
-          <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Ideal Rankine Cycle Analysis</div>
+          <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Ideal Rankine Cycle Analysis</div>
         </div>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          <button data-tour="theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: desktop ? 17.50 : 11, cursor: "pointer", fontFamily: FD }}>Theory</button>
-          <button onClick={() => setShowTour(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: desktop ? 17.50 : 11, cursor: "pointer", fontFamily: FD }}>Instructions</button>
+          <button data-tour="theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
+          <button onClick={() => setShowTour(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
         </div>
       </div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
@@ -1771,9 +1772,9 @@ function RankinePage({ onBack }) {
           { l: "BWR", v: `${(cycle.bwr * 100).toFixed(2)}%`, c: K.workIn },
         ].map((m, i) => (
           <div key={i} style={{ textAlign: "center", padding: desktop ? "8px 0" : "4px 0" }}>
-            <div style={{ fontSize: desktop ? 15 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
-            <div style={{ fontSize: desktop ? 40 : 20, fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
-            {m.s && <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
+            <div style={{ fontSize: sz(desktop ? 15 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
+            <div style={{ fontSize: sz(desktop ? 40 : 20), fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
+            {m.s && <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
           </div>
         ))}
       </div>
@@ -1799,21 +1800,21 @@ function RankinePage({ onBack }) {
             <div style={{ display: "flex", gap: 6 }}>
               <button data-tour="eta-areas" onClick={() => setShowAreas(a => !a)} style={{
                 background: showAreas ? K.workOut : "none", border: `1px solid ${showAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
-                color: showAreas ? "#fff" : K.inkMed, fontSize: desktop ? 15 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+                color: showAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
               }}>η areas</button>
               <button data-tour="fx" onClick={() => setShowEqs(true)} style={{
                 background: "none", border: `1px solid ${K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
-                color: K.inkMed, fontSize: desktop ? 15 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
+                color: K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4,
               }}>f(x)</button>
             </div>
           </div>
           <div data-tour="lock-buttons" style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockV(false); } }}
-              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 15 : 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
               {lockS ? "🔒" : "🔓"} Lock s = {dragPoint.s.toFixed(2)}
             </button>
             <button onClick={() => { setLockT(l => !l); if (!lockT) { setLockS(false); setLockP(false); setLockV(false); } }}
-              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 15 : 9, fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
               {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
             </button>
           </div>
@@ -1827,16 +1828,16 @@ function RankinePage({ onBack }) {
             <span>P–v Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <button data-tour="pv-areas" onClick={() => setShowPvAreas(a => !a)} style={{
               background: showPvAreas ? K.workOut : "none", border: `1px solid ${showPvAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
-              color: showPvAreas ? "#fff" : K.inkMed, fontSize: desktop ? 15 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              color: showPvAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
             }}>W areas</button>
           </div>
           <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockV(false); setLockS(false); setLockT(false); } }}
-              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 15 : 9, fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
               {lockP ? "🔒" : "🔓"} Lock P = {(dragPoint.P != null ? dragPoint.P : stToP(dragPoint.s, dragPoint.T)).toFixed(0)} kPa
             </button>
             <button onClick={() => { setLockV(l => !l); if (!lockV) { setLockP(false); setLockS(false); setLockT(false); } }}
-              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 15 : 9, fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
               {lockV ? "🔒" : "🔓"} Lock v = {(dragPoint.v != null ? dragPoint.v : stToV(dragPoint.s, dragPoint.T)).toFixed(4)} m³/kg
             </button>
           </div>
@@ -1853,7 +1854,7 @@ function RankinePage({ onBack }) {
           <ParamSlider label="Boiler Pressure (P high)" unit="kPa" color={K.heatIn} value={pHigh} min={500} max={25000} step={100} onChange={setPHigh} />
           <ParamSlider label="Condenser Pressure (P low)" unit="kPa" color={K.heatOut} value={pLow} min={5} max={100} step={1} onChange={setPLow} />
           <ParamSlider label="Superheat Temperature (T₃)" unit="°C" color={K.workOut} value={adjustedTSup} min={minTSup} max={600} step={5} onChange={v => setTSup(v)} />
-          <div style={{ marginTop: 6, fontSize: desktop ? 15 : 9, color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
+          <div style={{ marginTop: 6, fontSize: sz(desktop ? 15 : 9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
             T_sat at P_high = {tSatHigh.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
         </div>
@@ -1869,32 +1870,32 @@ function RankinePage({ onBack }) {
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? 16 : 8 }}>
           {/* Heat Transfer group */}
           <div>
-            <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
+            <div style={{ fontSize: sz(desktop ? 15 : 9), fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
                 { l: "Q in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn, topic: "qin" },
                 { l: "Q out (Cond.)", v: "−" + fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut, topic: "qout" },
               ].map((e, i) => (
                 <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
-                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
-                  <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
-                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
+                  <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
+                  <div style={{ fontSize: sz(desktop ? 35 : 16), fontFamily: FD, color: e.c }}>{e.v}</div>
+                  <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
                 </div>
               ))}
             </div>
           </div>
           {/* Work group */}
           <div>
-            <div style={{ fontSize: desktop ? 15 : 9, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Work</div>
+            <div style={{ fontSize: sz(desktop ? 15 : 9), fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Work</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
                 { l: "W turbine", v: fmt(cycle.wTurbine), u: "kJ/kg", c: K.workOut, topic: "wt" },
                 { l: "W pump", v: "−" + fmt(cycle.wPump), u: "kJ/kg", c: K.workIn, topic: "wp" },
               ].map((e, i) => (
                 <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
-                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
-                  <div style={{ fontSize: desktop ? 35 : 16, fontFamily: FD, color: e.c }}>{e.v}</div>
-                  <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
+                  <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
+                  <div style={{ fontSize: sz(desktop ? 35 : 16), fontFamily: FD, color: e.c }}>{e.v}</div>
+                  <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
                 </div>
               ))}
             </div>
@@ -1902,12 +1903,12 @@ function RankinePage({ onBack }) {
         </div>
         <div style={{ marginTop: desktop ? 15 : 8, display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: 8 }}>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
-            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_in + Q_out (Q_out &lt; 0)</div>
-            <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</div>
+            <div style={{ fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_in + Q_out (Q_out &lt; 0)</div>
+            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</div>
           </div>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
-            <div style={{ fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>W_net = W_t + W_p (W_p &lt; 0)</div>
-            <div style={{ fontSize: desktop ? 25 : 12, fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</div>
+            <div style={{ fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>W_net = W_t + W_p (W_p &lt; 0)</div>
+            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</div>
           </div>
         </div>
       </div>
@@ -1915,15 +1916,15 @@ function RankinePage({ onBack }) {
       <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px" }}>
         <button data-tour="dark-mode" onClick={toggleDarkMode} style={{
           background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
-          color: K.inkMed, fontSize: desktop ? 13 : 10, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
+          color: K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{darkMode ? "☀ Light Mode" : "☾ Dark Mode"}</button>
       </div>
-      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: desktop ? 15 : 9, color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
+      <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
         Ideal Rankine Cycle · Simplified Steam Properties
       </div>
       <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", borderTop: `1px solid ${K.border}`, marginTop: desktop ? 8 : 4, marginLeft: desktop ? 40 : 16, marginRight: desktop ? 40 : 16 }}>
-        <div style={{ fontSize: desktop ? 14 : 9, color: K.inkMed, fontFamily: FM, marginBottom: 4 }}>Built by <span style={{ fontWeight: 600, color: K.ink }}>Scott Presbrey</span></div>
-        <span onClick={() => { const u="scottypres",d="gmail",t="com"; window.location.href="mailto:"+u+"\u0040"+d+"."+t; }} style={{ fontSize: desktop ? 13 : 8, color: K.accent, fontFamily: FM, textDecoration: "underline", cursor: "pointer" }}>{"scottypres" + "\u0040" + "gmail.com"}</span>
+        <div style={{ fontSize: sz(desktop ? 14 : 9), color: K.inkMed, fontFamily: FM, marginBottom: 4 }}>Built by <span style={{ fontWeight: 600, color: K.ink }}>Scott Presbrey</span></div>
+        <span onClick={() => { const u="scottypres",d="gmail",t="com"; window.location.href="mailto:"+u+"\u0040"+d+"."+t; }} style={{ fontSize: sz(desktop ? 13 : 8), color: K.accent, fontFamily: FM, textDecoration: "underline", cursor: "pointer" }}>{"scottypres" + "\u0040" + "gmail.com"}</span>
       </div>
     </div>
   );
