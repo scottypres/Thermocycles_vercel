@@ -250,35 +250,35 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         overflowY: "auto",
       }}>
         <div style={{ maxWidth: 480, margin: "0 auto" }}>
-          <div style={{ fontSize: 10, fontFamily: FM, color: K.inkLight, marginBottom: 4 }}>
+          <div style={{ fontSize: 12, fontFamily: FM, color: K.inkLight, marginBottom: 4 }}>
             Step {stepIdx + 1} of {steps.length}
           </div>
-          <div style={{ fontSize: 16, fontFamily: FD, color: K.ink, marginBottom: 6 }}>
+          <div style={{ fontSize: 19, fontFamily: FD, color: K.ink, marginBottom: 6 }}>
             {step.title}
           </div>
-          <div style={{ fontSize: 12, fontFamily: FM, color: K.inkMed, lineHeight: 1.5, marginBottom: 14 }}>
+          <div style={{ fontSize: 14, fontFamily: FM, color: K.inkMed, lineHeight: 1.5, marginBottom: 14 }}>
             {step.description}
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             {!forced && <button onClick={onClose} style={{
               background: "none", border: `1px solid ${K.border}`, color: K.inkMed,
-              fontSize: 10, fontFamily: FM, cursor: "pointer", padding: "6px 14px",
+              fontSize: 12, fontFamily: FM, cursor: "pointer", padding: "6px 14px",
             }}>Exit Tour</button>}
             <div style={{ display: "flex", gap: 8, marginLeft: forced ? "auto" : 0 }}>
               {stepIdx > 0 && <button onClick={() => setStepIdx(i => i - 1)} style={{
                 background: "none", border: `1px solid ${K.border}`,
-                padding: "6px 14px", color: K.inkMed, fontSize: 11, fontFamily: FM, cursor: "pointer",
+                padding: "6px 14px", color: K.inkMed, fontSize: 13, fontFamily: FM, cursor: "pointer",
               }}>Back</button>}
               {stepIdx < steps.length - 1 ? (
                 <button onClick={() => setStepIdx(i => i + 1)} style={{
                   background: accent, border: "none", padding: "6px 14px",
-                  color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer",
+                  color: "#fff", fontSize: 14, fontFamily: FD, cursor: "pointer",
                 }}>Next</button>
               ) : (
                 <button onClick={onClose} style={{
                   background: accent, border: "none", padding: "6px 14px",
-                  color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer",
+                  color: "#fff", fontSize: 14, fontFamily: FD, cursor: "pointer",
                 }}>Finish</button>
               )}
             </div>
