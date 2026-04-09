@@ -1714,10 +1714,13 @@ function RankinePage({ onBack }) {
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
-  const [showTour, setShowTour] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(() => {
+  const [showTour, setShowTour] = useState(() => {
     try { return !localStorage.getItem("tourSeen_rankine"); } catch { return false; }
   });
+  const [forcedTour, setForcedTour] = useState(() => {
+    try { return !localStorage.getItem("tourSeen_rankine"); } catch { return false; }
+  });
+  const [showWelcome] = useState(false);
   const [dragPoint, setDragPoint] = useState({ s: 4.2, T: 200 });
   const [showAreas, setShowAreas] = useState(false);
   const [showPvAreas, setShowPvAreas] = useState(false);
@@ -1765,12 +1768,12 @@ function RankinePage({ onBack }) {
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           <button data-tour="theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
-          <button onClick={() => setShowTour(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
+          <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
         </div>
       </div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
       <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); }} />
-      <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} onClose={() => setShowTour(false)} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
+      <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen_rankine", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>

@@ -107,7 +107,7 @@ function getTooltipPos(rect) {
 }
 
 /* ───────── Guided Tour ───────── */
-export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange }) {
+export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange, forced }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [rect, setRect] = useState(null);
 
@@ -146,6 +146,60 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
   const accent = K.accent;
   const isSizing = step.type === "sizing";
 
+  const pct = ((textScale - 0.8) / 0.8) * 100;
+
+  /* ── Sizing step: slim fixed top bar, no overlay ── */
+  if (isSizing) {
+    const smallBtn = {
+      width: 32, height: 32, fontSize: 18, fontFamily: FM, fontWeight: 700,
+      background: K.card, border: `1.5px solid ${K.border}`, color: K.ink,
+      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+      borderRadius: 4, flexShrink: 0,
+    };
+    return (
+      <>
+        <style>{`
+          input[type="range"].tour-slider::-webkit-slider-thumb {
+            -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
+            background:${accent};border:2px solid ${K.card};cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.15);
+          }
+          input[type="range"].tour-slider::-moz-range-thumb {
+            width:16px;height:16px;border-radius:50%;background:${accent};border:2px solid ${K.card};cursor:pointer;
+          }
+        `}</style>
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 10000,
+          background: K.card, borderBottom: `2px solid ${accent}`,
+          padding: "10px 16px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+          display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+        }}>
+          <div style={{ fontSize: 10, fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap" }}>
+            Display Size — {Math.round(textScale * 100)}%
+          </div>
+          <button onClick={() => onScaleChange(Math.max(0.8, Math.round((textScale - 0.1) * 100) / 100))} style={smallBtn}>−</button>
+          <input type="range" min={0.8} max={1.6} step={0.05} value={textScale}
+            className="tour-slider"
+            onChange={e => onScaleChange(Number(e.target.value))}
+            style={{ flex: 1, minWidth: 80, height: 6, appearance: "none", WebkitAppearance: "none",
+              background: `linear-gradient(to right, ${accent} 0%, ${accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`,
+              borderRadius: 0, outline: "none", cursor: "pointer" }} />
+          <button onClick={() => onScaleChange(Math.min(1.6, Math.round((textScale + 0.1) * 100) / 100))} style={smallBtn}>+</button>
+          <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+            {!forced && <button onClick={onClose} style={{
+              background: "none", border: "none", color: K.inkLight,
+              fontSize: 10, fontFamily: FM, cursor: "pointer", padding: "4px 8px",
+            }}>Exit</button>}
+            <button onClick={() => setStepIdx(i => i + 1)} style={{
+              background: accent, border: "none", padding: "6px 16px",
+              color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer", whiteSpace: "nowrap",
+            }}>Next →</button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  /* ── Normal tour steps: overlay with cutout + tooltip ── */
   return (
     <>
       <style>{`
@@ -153,35 +207,22 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
           0%, 100% { box-shadow: 0 0 0 3px ${accent}cc, 0 0 14px ${accent}44; }
           50% { box-shadow: 0 0 0 3px ${accent}22, 0 0 0px ${accent}00; }
         }
-        input[type="range"].tour-slider::-webkit-slider-thumb {
-          -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
-          background:${accent};border:2px solid ${K.card};cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.15);
-        }
-        input[type="range"].tour-slider::-moz-range-thumb {
-          width:16px;height:16px;border-radius:50%;background:${accent};border:2px solid ${K.card};cursor:pointer;
-        }
       `}</style>
 
-      {/* Overlay with cutout (skip for sizing step) */}
-      <div style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={onClose}>
-        {!isSizing && (
-          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
-            <defs>
-              <mask id="tour-mask">
-                <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                {rect && <rect x={rect.left - pad} y={rect.top - pad}
-                  width={rect.width + pad * 2} height={rect.height + pad * 2}
-                  rx="4" fill="black" />}
-              </mask>
-            </defs>
-            <rect x="0" y="0" width="100%" height="100%" fill="rgba(0,0,0,0.45)" mask="url(#tour-mask)" />
-          </svg>
-        )}
-        {isSizing && (
-          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} />
-        )}
+      <div style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={forced ? undefined : onClose}>
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+          <defs>
+            <mask id="tour-mask">
+              <rect x="0" y="0" width="100%" height="100%" fill="white" />
+              {rect && <rect x={rect.left - pad} y={rect.top - pad}
+                width={rect.width + pad * 2} height={rect.height + pad * 2}
+                rx="4" fill="black" />}
+            </mask>
+          </defs>
+          <rect x="0" y="0" width="100%" height="100%" fill="rgba(0,0,0,0.45)" mask="url(#tour-mask)" />
+        </svg>
 
-        {!isSizing && rect && <div style={{
+        {rect && <div style={{
           position: "fixed", left: rect.left - pad, top: rect.top - pad,
           width: rect.width + pad * 2, height: rect.height + pad * 2,
           borderRadius: 4, animation: "tour-blink 1s ease-in-out infinite",
@@ -189,10 +230,9 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         }} />}
       </div>
 
-      {/* Tooltip */}
       <div onClick={e => e.stopPropagation()} style={{
         position: "fixed", zIndex: 10000,
-        ...(isSizing || !rect
+        ...(!rect
           ? { top: "50%", left: "50%", transform: "translate(-50%,-50%)", maxWidth: 340 }
           : getTooltipPos(rect)),
         background: K.card, border: `2px solid ${accent}`,
@@ -205,33 +245,28 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         <div style={{ fontSize: 16, fontFamily: FD, color: K.ink, marginBottom: 6 }}>
           {step.title}
         </div>
-
-        {isSizing ? (
-          <SizingPanel textScale={textScale} onScaleChange={onScaleChange} K={K} />
-        ) : (
-          <div style={{ fontSize: 12, fontFamily: FM, color: K.inkMed, lineHeight: 1.5, marginBottom: 14 }}>
-            {step.description}
-          </div>
-        )}
+        <div style={{ fontSize: 12, fontFamily: FM, color: K.inkMed, lineHeight: 1.5, marginBottom: 14 }}>
+          {step.description}
+        </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <button onClick={onClose} style={{
+          {!forced && <button onClick={onClose} style={{
             background: "none", border: "none", color: K.inkLight,
             fontSize: 10, fontFamily: FM, cursor: "pointer", padding: "4px 8px",
-          }}>Exit Tour</button>
-          <div style={{ display: "flex", gap: 8 }}>
+          }}>Exit Tour</button>}
+          <div style={{ display: "flex", gap: 8, marginLeft: forced ? "auto" : 0 }}>
             {stepIdx > 0 && <button onClick={() => setStepIdx(i => i - 1)} style={{
               background: "none", border: `1px solid ${K.border}`,
               padding: "6px 14px", color: K.inkMed, fontSize: 11, fontFamily: FM, cursor: "pointer",
             }}>Back</button>}
             {stepIdx < steps.length - 1 ? (
               <button onClick={() => setStepIdx(i => i + 1)} style={{
-                background: K.accent, border: "none", padding: "6px 14px",
+                background: accent, border: "none", padding: "6px 14px",
                 color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer",
               }}>Next</button>
             ) : (
               <button onClick={onClose} style={{
-                background: K.accent, border: "none", padding: "6px 14px",
+                background: accent, border: "none", padding: "6px 14px",
                 color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer",
               }}>Finish</button>
             )}

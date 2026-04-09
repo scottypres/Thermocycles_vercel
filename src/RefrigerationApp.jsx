@@ -1401,10 +1401,13 @@ export default function RefrigerationPage({ onBack }) {
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
   const [showRefInfo, setShowRefInfo] = useState(false);
-  const [showTour, setShowTour] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(() => {
+  const [showTour, setShowTour] = useState(() => {
     try { return !localStorage.getItem("tourSeen_refrigeration"); } catch { return false; }
   });
+  const [forcedTour, setForcedTour] = useState(() => {
+    try { return !localStorage.getItem("tourSeen_refrigeration"); } catch { return false; }
+  });
+  const [showWelcome] = useState(false);
   const [showTsAreas, setShowTsAreas] = useState(false);
   const [showPhAreas, setShowPhAreas] = useState(false);
   const [lineDragInfo, setLineDragInfo] = useState(null);
@@ -1501,7 +1504,7 @@ export default function RefrigerationPage({ onBack }) {
           <div style={{ display: "flex", gap: 6 }}>
             <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: "7px 14px", color: "#fff", fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Theory</button>
             <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: "7px 14px", color: "#fff", fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
-            <button onClick={() => setShowTour(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: "7px 14px", color: K.inkMed, fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
+            <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: "7px 14px", color: K.inkMed, fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
         {/* Refrigerant selector */}
@@ -1522,7 +1525,7 @@ export default function RefrigerationPage({ onBack }) {
       <RefInfoModal open={showInfo} onClose={() => setShowInfo(false)} />
       <RefrigerantInfoModal open={showRefInfo} onClose={() => setShowRefInfo(false)} currentRef={refData} />
       <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); }} />
-      <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} onClose={() => setShowTour(false)} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
+      <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen_refrigeration", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance bar */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
