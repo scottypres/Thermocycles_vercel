@@ -1505,7 +1505,6 @@ export default function RefrigerationPage({ onBack }) {
             <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: "7px 14px", color: "#fff", fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Theory</button>
             <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: "7px 14px", color: "#fff", fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
             <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: "7px 14px", color: K.inkMed, fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
-            <button onClick={() => { document.cookie.split(";").forEach(c => { document.cookie = c.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/"; }); localStorage.clear(); window.location.reload(); }} style={{ background: "#e74c3c", border: "none", padding: "7px 14px", color: "#fff", fontSize: sz(9), cursor: "pointer", fontFamily: FM }}>Clear Data & Reload</button>
           </div>
         </div>
         {/* Refrigerant selector */}
