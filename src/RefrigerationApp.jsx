@@ -962,6 +962,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("compressor")}>
         <circle cx={68} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
         <path d="M45,186 L68,145 L91,186 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <rect x={36} y={164} width={64} height={14} fill={K.card} />
         <text x={68} y={175} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Compressor</text>
       </g>
       {/* CONDENSER */}
@@ -1008,6 +1009,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
       <text x={180} y={8} fill={K.heatOut} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_cond = {fmt(cycle.qCond)} kJ/kg</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatIn} strokeWidth={1.8} />
       <path d="M176,302 L180,298 L184,302" fill="none" stroke={K.heatIn} strokeWidth={1.5} />
+      <rect x={110} y={310} width={140} height={14} fill={K.card} />
       <text x={180} y={318} fill={K.heatIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_evap = {fmt(cycle.qEvap)} kJ/kg</text>
       <line x1={36} y1={172} x2={18} y2={172} stroke={K.workIn} strokeWidth={1.8} />
       <path d="M40,168 L36,172 L40,176" fill="none" stroke={K.workIn} strokeWidth={1.5} />
