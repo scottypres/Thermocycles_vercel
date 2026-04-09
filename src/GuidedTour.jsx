@@ -1,8 +1,35 @@
 import { useState, useEffect } from "react";
 import { FD, FM } from "./shared.jsx";
 
+/* ───────── Sizing Preview Panel ───────── */
+function SizingPanel({ textScale, onScaleChange, K }) {
+  return (
+    <div style={{ textAlign: "left", padding: "12px", background: K.cardAlt, border: `1px solid ${K.border}`, marginBottom: 14 }}>
+      <div style={{ fontSize: 10, fontFamily: FM, color: K.inkLight, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>
+        Adjust Display Size
+      </div>
+      <input type="range" min={0.8} max={1.6} step={0.05} value={textScale}
+        onChange={e => onScaleChange(Number(e.target.value))}
+        style={{ width: "100%", height: 3, appearance: "none", WebkitAppearance: "none",
+          background: `linear-gradient(to right, ${K.accent} 0%, ${K.accent} ${((textScale - 0.8) / 0.8) * 100}%, ${K.border} ${((textScale - 0.8) / 0.8) * 100}%, ${K.border} 100%)`,
+          borderRadius: 0, outline: "none", cursor: "pointer" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 8, fontFamily: FM, color: K.inkLight }}>
+        <span>Smaller</span>
+        <span style={{ color: K.accent, fontWeight: 600 }}>{Math.round(textScale * 100)}%</span>
+        <span>Larger</span>
+      </div>
+      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${K.border}` }}>
+        <div style={{ fontSize: 9, fontFamily: FM, color: K.inkLight, marginBottom: 6, fontStyle: "italic" }}>Preview at current size:</div>
+        <div style={{ fontSize: 12, fontFamily: FD, color: K.ink, marginBottom: 4 }}>Section Header</div>
+        <div style={{ fontSize: 8, fontFamily: FM, color: K.inkLight, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1, fontStyle: "italic" }}>Label text · units</div>
+        <div style={{ fontSize: 16, fontFamily: FD, color: K.accent }}>123.4 <span style={{ fontSize: 8, fontFamily: FM, color: K.inkLight }}>kJ/kg</span></div>
+      </div>
+    </div>
+  );
+}
+
 /* ───────── Welcome Popup (first-load) ───────── */
-export function WelcomePopup({ open, onStart, onDismiss, K }) {
+export function WelcomePopup({ open, onStart, onDismiss, K, textScale, onScaleChange }) {
   if (!open) return null;
   return (
     <div style={{
@@ -12,10 +39,11 @@ export function WelcomePopup({ open, onStart, onDismiss, K }) {
     }} onClick={onDismiss}>
       <div onClick={e => e.stopPropagation()} style={{
         background: K.card, border: `2px solid ${K.border}`,
-        padding: "32px 28px", maxWidth: 340, textAlign: "center",
+        padding: "28px 24px", maxWidth: 360, textAlign: "center",
       }}>
-        <h2 style={{ fontFamily: FD, color: K.ink, margin: "0 0 8px", fontSize: 24 }}>Welcome</h2>
-        <p style={{ fontFamily: FM, color: K.inkMed, fontSize: 13, lineHeight: 1.6, margin: "0 0 24px" }}>
+        <h2 style={{ fontFamily: FD, color: K.ink, margin: "0 0 14px", fontSize: 22 }}>Welcome</h2>
+        <SizingPanel textScale={textScale} onScaleChange={onScaleChange} K={K} />
+        <p style={{ fontFamily: FM, color: K.inkMed, fontSize: 12, lineHeight: 1.5, margin: "0 0 16px" }}>
           Would you like a quick tour of the interactive features?
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
@@ -56,7 +84,7 @@ function getTooltipPos(rect) {
 }
 
 /* ───────── Guided Tour ───────── */
-export function GuidedTour({ steps, isOpen, onClose, K }) {
+export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [rect, setRect] = useState(null);
 
@@ -65,8 +93,10 @@ export function GuidedTour({ steps, isOpen, onClose, K }) {
   useEffect(() => {
     if (!isOpen || !steps[stepIdx]) return;
 
-    const sel = steps[stepIdx].target;
-    const el = document.querySelector(`[data-tour="${sel}"]`);
+    const step = steps[stepIdx];
+    if (!step.target) { setRect(null); return; }
+
+    const el = document.querySelector(`[data-tour="${step.target}"]`);
     if (!el) { setRect(null); return; }
 
     el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -91,6 +121,7 @@ export function GuidedTour({ steps, isOpen, onClose, K }) {
   const step = steps[stepIdx];
   const pad = 6;
   const accent = K.accent;
+  const isSizing = step.type === "sizing";
 
   return (
     <>
@@ -99,23 +130,35 @@ export function GuidedTour({ steps, isOpen, onClose, K }) {
           0%, 100% { box-shadow: 0 0 0 3px ${accent}cc, 0 0 14px ${accent}44; }
           50% { box-shadow: 0 0 0 3px ${accent}22, 0 0 0px ${accent}00; }
         }
+        input[type="range"].tour-slider::-webkit-slider-thumb {
+          -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
+          background:${accent};border:2px solid ${K.card};cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.15);
+        }
+        input[type="range"].tour-slider::-moz-range-thumb {
+          width:16px;height:16px;border-radius:50%;background:${accent};border:2px solid ${K.card};cursor:pointer;
+        }
       `}</style>
 
-      {/* Overlay with cutout */}
+      {/* Overlay with cutout (skip for sizing step) */}
       <div style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={onClose}>
-        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
-          <defs>
-            <mask id="tour-mask">
-              <rect x="0" y="0" width="100%" height="100%" fill="white" />
-              {rect && <rect x={rect.left - pad} y={rect.top - pad}
-                width={rect.width + pad * 2} height={rect.height + pad * 2}
-                rx="4" fill="black" />}
-            </mask>
-          </defs>
-          <rect x="0" y="0" width="100%" height="100%" fill="rgba(0,0,0,0.45)" mask="url(#tour-mask)" />
-        </svg>
+        {!isSizing && (
+          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+            <defs>
+              <mask id="tour-mask">
+                <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                {rect && <rect x={rect.left - pad} y={rect.top - pad}
+                  width={rect.width + pad * 2} height={rect.height + pad * 2}
+                  rx="4" fill="black" />}
+              </mask>
+            </defs>
+            <rect x="0" y="0" width="100%" height="100%" fill="rgba(0,0,0,0.45)" mask="url(#tour-mask)" />
+          </svg>
+        )}
+        {isSizing && (
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} />
+        )}
 
-        {rect && <div style={{
+        {!isSizing && rect && <div style={{
           position: "fixed", left: rect.left - pad, top: rect.top - pad,
           width: rect.width + pad * 2, height: rect.height + pad * 2,
           borderRadius: 4, animation: "tour-blink 1s ease-in-out infinite",
@@ -126,7 +169,9 @@ export function GuidedTour({ steps, isOpen, onClose, K }) {
       {/* Tooltip */}
       <div onClick={e => e.stopPropagation()} style={{
         position: "fixed", zIndex: 10000,
-        ...(rect ? getTooltipPos(rect) : { top: "50%", left: "50%", transform: "translate(-50%,-50%)", maxWidth: 320 }),
+        ...(isSizing || !rect
+          ? { top: "50%", left: "50%", transform: "translate(-50%,-50%)", maxWidth: 340 }
+          : getTooltipPos(rect)),
         background: K.card, border: `2px solid ${accent}`,
         padding: "16px 20px",
         boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
@@ -137,9 +182,15 @@ export function GuidedTour({ steps, isOpen, onClose, K }) {
         <div style={{ fontSize: 16, fontFamily: FD, color: K.ink, marginBottom: 6 }}>
           {step.title}
         </div>
-        <div style={{ fontSize: 12, fontFamily: FM, color: K.inkMed, lineHeight: 1.5, marginBottom: 14 }}>
-          {step.description}
-        </div>
+
+        {isSizing ? (
+          <SizingPanel textScale={textScale} onScaleChange={onScaleChange} K={K} />
+        ) : (
+          <div style={{ fontSize: 12, fontFamily: FM, color: K.inkMed, lineHeight: 1.5, marginBottom: 14 }}>
+            {step.description}
+          </div>
+        )}
+
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <button onClick={onClose} style={{
             background: "none", border: "none", color: K.inkLight,
@@ -170,6 +221,7 @@ export function GuidedTour({ steps, isOpen, onClose, K }) {
 
 /* ───────── Tour Steps: Rankine Cycle ───────── */
 export const RANKINE_TOUR_STEPS = [
+  { target: null, type: "sizing", title: "Display Size", description: "" },
   { target: "theory", title: "Theory", description: "Open the Theory section to learn about ideal Rankine cycle fundamentals, key concepts, and the four thermodynamic processes." },
   { target: "schematic", title: "System Schematic", description: "Click any device — Boiler, Turbine, Condenser, or Pump — to see its thermodynamic process, equations, and live calculated values." },
   { target: "ts-diagram", title: "Drag Labels on T–s", description: "Drag the 'Boiler' or 'Condenser' labels on the T–s diagram to interactively change the operating pressures." },
@@ -183,6 +235,7 @@ export const RANKINE_TOUR_STEPS = [
 
 /* ───────── Tour Steps: Refrigeration Cycle ───────── */
 export const REF_TOUR_STEPS = [
+  { target: null, type: "sizing", title: "Display Size", description: "" },
   { target: "ref-theory", title: "Theory", description: "Open the Theory section to learn about the vapor-compression refrigeration cycle and its four processes." },
   { target: "ref-refrigerants", title: "Refrigerants", description: "Explore different refrigerants — R-134a, R-410A, R-717, and more — with their properties and typical applications." },
   { target: "ref-schematic", title: "System Schematic", description: "Click any device — Compressor, Condenser, Expansion Valve, or Evaporator — to see its thermodynamic details and live values." },

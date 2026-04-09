@@ -1363,6 +1363,11 @@ export default function RefrigerationPage({ onBack }) {
     });
   }, []);
 
+  const [textScale, setTextScale] = useState(() => {
+    try { const v = parseFloat(document.cookie.split('; ').find(c => c.startsWith('textScale='))?.split('=')[1]); return isNaN(v) ? 1 : Math.max(0.8, Math.min(1.6, v)); } catch { return 1; }
+  });
+  const handleScaleChange = useCallback((s) => { setTextScale(s); document.cookie = `textScale=${s};path=/;max-age=31536000`; }, []);
+
   const [refIdx, setRefIdx] = useState(0);
   const refData = REFRIGERANTS[refIdx];
   const defaults = useMemo(() => getDefaultPressures(refData), [refData]);
@@ -1446,7 +1451,7 @@ export default function RefrigerationPage({ onBack }) {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1100 : 480, margin: "0 auto" }}>
+    <div style={{ zoom: textScale, minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: (desktop ? 1100 : 480) / textScale, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1493,8 +1498,8 @@ export default function RefrigerationPage({ onBack }) {
 
       <RefInfoModal open={showInfo} onClose={() => setShowInfo(false)} />
       <RefrigerantInfoModal open={showRefInfo} onClose={() => setShowRefInfo(false)} currentRef={refData} />
-      <WelcomePopup open={showWelcome} K={K} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); }} />
-      <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} onClose={() => setShowTour(false)} K={K} />
+      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); }} />
+      <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} onClose={() => setShowTour(false)} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance bar */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>

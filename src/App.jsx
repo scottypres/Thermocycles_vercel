@@ -1691,6 +1691,11 @@ function RankinePage({ onBack }) {
     });
   }, []);
 
+  const [textScale, setTextScale] = useState(() => {
+    try { const v = parseFloat(document.cookie.split('; ').find(c => c.startsWith('textScale='))?.split('=')[1]); return isNaN(v) ? 1 : Math.max(0.8, Math.min(1.6, v)); } catch { return 1; }
+  });
+  const handleScaleChange = useCallback((s) => { setTextScale(s); document.cookie = `textScale=${s};path=/;max-age=31536000`; }, []);
+
   const [pHigh, setPHigh] = useState(4000);
   const [pLow, setPLow] = useState(20);
   const [tSup, setTSup] = useState(450);
@@ -1723,7 +1728,7 @@ function RankinePage({ onBack }) {
   const sec = { margin: "0 0 14px 0", fontSize: desktop ? 22.50 : 12, fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   return (
-    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
+    <div style={{ zoom: textScale, minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: (desktop ? 1750 : 480) / textScale, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1752,8 +1757,8 @@ function RankinePage({ onBack }) {
         </div>
       </div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
-      <WelcomePopup open={showWelcome} K={K} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); }} />
-      <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} onClose={() => setShowTour(false)} K={K} />
+      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); }} />
+      <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} onClose={() => setShowTour(false)} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
