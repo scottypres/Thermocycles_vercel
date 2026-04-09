@@ -1223,7 +1223,7 @@ function SchematicDiagram({ cycle, textScale }) {
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
   return (<>
-    <svg viewBox="-2 -2 381 330" style={{ width: "100%" }}>
+    <svg viewBox="-8 -2 381 330" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -1247,15 +1247,15 @@ function SchematicDiagram({ cycle, textScale }) {
       </g>
       {/* TURBINE */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("turbine")}>
-        <path d="M282,122 L322,142 L322,202 L282,222 Z" fill="rgba(255,255,255,0.01)" stroke={K.workOut} strokeWidth={1.5} strokeLinejoin="round" />
-        {[132, 145, 158, 171, 184, 197, 212].map(y => {
-          const xr = y < 142 ? 282 + (y - 122) / 20 * 40 : y > 202 ? 322 - (y - 202) / 20 * 40 : 322;
-          return <line key={y} x1={286} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
+        <path d="M267,115 L313,138 L313,207 L267,230 Z" fill="rgba(255,255,255,0.01)" stroke={K.workOut} strokeWidth={1.5} strokeLinejoin="round" />
+        {[127, 143, 157, 172, 187, 201, 217].map(y => {
+          const xr = y < 138 ? 267 + (y - 115) / 23 * 46 : y > 207 ? 313 - (y - 207) / 23 * 46 : 313;
+          return <line key={y} x1={271} y1={y} x2={xr - 4} y2={y} stroke={K.workOut} strokeWidth={0.3} />;
         })}
-        <rect x={302 - sz(20)} y={170 - sz(12)} width={sz(40)} height={sz(16)} fill={K.card} />
-        <text x={302} y={170} fill={K.workOut} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Turbine</text>
-        <rect x={302 - sz(20)} y={181 - sz(8)} width={sz(40)} height={sz(12)} fill={K.card} />
-        <text x={302} y={181} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+        <rect x={290 - sz(20)} y={170 - sz(12)} width={sz(40)} height={sz(16)} fill={K.card} />
+        <text x={290} y={170} fill={K.workOut} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Turbine</text>
+        <rect x={290 - sz(20)} y={181 - sz(8)} width={sz(40)} height={sz(12)} fill={K.card} />
+        <text x={290} y={181} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
@@ -1272,11 +1272,11 @@ function SchematicDiagram({ cycle, textScale }) {
       </g>
       {/* Pipes */}
       <polyline points="85,144 85,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
-      <polyline points="250,57 302,57 302,132" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
-      <polyline points="302,212 302,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points="250,57 290,57 290,127" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points="290,219 290,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="110,273 85,273 85,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       {/* State markers */}
-      {[{ n:"2",x:85,y:82 },{ n:"3",x:302,y:57 },{ n:"4",x:302,y:273 },{ n:"1",x:85,y:273 }].map((p,i) => (
+      {[{ n:"2",x:85,y:82 },{ n:"3",x:290,y:57 },{ n:"4",x:290,y:273 },{ n:"1",x:85,y:273 }].map((p,i) => (
         <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={sz(12)} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy */}
@@ -1284,10 +1284,10 @@ function SchematicDiagram({ cycle, textScale }) {
       <text x={180} y={8} fill={K.heatIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_in = {fmt(cycle.qIn)} kJ/kg</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
       <text x={180} y={324} fill={K.heatOut} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cycle.qOut)} kJ/kg</text>
-      <line x1={321} y1={172} x2={338} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
-      <text x={343} y={166} fill={K.workOut} fontSize={sz(7.5)} textAnchor="start" fontFamily={FM} fontWeight="700">W_t</text>
-      <text x={343} y={177} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cycle.wTurbine)}</text>
-      <text x={343} y={187} fill={K.workOut} fontSize={sz(6)} textAnchor="start" fontFamily={FM} fontWeight="700">kJ/kg</text>
+      <line x1={314} y1={172} x2={331} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
+      <text x={336} y={166} fill={K.workOut} fontSize={sz(7.5)} textAnchor="start" fontFamily={FM} fontWeight="700">W_t</text>
+      <text x={336} y={177} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cycle.wTurbine)}</text>
+      <text x={336} y={187} fill={K.workOut} fontSize={sz(6)} textAnchor="start" fontFamily={FM} fontWeight="700">kJ/kg</text>
       <line x1={53} y1={172} x2={33} y2={172} stroke={K.workIn} strokeWidth={1.8} markerEnd="url(#mY)" />
       <text x={29} y={162} fill={K.workIn} fontSize={sz(7.5)} textAnchor="end" fontFamily={FM} fontWeight="700">W_p</text>
       <text x={29} y={173} fill={K.workIn} fontSize={sz(7)} textAnchor="end" fontFamily={FM} fontWeight="700">−{fmt(cycle.wPump)}</text>
