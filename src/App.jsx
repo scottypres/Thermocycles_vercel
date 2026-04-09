@@ -586,12 +586,12 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         const T = isBoiler ? cycle.Tsat_high : cycle.Tsat_low;
         const label = isBoiler ? "T_sat(high)" : "T_sat(low)";
         const valueText = `${label} = ${T.toFixed(1)}°C`;
-        const boxW = Math.max(104, valueText.length * 5.7 + 16);
+        const boxW = Math.max(sz(104), valueText.length * sz(5.7) + sz(16));
         const boxY = TS_PLOT.y + 2;
         return (<>
           <line x1={TS_PLOT.x} y1={lineY} x2={TS_PLOT.x + TS_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
-          <rect x={TS_PLOT.x + TS_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
-          <text x={TS_PLOT.x + TS_PLOT.w / 2} y={boxY + 13} fill={color} fontSize={sz(9)} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
+          <rect x={TS_PLOT.x + TS_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={sz(18)} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
+          <text x={TS_PLOT.x + TS_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(9)} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
       })()}
       {!showAreas && <>
@@ -604,13 +604,13 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
       {/* State points */}
       {st.map((s, i) => {
         const cx = mapS(s.s), cy = mapT(s.T);
-        const off = [{ dx: -14, dy: 14 }, { dx: -14, dy: -10 }, { dx: 8, dy: -10 }, { dx: 8, dy: 14 }];
+        const off = [{ dx: sz(-14), dy: sz(14) }, { dx: sz(-14), dy: sz(-10) }, { dx: sz(8), dy: sz(-10) }, { dx: sz(8), dy: sz(14) }];
         const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
             <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
-            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill={K.card} />
+            <rect x={tx - sz(7)} y={ty - sz(10)} width={sz(14)} height={sz(13)} rx={1} fill={K.card} />
             <text x={tx} y={ty} fill={K.accent} fontSize={sz(12)} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
@@ -620,18 +620,18 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {/* Drag point label */}
-        <rect x={dpx + 12} y={dpy - 22} width={70} height={18} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-        <text x={dpx + 16} y={dpy - 10} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>
+        <rect x={dpx + sz(12)} y={dpy - sz(22)} width={sz(70)} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
+        <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>
           {dragPoint.T.toFixed(0)}°C, {dragPoint.s.toFixed(2)}
         </text>
         {/* Labels — Boiler and Condenser are draggable (hitbox around text) */}
-        <rect x={mapS((st[2].s + st[3].s) / 2) + 14} y={mapT((st[2].T + st[3].T) / 2) - 8} width={34} height={11} rx={2} fill={K.card} />
-        <text x={mapS((st[2].s + st[3].s) / 2) + 16} y={mapT((st[2].T + st[3].T) / 2)} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Turbine</text>
-        <rect x={condTextX - 24} y={condTextY - 8} width={48} height={11} rx={2} fill={K.card} />
+        <rect x={mapS((st[2].s + st[3].s) / 2) + sz(14)} y={mapT((st[2].T + st[3].T) / 2) - sz(8)} width={sz(34)} height={sz(11)} rx={2} fill={K.card} />
+        <text x={mapS((st[2].s + st[3].s) / 2) + sz(16)} y={mapT((st[2].T + st[3].T) / 2)} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Turbine</text>
+        <rect x={condTextX - sz(24)} y={condTextY - sz(8)} width={sz(48)} height={sz(11)} rx={2} fill={K.card} />
         <text x={condTextX} y={condTextY} fill={K.heatOut} fontSize={sz(7)} fontFamily={FM} textAnchor="middle" fontWeight="500" style={{ cursor: "ns-resize" }}>Condenser</text>
-        <rect x={mapS(st[0].s) - 40} y={mapT((st[0].T + st[1].T) / 2) - 8} width={30} height={11} rx={2} fill={K.card} />
-        <text x={mapS(st[0].s) - 10} y={mapT((st[0].T + st[1].T) / 2)} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
-        <rect x={boilerTextX - 18} y={boilerTextY - 8} width={36} height={11} rx={2} fill={K.card} />
+        <rect x={mapS(st[0].s) - sz(40)} y={mapT((st[0].T + st[1].T) / 2) - sz(8)} width={sz(30)} height={sz(11)} rx={2} fill={K.card} />
+        <text x={mapS(st[0].s) - sz(10)} y={mapT((st[0].T + st[1].T) / 2)} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
+        <rect x={boilerTextX - sz(18)} y={boilerTextY - sz(8)} width={sz(36)} height={sz(11)} rx={2} fill={K.card} />
         <text x={boilerTextX} y={boilerTextY} fill={K.heatIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Boiler</text>
         {/* Instruction hint */}
         <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
@@ -643,24 +643,24 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         const toggle = (key) => setAreaToggles(prev => ({ ...prev, [key]: !prev[key] }));
         return (
           <>
-            <rect x={lx} y={ly} width={152} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
+            <rect x={lx} y={ly} width={sz(152)} height={sz(52)} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             {/* Q_in */}
             <g onClick={() => toggle("qIn")} style={{ cursor: "pointer" }} opacity={areaToggles.qIn ? 1 : 0.35}>
-              <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
-              <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM}>Q_in (1→3) = {fmt(cycle.qIn)} kJ/kg</text>
+              <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
+              <text x={lx + sz(17)} y={ly + sz(12)} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM}>Q_in (1→3) = {fmt(cycle.qIn)} kJ/kg</text>
             </g>
             {/* Q_out */}
             <g onClick={() => toggle("qOut")} style={{ cursor: "pointer" }} opacity={areaToggles.qOut ? 1 : 0.35}>
-              <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
-              <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM}>Q_out (4→1) = −{fmt(cycle.qOut)} kJ/kg</text>
+              <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
+              <text x={lx + sz(17)} y={ly + sz(25)} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM}>Q_out (4→1) = −{fmt(cycle.qOut)} kJ/kg</text>
             </g>
             {/* W_net */}
             <g onClick={() => toggle("wNet")} style={{ cursor: "pointer" }} opacity={areaToggles.wNet ? 1 : 0.35}>
-              <rect x={lx + 5} y={ly + 31} width={8} height={8} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
-              <text x={lx + 17} y={ly + 38} fill={K.workOut} fontSize={sz(8)} fontFamily={FM}>W_net (1→3→4→1) = {fmt(cycle.wNet)} kJ/kg</text>
+              <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
+              <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(8)} fontFamily={FM}>W_net (1→3→4→1) = {fmt(cycle.wNet)} kJ/kg</text>
             </g>
             {/* η */}
-            <text x={lx + 5} y={ly + 49} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
+            <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
           </>
         );
       })()}
@@ -969,12 +969,12 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         const label = isBoiler ? "P_high" : "P_low";
         const P = isBoiler ? cycle.pHigh : cycle.pLow;
         const valueText = `${label} = ${P} kPa`;
-        const boxW = Math.max(96, valueText.length * 5.7 + 16);
+        const boxW = Math.max(sz(96), valueText.length * sz(5.7) + sz(16));
         const boxY = PV_PLOT.y + 2;
         return (<>
           <line x1={PV_PLOT.x} y1={lineY} x2={PV_PLOT.x + PV_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
-          <rect x={PV_PLOT.x + PV_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
-          <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + 13} fill={color} fontSize={sz(9)} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
+          <rect x={PV_PLOT.x + PV_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={sz(18)} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
+          <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(9)} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
       })()}
       {!showPvAreas && <>
@@ -987,13 +987,13 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
       {/* State points */}
       {st.map((s, i) => {
         const cx = mapV(stateV[i]), cy = mapP(stateP[i]);
-        const off = [{ dx: -12, dy: 12 }, { dx: -12, dy: -8 }, { dx: 10, dy: -8 }, { dx: 10, dy: 12 }];
+        const off = [{ dx: sz(-12), dy: sz(12) }, { dx: sz(-12), dy: sz(-8) }, { dx: sz(10), dy: sz(-8) }, { dx: sz(10), dy: sz(12) }];
         const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
             <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
-            <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill={K.card} />
+            <rect x={tx - sz(7)} y={ty - sz(10)} width={sz(14)} height={sz(13)} rx={1} fill={K.card} />
             <text x={tx} y={ty} fill={K.accent} fontSize={sz(12)} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
@@ -1003,43 +1003,43 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {/* Labels — Boiler and Condenser are draggable */}
-        <rect x={mapV(stateV[0]) - 40} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2 - 8} width={30} height={11} rx={2} fill={K.card} />
-        <text x={mapV(stateV[0]) - 10} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
-        <rect x={boilerTextX - 18} y={boilerTextY - 8} width={36} height={11} rx={2} fill={K.card} />
+        <rect x={mapV(stateV[0]) - sz(40)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2 - sz(8)} width={sz(30)} height={sz(11)} rx={2} fill={K.card} />
+        <text x={mapV(stateV[0]) - sz(10)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="end">Pump</text>
+        <rect x={boilerTextX - sz(18)} y={boilerTextY - sz(8)} width={sz(36)} height={sz(11)} rx={2} fill={K.card} />
         <text x={boilerTextX} y={boilerTextY} fill={K.heatIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Boiler</text>
-        <rect x={(mapV(stateV[2]) + mapV(stateV[3])) / 2 + 12} y={(mapP(stateP[2]) + mapP(stateP[3])) / 2 - 8} width={34} height={11} rx={2} fill={K.card} />
-        <text x={(mapV(stateV[2]) + mapV(stateV[3])) / 2 + 14} y={(mapP(stateP[2]) + mapP(stateP[3])) / 2} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Turbine</text>
-        <rect x={condTextX - 24} y={condTextY - 8} width={48} height={11} rx={2} fill={K.card} />
+        <rect x={(mapV(stateV[2]) + mapV(stateV[3])) / 2 + sz(12)} y={(mapP(stateP[2]) + mapP(stateP[3])) / 2 - sz(8)} width={sz(34)} height={sz(11)} rx={2} fill={K.card} />
+        <text x={(mapV(stateV[2]) + mapV(stateV[3])) / 2 + sz(14)} y={(mapP(stateP[2]) + mapP(stateP[3])) / 2} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Turbine</text>
+        <rect x={condTextX - sz(24)} y={condTextY - sz(8)} width={sz(48)} height={sz(11)} rx={2} fill={K.card} />
         <text x={condTextX} y={condTextY} fill={K.heatOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Condenser</text>
         {/* Instruction hint */}
         <text x={PV_W - 8} y={PV_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockV ? "v locked" : "tap & drag"}</text>
       </>}
       {showPvAreas && (() => {
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
-        const boxW = 168;
+        const boxW = sz(168);
         const lx = PV_PLOT.x + PV_PLOT.w - boxW - 6;
         const ly = PV_PLOT.y + 4;
         const toggle = (key) => setAreaToggles(prev => ({ ...prev, [key]: !prev[key] }));
         return (
           <>
-            <rect x={lx} y={ly} width={boxW} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
+            <rect x={lx} y={ly} width={boxW} height={sz(52)} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             {/* W_turbine */}
             <g onClick={() => toggle("wTurbine")} style={{ cursor: "pointer" }} opacity={areaToggles.wTurbine ? 1 : 0.35}>
-              <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.workOut}30`} stroke={K.workOut} strokeWidth={0.6} />
-              <text x={lx + 17} y={ly + 12} fill={K.workOut} fontSize={sz(8)} fontFamily={FM}>W_turbine (3→4) = {fmt(cycle.wTurbine)} kJ/kg</text>
+              <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}30`} stroke={K.workOut} strokeWidth={0.6} />
+              <text x={lx + sz(17)} y={ly + sz(12)} fill={K.workOut} fontSize={sz(8)} fontFamily={FM}>W_turbine (3→4) = {fmt(cycle.wTurbine)} kJ/kg</text>
             </g>
             {/* W_pump */}
             <g onClick={() => toggle("wPump")} style={{ cursor: "pointer" }} opacity={areaToggles.wPump ? 1 : 0.35}>
-              <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.workIn}30`} stroke={K.workIn} strokeWidth={0.6} />
-              <text x={lx + 17} y={ly + 25} fill={K.workIn} fontSize={sz(8)} fontFamily={FM}>W_pump (1→2) = −{fmt(cycle.wPump)} kJ/kg</text>
+              <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workIn}30`} stroke={K.workIn} strokeWidth={0.6} />
+              <text x={lx + sz(17)} y={ly + sz(25)} fill={K.workIn} fontSize={sz(8)} fontFamily={FM}>W_pump (1→2) = −{fmt(cycle.wPump)} kJ/kg</text>
             </g>
             {/* W_net */}
             <g onClick={() => toggle("wNet")} style={{ cursor: "pointer" }} opacity={areaToggles.wNet ? 1 : 0.35}>
-              <rect x={lx + 5} y={ly + 31} width={8} height={8} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
-              <text x={lx + 17} y={ly + 38} fill={K.workOut} fontSize={sz(8)} fontFamily={FM}>W_net = {fmt(cycle.wNet)} kJ/kg</text>
+              <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
+              <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(8)} fontFamily={FM}>W_net = {fmt(cycle.wNet)} kJ/kg</text>
             </g>
             {/* BWR */}
-            <text x={lx + 5} y={ly + 49} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">BWR = {(cycle.bwr * 100).toFixed(1)}%</text>
+            <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">BWR = {(cycle.bwr * 100).toFixed(1)}%</text>
           </>
         );
       })()}
@@ -1211,7 +1211,7 @@ function ComponentModal({ component, cycle, onClose }) {
 
 /* ───────── Schematic ───────── */
 function SchematicDiagram({ cycle, textScale }) {
-  const sz = px => px * (textScale || 1);
+  const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
   const mk = [
