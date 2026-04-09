@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { GuidedTour, WelcomePopup, RANKINE_TOUR_STEPS } from "./GuidedTour.jsx";
 
 /* ───────── Steam Property Data ───────── */
 const STEAM_TABLE = [
@@ -1696,6 +1697,10 @@ function RankinePage({ onBack }) {
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
+  const [showTour, setShowTour] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    try { return !localStorage.getItem("tourSeen_rankine"); } catch { return false; }
+  });
   const [dragPoint, setDragPoint] = useState({ s: 4.2, T: 200 });
   const [showAreas, setShowAreas] = useState(false);
   const [showPvAreas, setShowPvAreas] = useState(false);
@@ -1741,9 +1746,14 @@ function RankinePage({ onBack }) {
           <div style={{ fontSize: desktop ? 13.75 : 8, color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Ideal Rankine Cycle Analysis</div>
         </div>
         </div>
-        <button onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: desktop ? 17.50 : 11, cursor: "pointer", fontFamily: FD }}>Theory</button>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button data-tour="theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: desktop ? 17.50 : 11, cursor: "pointer", fontFamily: FD }}>Theory</button>
+          <button onClick={() => setShowTour(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: desktop ? 17.50 : 11, cursor: "pointer", fontFamily: FD }}>Instructions</button>
+        </div>
       </div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
+      <WelcomePopup open={showWelcome} K={K} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); }} />
+      <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} onClose={() => setShowTour(false)} K={K} />
 
       {/* Performance */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
@@ -1764,7 +1774,7 @@ function RankinePage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>System Schematic</h3>
-          <SchematicDiagram cycle={cycle} />
+          <div data-tour="schematic"><SchematicDiagram cycle={cycle} /></div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
@@ -1775,21 +1785,21 @@ function RankinePage({ onBack }) {
       {/* Row: T-s + P-v Diagrams (side by side on desktop) */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         {/* T-s Diagram */}
-        <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
+        <div data-tour="ts-diagram" style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
             <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => setShowAreas(a => !a)} style={{
+              <button data-tour="eta-areas" onClick={() => setShowAreas(a => !a)} style={{
                 background: showAreas ? K.workOut : "none", border: `1px solid ${showAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: showAreas ? "#fff" : K.inkMed, fontSize: desktop ? 15 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
               }}>η areas</button>
-              <button onClick={() => setShowEqs(true)} style={{
+              <button data-tour="fx" onClick={() => setShowEqs(true)} style={{
                 background: "none", border: `1px solid ${K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: K.inkMed, fontSize: desktop ? 15 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
               }}>f(x)</button>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
+          <div data-tour="lock-buttons" style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockV(false); } }}
               style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: desktop ? 15 : 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
               {lockS ? "🔒" : "🔓"} Lock s = {dragPoint.s.toFixed(2)}
@@ -1807,7 +1817,7 @@ function RankinePage({ onBack }) {
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
             <span>P–v Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
-            <button onClick={() => setShowPvAreas(a => !a)} style={{
+            <button data-tour="pv-areas" onClick={() => setShowPvAreas(a => !a)} style={{
               background: showPvAreas ? K.workOut : "none", border: `1px solid ${showPvAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
               color: showPvAreas ? "#fff" : K.inkMed, fontSize: desktop ? 15 : 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
             }}>W areas</button>
@@ -1846,7 +1856,7 @@ function RankinePage({ onBack }) {
       </div>
 
       {/* Energy Balance */}
-      <div style={{ ...card, marginBottom: 0 }}>
+      <div data-tour="energy-balance" style={{ ...card, marginBottom: 0 }}>
         <h3 style={sec}>Energy Balance</h3>
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? 16 : 8 }}>
           {/* Heat Transfer group */}
@@ -1895,7 +1905,7 @@ function RankinePage({ onBack }) {
       </div>
 
       <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px" }}>
-        <button onClick={toggleDarkMode} style={{
+        <button data-tour="dark-mode" onClick={toggleDarkMode} style={{
           background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
           color: K.inkMed, fontSize: desktop ? 13 : 10, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{darkMode ? "☀ Light Mode" : "☾ Dark Mode"}</button>

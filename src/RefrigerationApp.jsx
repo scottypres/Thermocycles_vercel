@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop } from "./shared.jsx";
 let K = K_LIGHT;
 import { REFRIGERANTS, interpRefrigerant, getRefrigerantDomeBounds, getRefrigerantPhaseInfo, getDefaultPressures } from "./refrigerantData.js";
+import { GuidedTour, WelcomePopup, REF_TOUR_STEPS } from "./GuidedTour.jsx";
 
 /* ───────── Cycle Calculation ───────── */
 function calculateRefrigerationCycle(ref, pHigh, pLow) {
@@ -1372,6 +1373,10 @@ export default function RefrigerationPage({ onBack }) {
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
   const [showRefInfo, setShowRefInfo] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    try { return !localStorage.getItem("tourSeen_refrigeration"); } catch { return false; }
+  });
   const [showTsAreas, setShowTsAreas] = useState(false);
   const [showPhAreas, setShowPhAreas] = useState(false);
   const [lineDragInfo, setLineDragInfo] = useState(null);
@@ -1466,8 +1471,9 @@ export default function RefrigerationPage({ onBack }) {
             </div>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
-            <button onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: "7px 14px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: FD }}>Theory</button>
-            <button onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: "7px 14px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
+            <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: "7px 14px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: FD }}>Theory</button>
+            <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: "7px 14px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
+            <button onClick={() => setShowTour(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: "7px 14px", color: K.inkMed, fontSize: 11, cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
         {/* Refrigerant selector */}
@@ -1487,6 +1493,8 @@ export default function RefrigerationPage({ onBack }) {
 
       <RefInfoModal open={showInfo} onClose={() => setShowInfo(false)} />
       <RefrigerantInfoModal open={showRefInfo} onClose={() => setShowRefInfo(false)} currentRef={refData} />
+      <WelcomePopup open={showWelcome} K={K} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); }} />
+      <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} onClose={() => setShowTour(false)} K={K} />
 
       {/* Performance bar */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
@@ -1507,7 +1515,7 @@ export default function RefrigerationPage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— {refData.name}</span></h3>
-          <RefSchematicDiagram cycle={cycle} />
+          <div data-tour="ref-schematic"><RefSchematicDiagram cycle={cycle} /></div>
         </div>
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams</span></h3>
@@ -1518,21 +1526,21 @@ export default function RefrigerationPage({ onBack }) {
       {/* Row: T-s + P-h Diagrams */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         {/* T-s Diagram */}
-        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
+        <div data-tour="ref-ts-diagram" style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: 8 }}>
             <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => setShowTsAreas(a => !a)} style={{
+              <button data-tour="ref-cop-areas" onClick={() => setShowTsAreas(a => !a)} style={{
                 background: showTsAreas ? K.workIn : "none", border: `1px solid ${showTsAreas ? K.workIn : K.border}`, padding: "3px 8px",
                 color: showTsAreas ? "#fff" : K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
               }}>COP areas</button>
-              <button onClick={() => setShowEqs(true)} style={{
+              <button data-tour="ref-fx" onClick={() => setShowEqs(true)} style={{
                 background: "none", border: `1px solid ${K.border}`, padding: "3px 8px",
                 color: K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4,
               }}>f(x)</button>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <div data-tour="ref-lock-buttons" style={{ display: "flex", gap: 8, marginBottom: 8 }}>
             <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockH(false); } }}
               style={{ flex: 1, padding: "5px 0", fontSize: 9, fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
               {lockS ? "\u{1F512}" : "\u{1F513}"} Lock s = {dragPoint.s.toFixed(2)}
@@ -1551,7 +1559,7 @@ export default function RefrigerationPage({ onBack }) {
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: 8 }}>
             <span>P–h Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
-            <button onClick={() => setShowPhAreas(a => !a)} style={{
+            <button data-tour="ref-energy-areas" onClick={() => setShowPhAreas(a => !a)} style={{
               background: showPhAreas ? K.workIn : "none", border: `1px solid ${showPhAreas ? K.workIn : K.border}`, padding: "3px 8px",
               color: showPhAreas ? "#fff" : K.inkMed, fontSize: 9, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
             }}>Energy areas</button>
@@ -1590,7 +1598,7 @@ export default function RefrigerationPage({ onBack }) {
       </div>
 
       {/* Energy Balance */}
-      <div style={{ ...card, marginBottom: 0 }}>
+      <div data-tour="ref-energy-balance" style={{ ...card, marginBottom: 0 }}>
         <h3 style={sec}>Energy Balance</h3>
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? 16 : 8 }}>
           {/* Heat Transfer group */}
@@ -1634,7 +1642,7 @@ export default function RefrigerationPage({ onBack }) {
       </div>
 
       <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px" }}>
-        <button onClick={toggleDarkMode} style={{
+        <button data-tour="ref-dark-mode" onClick={toggleDarkMode} style={{
           background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
           color: K.inkMed, fontSize: desktop ? 13 : 10, fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{darkMode ? "\u2600 Light Mode" : "\u263E Dark Mode"}</button>
