@@ -961,7 +961,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
       {/* COMPRESSOR */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("compressor")}>
         <circle cx={68} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
-        <path d="M54,185 L68,158 L82,185 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <path d="M51,189 L68,155 L85,189 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
         <text x={68} y={175} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Compressor</text>
         <rect x={40} y={203} width={56} height={12} fill={K.card} />
         <text x={68} y={211} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
