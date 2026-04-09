@@ -947,7 +947,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
     { id: "rM", c: K.inkMed }, { id: "rK", c: K.ink },
   ];
   return (<>
-    <svg viewBox="0 0 360 320" style={{ width: "100%", maxWidth: 420 }}>
+    <svg viewBox="-28 0 360 320" style={{ width: "100%", maxWidth: 420 }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -1013,9 +1013,9 @@ function RefSchematicDiagram({ cycle, textScale }) {
       <text x={180} y={318} fill={K.heatIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_evap = {fmt(cycle.qEvap)} kJ/kg</text>
       <line x1={8} y1={172} x2={33} y2={172} stroke={K.workIn} strokeWidth={1.8} />
       <path d="M29,168 L33,172 L29,176" fill="none" stroke={K.workIn} strokeWidth={1.5} />
-      <text x={20} y={160} fill={K.workIn} fontSize={sz(7.5)} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
-      <text x={20} y={188} fill={K.workIn} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
-      <text x={20} y={198} fill={K.workIn} fontSize={sz(6)} textAnchor="middle" fontFamily={FM}>kJ/kg</text>
+      <text x={14} y={160} fill={K.workIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
+      <text x={14} y={188} fill={K.workIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
+      <text x={14} y={198} fill={K.workIn} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>kJ/kg</text>
     </svg>
     <RefComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);

@@ -1003,7 +1003,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {/* Labels — Boiler and Condenser are draggable */}
-        <rect x={mapV(stateV[0]) + sz(8)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2 - sz(8)} width={sz(30)} height={sz(11)} rx={2} fill={K.card} />
+        <rect x={mapV(stateV[0]) + sz(8)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2 - sz(8)} width={sz(25)} height={sz(11)} rx={2} fill={K.card} />
         <text x={mapV(stateV[0]) + sz(10)} y={(mapP(stateP[0]) + mapP(stateP[1])) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="start">Pump</text>
         <rect x={boilerTextX - sz(18)} y={boilerTextY - sz(8)} width={sz(36)} height={sz(11)} rx={2} fill={K.card} />
         <text x={boilerTextX} y={boilerTextY} fill={K.heatIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Boiler</text>
