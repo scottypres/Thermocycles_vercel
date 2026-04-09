@@ -1219,7 +1219,7 @@ function SchematicDiagram({ cycle, textScale }) {
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
   ];
   return (<>
-    <svg viewBox="-16 -2 381 330" style={{ width: "100%" }}>
+    <svg viewBox="-2 -2 381 330" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
