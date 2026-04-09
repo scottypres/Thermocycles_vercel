@@ -1761,7 +1761,7 @@ function RankinePage({ onBack }) {
         <div>
           <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
           <h1 style={{ margin: 0, fontSize: sz(desktop ? 35 : 20), fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
-            SteamCycle <span style={{ color: K.accent, fontStyle: "italic" }}>Studio</span>
+            Rankine <span style={{ color: K.accent, fontStyle: "italic" }}>Cycle</span>
           </h1>
           <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Ideal Rankine Cycle Analysis</div>
         </div>
