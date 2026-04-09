@@ -251,7 +251,8 @@ const TS_W = 360, TS_H = 285;
 const TS_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const TS_PLOT = { x: TS_PAD.l, y: TS_PAD.t, w: TS_W - TS_PAD.l - TS_PAD.r, h: TS_H - TS_PAD.t - TS_PAD.b };
 
-function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd }) {
+function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale }) {
+  const sz = px => px * (textScale || 1);
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
@@ -408,10 +409,10 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
       {/* Axes */}
       <line x1={TS_PLOT.x} y1={TS_PLOT.y + TS_PLOT.h} x2={TS_PLOT.x + TS_PLOT.w} y2={TS_PLOT.y + TS_PLOT.h} stroke={K.ink} strokeWidth={1.2} />
       <line x1={TS_PLOT.x} y1={TS_PLOT.y} x2={TS_PLOT.x} y2={TS_PLOT.y + TS_PLOT.h} stroke={K.ink} strokeWidth={1.2} />
-      {sGridVals.map((s, i) => <text key={`sl${i}`} x={mapS(s)} y={TS_PLOT.y + TS_PLOT.h + 10} fill={K.inkMed} fontSize={6.5} textAnchor="middle" fontFamily={FM}>{s.toFixed(1)}</text>)}
-      {tGridVals.map((t, i) => <text key={`tl${i}`} x={TS_PLOT.x - 4} y={mapT(t) + 2.5} fill={K.inkMed} fontSize={6.5} textAnchor="end" fontFamily={FM}>{t}</text>)}
-      <text x={TS_W / 2} y={TS_H - 1} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
-      <text x={10} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${TS_H / 2 - 8})`}>T (°C)</text>
+      {sGridVals.map((s, i) => <text key={`sl${i}`} x={mapS(s)} y={TS_PLOT.y + TS_PLOT.h + 10} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>{s.toFixed(1)}</text>)}
+      {tGridVals.map((t, i) => <text key={`tl${i}`} x={TS_PLOT.x - 4} y={mapT(t) + 2.5} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="end" fontFamily={FM}>{t}</text>)}
+      <text x={TS_W / 2} y={TS_H - 1} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
+      <text x={10} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${TS_H / 2 - 8})`}>T (°C)</text>
       {/* Dome */}
       <path d={domePathD} fill={showAreas ? "none" : K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
       {showAreas && (() => {
@@ -466,18 +467,18 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
         return (<>
           <line x1={TS_PLOT.x} y1={lineY} x2={TS_PLOT.x + TS_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
           <rect x={boxX} y={boxY} width={boxW} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
-          <text x={boxX + boxW / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
+          <text x={boxX + boxW / 2} y={boxY + 13} fill={color} fontSize={sz(9)} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
       })()}
       {!showAreas && <>
         <rect x={mapS(st[0].s) + 4} y={(mapT(st[0].T) + mapT(st[1].T)) / 2 - 8} width={52} height={11} rx={2} fill={K.card} />
-        <text x={mapS(st[0].s) + 8} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500">Compressor</text>
+        <text x={mapS(st[0].s) + 8} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Compressor</text>
         <rect x={mapS((st[1].s + st[2].s) / 2) - 24} y={mapT(cycle.Tsat_high) - 16} width={48} height={11} rx={2} fill={K.card} />
-        <text x={mapS((st[1].s + st[2].s) / 2)} y={mapT(cycle.Tsat_high) - 8} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Condenser</text>
+        <text x={mapS((st[1].s + st[2].s) / 2)} y={mapT(cycle.Tsat_high) - 8} fill={K.heatOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Condenser</text>
         <rect x={mapS((st[2].s + st[3].s) / 2) - 16 - 44} y={(mapT(st[2].T) + mapT(st[3].T)) / 2 - 8} width={44} height={11} rx={2} fill={K.card} />
-        <text x={mapS((st[2].s + st[3].s) / 2) - 16} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.inkMed} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Exp. Valve</text>
+        <text x={mapS((st[2].s + st[3].s) / 2) - 16} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.inkMed} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="end">Exp. Valve</text>
         <rect x={mapS((st[3].s + st[0].s) / 2) - 26} y={mapT(st[0].T) + 5} width={52} height={11} rx={2} fill={K.card} />
-        <text x={mapS((st[3].s + st[0].s) / 2)} y={mapT(st[0].T) + 13} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Evaporator</text>
+        <text x={mapS((st[3].s + st[0].s) / 2)} y={mapT(st[0].T) + 13} fill={K.heatIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Evaporator</text>
         <line x1={dpx} y1={dpy} x2={dpx} y2={TS_PLOT.y + TS_PLOT.h} stroke={lockS ? K.accent : K.inkLight} strokeWidth={lockS ? 1.2 : 0.5} strokeDasharray={lockS ? "none" : "2 2"} />
         <line x1={dpx} y1={dpy} x2={TS_PLOT.x} y2={dpy} stroke={lockT ? K.accent : K.inkLight} strokeWidth={lockT ? 1.2 : 0.5} strokeDasharray={lockT ? "none" : "2 2"} />
       </>}
@@ -491,14 +492,14 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
             <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
             <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill={K.card} />
-            <text x={tx} y={ty} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
+            <text x={tx} y={ty} fill={K.accent} fontSize={sz(12)} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
       })}
       {!showAreas && <>
         <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
-        <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={7} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
+        <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
       </>}
       {showAreas && (() => {
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
@@ -507,12 +508,12 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
           <>
             <rect x={lx} y={ly} width={160} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={8} fontFamily={FM}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
+            <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
             <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={8} fontFamily={FM}>Q_cond (1→3) = {fmt(cycle.qCond)} kJ/kg</text>
+            <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM}>Q_cond (1→3) = {fmt(cycle.qCond)} kJ/kg</text>
             <rect x={lx + 5} y={ly + 31} width={8} height={8} rx={1} fill={`${K.workIn}40`} stroke={K.workIn} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 38} fill={K.workIn} fontSize={8} fontFamily={FM}>W_comp (1→2) = {fmt(cycle.wComp)} kJ/kg</text>
-            <text x={lx + 5} y={ly + 49} fill={K.ink} fontSize={8} fontFamily={FD} fontWeight="bold">COP = {cycle.copCool.toFixed(2)}</text>
+            <text x={lx + 17} y={ly + 38} fill={K.workIn} fontSize={sz(8)} fontFamily={FM}>W_comp (1→2) = {fmt(cycle.wComp)} kJ/kg</text>
+            <text x={lx + 5} y={ly + 49} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">COP = {cycle.copCool.toFixed(2)}</text>
           </>
         );
       })()}
@@ -525,7 +526,8 @@ const PH_W = 360, PH_H = 285;
 const PH_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const PH_PLOT = { x: PH_PAD.l, y: PH_PAD.t, w: PH_W - PH_PAD.l - PH_PAD.r, h: PH_H - PH_PAD.t - PH_PAD.b };
 
-function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd }) {
+function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale }) {
+  const sz = px => px * (textScale || 1);
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
@@ -687,10 +689,10 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
       {pGridVals.map((p, i) => <line key={`pg${i}`} x1={PH_PLOT.x} y1={mapP(p)} x2={PH_PLOT.x + PH_PLOT.w} y2={mapP(p)} stroke={K.gridMajor} strokeWidth={0.5} />)}
       <line x1={PH_PLOT.x} y1={PH_PLOT.y + PH_PLOT.h} x2={PH_PLOT.x + PH_PLOT.w} y2={PH_PLOT.y + PH_PLOT.h} stroke={K.ink} strokeWidth={1.2} />
       <line x1={PH_PLOT.x} y1={PH_PLOT.y} x2={PH_PLOT.x} y2={PH_PLOT.y + PH_PLOT.h} stroke={K.ink} strokeWidth={1.2} />
-      {hGridVals.map((h, i) => <text key={`hl${i}`} x={mapH(h)} y={PH_PLOT.y + PH_PLOT.h + 10} fill={K.inkMed} fontSize={6.5} textAnchor="middle" fontFamily={FM}>{h}</text>)}
-      {pGridVals.map((p, i) => <text key={`pl${i}`} x={PH_PLOT.x - 4} y={mapP(p) + 2.5} fill={K.inkMed} fontSize={6.5} textAnchor="end" fontFamily={FM}>{p >= 1000 ? `${(p/1000).toFixed(1)}k` : p}</text>)}
-      <text x={PH_W / 2} y={PH_H - 1} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">h (kJ/kg)</text>
-      <text x={10} y={PH_H / 2 - 8} fill={K.inkMed} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${PH_H / 2 - 8})`}>P (kPa) — log</text>
+      {hGridVals.map((h, i) => <text key={`hl${i}`} x={mapH(h)} y={PH_PLOT.y + PH_PLOT.h + 10} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>{h}</text>)}
+      {pGridVals.map((p, i) => <text key={`pl${i}`} x={PH_PLOT.x - 4} y={mapP(p) + 2.5} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="end" fontFamily={FM}>{p >= 1000 ? `${(p/1000).toFixed(1)}k` : p}</text>)}
+      <text x={PH_W / 2} y={PH_H - 1} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">h (kJ/kg)</text>
+      <text x={10} y={PH_H / 2 - 8} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${PH_H / 2 - 8})`}>P (kPa) — log</text>
       {/* Dome */}
       <path d={domePathD} fill={showAreas ? "none" : K.dome} stroke={K.domeLine} strokeWidth={1} strokeDasharray="6 3" />
       {showAreas && (() => {
@@ -739,18 +741,18 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
         return (<>
           <line x1={PH_PLOT.x} y1={lineY} x2={PH_PLOT.x + PH_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
           <rect x={boxX} y={boxY} width={boxW} height={18} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
-          <text x={boxX + boxW / 2} y={boxY + 13} fill={color} fontSize={9} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
+          <text x={boxX + boxW / 2} y={boxY + 13} fill={color} fontSize={sz(9)} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
       })()}
       {!showAreas && <>
         <rect x={(mapH(cycle.h1) + mapH(cycle.h2)) / 2 + 6} y={(mapP(st[0].P) + mapP(st[1].P)) / 2 - 8} width={52} height={11} rx={2} fill={K.card} />
-        <text x={(mapH(cycle.h1) + mapH(cycle.h2)) / 2 + 10} y={(mapP(st[0].P) + mapP(st[1].P)) / 2} fill={K.workIn} fontSize={7} fontFamily={FM} fontWeight="500">Compressor</text>
+        <text x={(mapH(cycle.h1) + mapH(cycle.h2)) / 2 + 10} y={(mapP(st[0].P) + mapP(st[1].P)) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Compressor</text>
         <rect x={(mapH(cycle.h2) + mapH(cycle.h3)) / 2 - 24} y={mapP(st[1].P) - 15} width={48} height={11} rx={2} fill={K.card} />
-        <text x={(mapH(cycle.h2) + mapH(cycle.h3)) / 2} y={mapP(st[1].P) - 7} fill={K.heatOut} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Condenser</text>
+        <text x={(mapH(cycle.h2) + mapH(cycle.h3)) / 2} y={mapP(st[1].P) - 7} fill={K.heatOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Condenser</text>
         <rect x={mapH(cycle.h3) - 10 - 44} y={(mapP(st[2].P) + mapP(st[3].P)) / 2 - 8} width={44} height={11} rx={2} fill={K.card} />
-        <text x={mapH(cycle.h3) - 10} y={(mapP(st[2].P) + mapP(st[3].P)) / 2} fill={K.inkMed} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="end">Exp. Valve</text>
+        <text x={mapH(cycle.h3) - 10} y={(mapP(st[2].P) + mapP(st[3].P)) / 2} fill={K.inkMed} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="end">Exp. Valve</text>
         <rect x={(mapH(cycle.h4) + mapH(cycle.h1)) / 2 - 26} y={mapP(st[0].P) + 5} width={52} height={11} rx={2} fill={K.card} />
-        <text x={(mapH(cycle.h4) + mapH(cycle.h1)) / 2} y={mapP(st[0].P) + 13} fill={K.heatIn} fontSize={7} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Evaporator</text>
+        <text x={(mapH(cycle.h4) + mapH(cycle.h1)) / 2} y={mapP(st[0].P) + 13} fill={K.heatIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "grab" }}>Evaporator</text>
         <line x1={dpx} y1={dpy} x2={dpx} y2={PH_PLOT.y + PH_PLOT.h} stroke={lockH ? K.accent : K.inkLight} strokeWidth={lockH ? 1.2 : 0.5} strokeDasharray={lockH ? "none" : "2 2"} />
         <line x1={dpx} y1={dpy} x2={PH_PLOT.x} y2={dpy} stroke={lockP ? K.accent : K.inkLight} strokeWidth={lockP ? 1.2 : 0.5} strokeDasharray={lockP ? "none" : "2 2"} />
       </>}
@@ -764,14 +766,14 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
             <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
             <rect x={tx - 7} y={ty - 10} width={14} height={13} rx={1} fill={K.card} />
-            <text x={tx} y={ty} fill={K.accent} fontSize={12} fontFamily={FD} textAnchor="middle">{s.label}</text>
+            <text x={tx} y={ty} fill={K.accent} fontSize={sz(12)} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
       })}
       {!showAreas && <>
         <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
-        <text x={PH_W - 8} y={PH_PLOT.y + 10} fill={K.inkLight} fontSize={7} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockH ? "h locked" : "tap & drag"}</text>
+        <text x={PH_W - 8} y={PH_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockH ? "h locked" : "tap & drag"}</text>
       </>}
       {showAreas && (() => {
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
@@ -780,12 +782,12 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
           <>
             <rect x={lx} y={ly} width={160} height={52} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             <rect x={lx + 5} y={ly + 5} width={8} height={8} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={8} fontFamily={FM}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
+            <text x={lx + 17} y={ly + 12} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
             <rect x={lx + 5} y={ly + 18} width={8} height={8} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={8} fontFamily={FM}>Q_cond (2→3) = {fmt(cycle.qCond)} kJ/kg</text>
+            <text x={lx + 17} y={ly + 25} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM}>Q_cond (2→3) = {fmt(cycle.qCond)} kJ/kg</text>
             <rect x={lx + 5} y={ly + 31} width={8} height={8} rx={1} fill={`${K.workIn}40`} stroke={K.workIn} strokeWidth={0.6} />
-            <text x={lx + 17} y={ly + 38} fill={K.workIn} fontSize={8} fontFamily={FM}>W_comp (1→2) = {fmt(cycle.wComp)} kJ/kg</text>
-            <text x={lx + 5} y={ly + 49} fill={K.ink} fontSize={8} fontFamily={FD} fontWeight="bold">COP = {cycle.copCool.toFixed(2)}</text>
+            <text x={lx + 17} y={ly + 38} fill={K.workIn} fontSize={sz(8)} fontFamily={FM}>W_comp (1→2) = {fmt(cycle.wComp)} kJ/kg</text>
+            <text x={lx + 5} y={ly + 49} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">COP = {cycle.copCool.toFixed(2)}</text>
           </>
         );
       })()}
@@ -936,7 +938,8 @@ function RefComponentModal({ component, cycle, onClose }) {
 }
 
 /* ───────── Schematic ───────── */
-function RefSchematicDiagram({ cycle }) {
+function RefSchematicDiagram({ cycle, textScale }) {
+  const sz = px => px * (textScale || 1);
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
   const mk = [
@@ -959,22 +962,22 @@ function RefSchematicDiagram({ cycle }) {
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("compressor")}>
         <circle cx={68} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
         <path d="M54,185 L68,158 L82,185 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-        <text x={68} y={175} fill={K.workIn} fontSize={10} textAnchor="middle" fontFamily={FD}>Compressor</text>
-        <text x={68} y={205} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
+        <text x={68} y={175} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Compressor</text>
+        <text x={68} y={205} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* CONDENSER */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("condenser")}>
         <rect x={110} y={32} width={140} height={50} fill="rgba(255,255,255,0.01)" stroke={K.heatOut} strokeWidth={1.5} />
         <path d="M125,63 Q135,53 145,63 Q155,73 165,63 Q175,53 185,63 Q195,73 205,63 Q215,53 225,63 Q235,73 240,66" fill="none" stroke={K.heatOut} strokeWidth={0.7} />
-        <text x={180} y={53} fill={K.heatOut} fontSize={11} textAnchor="middle" fontFamily={FD}>Condenser</text>
-        <text x={180} y={67} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+        <text x={180} y={53} fill={K.heatOut} fontSize={sz(11)} textAnchor="middle" fontFamily={FD}>Condenser</text>
+        <text x={180} y={67} fill={K.inkLight} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* EXPANSION VALVE */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("expvalve")}>
         <path d="M295,152 L315,172 L295,192 L275,172 Z" fill="rgba(255,255,255,0.01)" stroke={K.inkMed} strokeWidth={1.5} strokeDasharray="4 2" />
-        <text x={295} y={170} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Exp.</text>
-        <text x={295} y={181} fill={K.inkMed} fontSize={8} textAnchor="middle" fontFamily={FD}>Valve</text>
-        <text x={295} y={198} fill={K.inkLight} fontSize={6} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
+        <text x={295} y={170} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Exp.</text>
+        <text x={295} y={181} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FD}>Valve</text>
+        <text x={295} y={198} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isenthalpic</text>
       </g>
       {/* EVAPORATOR */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("evaporator")}>
@@ -982,8 +985,8 @@ function RefSchematicDiagram({ cycle }) {
         {[130,150,170,190,210,230].map(x => (
           <g key={x}><line x1={x} y1={258} x2={x} y2={288} stroke={K.heatIn} strokeWidth={0.4} /><path d={`M${x-3},258 L${x},254 L${x+3},258`} fill="none" stroke={K.heatIn} strokeWidth={0.4} /></g>
         ))}
-        <text x={180} y={272} fill={K.heatIn} fontSize={11} textAnchor="middle" fontFamily={FD}>Evaporator</text>
-        <text x={180} y={286} fill={K.inkLight} fontSize={7} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
+        <text x={180} y={272} fill={K.heatIn} fontSize={sz(11)} textAnchor="middle" fontFamily={FD}>Evaporator</text>
+        <text x={180} y={286} fill={K.inkLight} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">const. pressure</text>
       </g>
       {/* Pipes */}
       <polyline points="68,144 68,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
@@ -992,18 +995,18 @@ function RefSchematicDiagram({ cycle }) {
       <polyline points="110,273 68,273 68,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#rK)" />
       {/* State markers */}
       {[{ n:"2",x:88,y:76 },{ n:"3",x:265,y:40 },{ n:"4",x:308,y:242 },{ n:"1",x:88,y:252 }].map((p,i) => (
-        <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={12} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
+        <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={sz(12)} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
       {/* Energy labels */}
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#rB)" />
-      <text x={180} y={8} fill={K.heatOut} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_cond = {fmt(cycle.qCond)} kJ/kg</text>
+      <text x={180} y={8} fill={K.heatOut} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_cond = {fmt(cycle.qCond)} kJ/kg</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatIn} strokeWidth={1.8} />
       <path d="M176,302 L180,298 L184,302" fill="none" stroke={K.heatIn} strokeWidth={1.5} />
-      <text x={180} y={318} fill={K.heatIn} fontSize={8} textAnchor="middle" fontFamily={FM}>Q_evap = {fmt(cycle.qEvap)} kJ/kg</text>
+      <text x={180} y={318} fill={K.heatIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_evap = {fmt(cycle.qEvap)} kJ/kg</text>
       <line x1={36} y1={172} x2={18} y2={172} stroke={K.workIn} strokeWidth={1.8} />
       <path d="M40,168 L36,172 L40,176" fill="none" stroke={K.workIn} strokeWidth={1.5} />
-      <text x={27} y={160} fill={K.workIn} fontSize={7.5} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
-      <text x={27} y={188} fill={K.workIn} fontSize={7} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
+      <text x={27} y={160} fill={K.workIn} fontSize={sz(7.5)} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
+      <text x={27} y={188} fill={K.workIn} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
     </svg>
     <RefComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);
@@ -1523,7 +1526,7 @@ export default function RefrigerationPage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— {refData.name}</span></h3>
-          <div data-tour="ref-schematic"><RefSchematicDiagram cycle={cycle} /></div>
+          <div data-tour="ref-schematic"><RefSchematicDiagram cycle={cycle} textScale={textScale} /></div>
         </div>
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams</span></h3>
@@ -1560,7 +1563,7 @@ export default function RefrigerationPage({ onBack }) {
           </div>
           <RefTsDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handleTsDrag} lockS={lockS} lockT={lockT} showAreas={showTsAreas}
             onPHighChange={setPHigh} onPLowChange={setPLow}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} />
         </div>
 
         {/* P-h Diagram */}
@@ -1584,7 +1587,7 @@ export default function RefrigerationPage({ onBack }) {
           </div>
           <RefPhDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handlePhDrag} lockP={lockP} lockH={lockH} showAreas={showPhAreas}
             onPHighChange={setPHigh} onPLowChange={setPLow}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} />
         </div>
       </div>
       <RefEquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} />
