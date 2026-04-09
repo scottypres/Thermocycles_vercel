@@ -7,7 +7,7 @@ export default function LandingPage({ onNavigate }) {
 
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{ fontSize: 11, color: K.inkLight, letterSpacing: 4, marginBottom: 4, textTransform: "uppercase" }}>Thermodynamics</div>
-        <h1 style={{ margin: 0, fontSize: 42, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
+        <h1 style={{ margin: 0, fontSize: 38, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
           ThermoCycles <span style={{ color: K.accent, fontStyle: "italic" }}>Studio</span>
         </h1>
         <div style={{ fontSize: 12, color: K.inkLight, letterSpacing: 2, marginTop: 6 }}>Interactive Thermodynamic Cycle Analysis</div>
