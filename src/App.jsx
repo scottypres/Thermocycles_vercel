@@ -1616,8 +1616,10 @@ function ParamSlider({ label, unit, value, min, max, step, onChange, color }) {
 }
 
 /* ───────── State Table ───────── */
-function StateTable({ cycle, onSelectState }) {
+function StateTable({ cycle, onSelectState, textScale }) {
   const isWide = useIsDesktop();
+  const sc = textScale || 1;
+  const sz = (px) => Math.round(px * sc);
   const fmt = v => v < 10 ? v.toFixed(3) : v < 100 ? v.toFixed(2) : v.toFixed(1);
   const qualities = cycle.states.map(s => {
     const info = getPhaseInfo(s.s, s.T);
@@ -1628,11 +1630,11 @@ function StateTable({ cycle, onSelectState }) {
   });
   return (
     <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: isWide ? 18 : 12 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: sz(isWide ? 18 : 12) }}>
         <thead>
           <tr style={{ borderBottom: `2px solid ${K.ink}` }}>
             {["State","T (°C)","P (kPa)","h (kJ/kg)","s (kJ/kg·K)","x"].map(h => (
-              <th key={h} style={{ padding: isWide ? "8px 6px" : "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: isWide ? 15 : 11, fontStyle: "italic" }}>{h}</th>
+              <th key={h} style={{ padding: isWide ? "8px 6px" : "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: sz(isWide ? 15 : 11), fontStyle: "italic" }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -1643,7 +1645,7 @@ function StateTable({ cycle, onSelectState }) {
               style={{ borderBottom: `0.5px solid ${K.gridMajor}`, cursor: "pointer", transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = K.cardAlt}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.accent, fontFamily: FD, fontSize: isWide ? 20 : 16 }}>
+              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.accent, fontFamily: FD, fontSize: sz(isWide ? 20 : 16) }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
                   {s.label}
                   <svg width="8" height="8" viewBox="0 0 8 8" style={{ opacity: 0.4 }}><circle cx="4" cy="4" r="3" fill="none" stroke={K.accent} strokeWidth="1"/><circle cx="4" cy="4" r="1" fill={K.accent}/></svg>
@@ -1653,12 +1655,12 @@ function StateTable({ cycle, onSelectState }) {
               <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.P)}</td>
               <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.h)}</td>
               <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.s)}</td>
-              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.inkMed, fontSize: isWide ? 15 : 11 }}>{qualities[i]}</td>
+              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.inkMed, fontSize: sz(isWide ? 15 : 11) }}>{qualities[i]}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div style={{ marginTop: 6, fontSize: isWide ? 13 : 9, color: K.inkLight, fontStyle: "italic", textAlign: "center" }}>
+      <div style={{ marginTop: 6, fontSize: sz(isWide ? 13 : 9), color: K.inkLight, fontStyle: "italic", textAlign: "center" }}>
         Tap a row to visualize that state point
       </div>
     </div>
@@ -1738,9 +1740,6 @@ function RankinePage({ onBack }) {
         }
         input[type="range"]::-moz-range-thumb { width:16px;height:16px;border-radius:50%;background:${K.accent};border:2px solid ${K.card};cursor:pointer; }
         *{box-sizing:border-box}body{margin:0;background:${K.bg}}
-        svg text{transform-box:fill-box;transform-origin:0% 50%;transform:scale(${textScale})}
-        svg text[text-anchor="middle"]{transform-origin:50% 50%}
-        svg text[text-anchor="end"]{transform-origin:100% 50%}
       `}</style>
 
       {/* Header */}
@@ -1851,16 +1850,16 @@ function RankinePage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : { ...card, padding: "16px" }}>
           <h3 style={sec}>Cycle Parameters</h3>
-          <ParamSlider label="Boiler Pressure (P high)" unit="kPa" color={K.heatIn} value={pHigh} min={500} max={25000} step={100} onChange={setPHigh} />
-          <ParamSlider label="Condenser Pressure (P low)" unit="kPa" color={K.heatOut} value={pLow} min={5} max={100} step={1} onChange={setPLow} />
-          <ParamSlider label="Superheat Temperature (T₃)" unit="°C" color={K.workOut} value={adjustedTSup} min={minTSup} max={600} step={5} onChange={v => setTSup(v)} />
+          <ParamSlider label="Boiler Pressure (P high)" unit="kPa" color={K.heatIn} value={pHigh} min={500} max={25000} step={100} onChange={setPHigh} textScale={textScale} />
+          <ParamSlider label="Condenser Pressure (P low)" unit="kPa" color={K.heatOut} value={pLow} min={5} max={100} step={1} onChange={setPLow} textScale={textScale} />
+          <ParamSlider label="Superheat Temperature (T₃)" unit="°C" color={K.workOut} value={adjustedTSup} min={minTSup} max={600} step={5} onChange={v => setTSup(v)} textScale={textScale} />
           <div style={{ marginTop: 6, fontSize: sz(desktop ? 15 : 9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
             T_sat at P_high = {tSatHigh.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
-          <StateTable cycle={cycle} onSelectState={setDragPoint} />
+          <StateTable cycle={cycle} onSelectState={setDragPoint} textScale={textScale} />
         </div>
       </div>
 

@@ -1304,16 +1304,18 @@ function RefrigerantInfoModal({ open, onClose, currentRef }) {
 }
 
 /* ───────── State Table (Refrigeration) ───────── */
-function RefStateTable({ cycle, refData, onSelectState }) {
+function RefStateTable({ cycle, refData, onSelectState, textScale }) {
+  const sc = textScale || 1;
+  const sz = (px) => Math.round(px * sc);
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(3) : Math.abs(v) < 100 ? v.toFixed(2) : v.toFixed(1);
   const descs = ["Sat. Vapor", "Superheated", "Sat. Liquid", "Two-Phase"];
   return (
     <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: 10 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: sz(10) }}>
         <thead>
           <tr style={{ borderBottom: `2px solid ${K.ink}` }}>
             {["State","Desc","T (°C)","P (kPa)","h (kJ/kg)","s (kJ/kg·K)","x"].map(h => (
-              <th key={h} style={{ padding: "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: 9, fontStyle: "italic" }}>{h}</th>
+              <th key={h} style={{ padding: "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: sz(9), fontStyle: "italic" }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -1324,25 +1326,25 @@ function RefStateTable({ cycle, refData, onSelectState }) {
               style={{ borderBottom: `0.5px solid ${K.gridMajor}`, cursor: "pointer", transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = K.cardAlt}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.accent, fontFamily: FD, fontSize: 13 }}>
+              <td style={{ padding: "6px 3px", textAlign: "center", color: K.accent, fontFamily: FD, fontSize: sz(13) }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
                   {s.label}
                   <svg width="8" height="8" viewBox="0 0 8 8" style={{ opacity: 0.4 }}><circle cx="4" cy="4" r="3" fill="none" stroke={K.accent} strokeWidth="1"/><circle cx="4" cy="4" r="1" fill={K.accent}/></svg>
                 </span>
               </td>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.inkLight, fontSize: 8 }}>{descs[i]}</td>
+              <td style={{ padding: "6px 3px", textAlign: "center", color: K.inkLight, fontSize: sz(8) }}>{descs[i]}</td>
               <td style={{ padding: "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.T)}</td>
               <td style={{ padding: "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.P)}</td>
               <td style={{ padding: "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.h)}</td>
               <td style={{ padding: "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.s)}</td>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.inkMed, fontSize: 9 }}>
+              <td style={{ padding: "6px 3px", textAlign: "center", color: K.inkMed, fontSize: sz(9) }}>
                 {i === 0 ? "1 (sat.v)" : i === 1 ? "— (sup.)" : i === 2 ? "0 (sat.l)" : cycle.x4.toFixed(3)}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div style={{ marginTop: 6, fontSize: 8, color: K.inkLight, fontStyle: "italic", textAlign: "center" }}>
+      <div style={{ marginTop: 6, fontSize: sz(8), color: K.inkLight, fontStyle: "italic", textAlign: "center" }}>
         Tap a row to visualize that state point
       </div>
     </div>
@@ -1461,9 +1463,6 @@ export default function RefrigerationPage({ onBack }) {
         }
         input[type="range"]::-moz-range-thumb { width:16px;height:16px;border-radius:50%;background:${K.accent};border:2px solid ${K.card};cursor:pointer; }
         *{box-sizing:border-box}body{margin:0;background:${K.bg}}
-        svg text{transform-box:fill-box;transform-origin:0% 50%;transform:scale(${textScale})}
-        svg text[text-anchor="middle"]{transform-origin:50% 50%}
-        svg text[text-anchor="end"]{transform-origin:100% 50%}
       `}</style>
 
       {/* Header */}
@@ -1594,15 +1593,15 @@ export default function RefrigerationPage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : { ...card, padding: "16px" }}>
           <h3 style={sec}>Cycle Parameters</h3>
-          <ParamSlider label="Condenser Pressure (P high)" unit="kPa" color={K.heatOut} value={effectivePHigh} min={Math.round(pMin + (pMax - pMin) * 0.2)} max={pMax} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPHigh} />
-          <ParamSlider label="Evaporator Pressure (P low)" unit="kPa" color={K.heatIn} value={effectivePLow} min={pMin} max={Math.round(pMin + (pMax - pMin) * 0.6)} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPLow} />
+          <ParamSlider label="Condenser Pressure (P high)" unit="kPa" color={K.heatOut} value={effectivePHigh} min={Math.round(pMin + (pMax - pMin) * 0.2)} max={pMax} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPHigh} textScale={textScale} />
+          <ParamSlider label="Evaporator Pressure (P low)" unit="kPa" color={K.heatIn} value={effectivePLow} min={pMin} max={Math.round(pMin + (pMax - pMin) * 0.6)} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPLow} textScale={textScale} />
           <div style={{ marginTop: 6, fontSize: sz(9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
             T_evap = {cycle.Tsat_low.toFixed(1)}°C &nbsp;|&nbsp; T_cond = {cycle.Tsat_high.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
         </div>
         <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: sz(9), color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
-          <RefStateTable cycle={cycle} refData={refData} onSelectState={setDragPoint} />
+          <RefStateTable cycle={cycle} refData={refData} onSelectState={setDragPoint} textScale={textScale} />
         </div>
       </div>
 
