@@ -103,17 +103,26 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
     const el = document.querySelector(`[data-tour="${step.target}"]`);
     if (!el) { setRect(null); return; }
 
-    // Scroll so the highlighted element sits in the upper portion of the viewport
-    // (above the bottom sheet which occupies the lower ~35%)
+    // Scroll so the highlighted element sits in the visible portion of the viewport
+    // (away from the sheet which occupies ~35%)
     const vh = window.innerHeight;
     const sheetH = vh * SHEET_HEIGHT_VH / 100;
-    const safeZone = vh - sheetH - 20; // visible area above bottom sheet
     const elRect = el.getBoundingClientRect();
     const absTop = elRect.top + window.scrollY;
-    // Center the element in the safe zone (upper portion), with some top margin
-    const topMargin = Math.max(20, (safeZone - elRect.height) / 3);
-    const targetScroll = Math.max(0, absTop - topMargin);
-    window.scrollTo({ top: targetScroll, behavior: "smooth" });
+    const isTop = step.sheet === "top";
+
+    if (isTop) {
+      // Sheet is at top — element should be in the lower portion
+      const safeTop = sheetH + 20; // below the top sheet
+      const targetScroll = Math.max(0, absTop - safeTop - Math.max(20, (vh - sheetH - 20 - elRect.height) / 3));
+      window.scrollTo({ top: targetScroll, behavior: "smooth" });
+    } else {
+      // Sheet is at bottom — element should be in the upper portion
+      const safeZone = vh - sheetH - 20;
+      const topMargin = Math.max(20, (safeZone - elRect.height) / 3);
+      const targetScroll = Math.max(0, absTop - topMargin);
+      window.scrollTo({ top: targetScroll, behavior: "smooth" });
+    }
 
     const measure = () => {
       const r = el.getBoundingClientRect();
@@ -229,13 +238,14 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         }} />}
       </div>
 
-      {/* ── Fixed bottom sheet ── */}
+      {/* ── Fixed sheet (top or bottom) ── */}
       <div onClick={e => e.stopPropagation()} style={{
         position: "fixed", zIndex: 10000,
-        bottom: 0, left: 0, right: 0,
-        background: K.card, borderTop: `2px solid ${accent}`,
-        padding: "18px 20px 24px",
-        boxShadow: "0 -4px 24px rgba(0,0,0,0.25)",
+        left: 0, right: 0,
+        ...(step.sheet === "top"
+          ? { top: 0, borderBottom: `2px solid ${accent}`, boxShadow: "0 4px 24px rgba(0,0,0,0.25)", padding: "24px 20px 18px" }
+          : { bottom: 0, borderTop: `2px solid ${accent}`, boxShadow: "0 -4px 24px rgba(0,0,0,0.25)", padding: "18px 20px 24px" }),
+        background: K.card,
         maxHeight: `${SHEET_HEIGHT_VH}vh`,
         overflowY: "auto",
       }}>
@@ -289,8 +299,8 @@ export const RANKINE_TOUR_STEPS = [
   { target: "eta-areas", title: "Efficiency Areas", description: "Toggle shaded areas on the T–s diagram to visualize thermal efficiency as the ratio of net work to heat input." },
   { target: "pv-areas", title: "Work Areas", description: "Toggle shaded areas on the P–v diagram to visualize the boundary work for each process." },
   { target: "lock-buttons", title: "Lock Properties", description: "Lock entropy (s), temperature (T), pressure (P), or specific volume (v) to constrain your drag point on the diagrams." },
-  { target: "energy-balance", title: "Energy Balance", description: "Click any energy value — Q in, Q out, W turbine, or W pump — to jump directly to its equation in the reference." },
-  { target: "dark-mode", title: "Dark Mode", description: "Toggle between light and dark themes. Your preference is saved automatically." },
+  { target: "energy-balance", title: "Energy Balance", description: "Click any energy value — Q in, Q out, W turbine, or W pump — to jump directly to its equation in the reference.", sheet: "top" },
+  { target: "dark-mode", title: "Dark Mode", description: "Toggle between light and dark themes. Your preference is saved automatically.", sheet: "top" },
 ];
 
 /* ───────── Tour Steps: Refrigeration Cycle ───────── */
@@ -304,6 +314,6 @@ export const REF_TOUR_STEPS = [
   { target: "ref-cop-areas", title: "COP Areas", description: "Toggle shaded areas on the T–s diagram to visualize the coefficient of performance." },
   { target: "ref-energy-areas", title: "Energy Areas", description: "Toggle shaded areas on the P–h diagram to visualize energy transfer for each process." },
   { target: "ref-lock-buttons", title: "Lock Properties", description: "Lock entropy (s), temperature (T), pressure (P), or enthalpy (h) to constrain your drag point on the diagrams." },
-  { target: "ref-energy-balance", title: "Energy Balance", description: "Click any energy value — Q evap, Q cond, or W compressor — to jump directly to its equation." },
-  { target: "ref-dark-mode", title: "Dark Mode", description: "Toggle between light and dark themes. Your preference is saved automatically." },
+  { target: "ref-energy-balance", title: "Energy Balance", description: "Click any energy value — Q evap, Q cond, or W compressor — to jump directly to its equation.", sheet: "top" },
+  { target: "ref-dark-mode", title: "Dark Mode", description: "Toggle between light and dark themes. Your preference is saved automatically.", sheet: "top" },
 ];
