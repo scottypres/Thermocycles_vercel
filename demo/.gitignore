@@ -1,0 +1,8 @@
+.env
+node_modules/
+audio/*.mp3
+output/*.mp4
+output/*.webm
+output/*.mkv
+playwright-report/
+test-results/

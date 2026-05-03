@@ -1,0 +1,17 @@
+{
+  "name": "thermocycles-demo",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Narrated screencast pipeline for ThermoCycles Studio",
+  "scripts": {
+    "audio": "node generate-audio.mjs",
+    "record": "node record.mjs",
+    "video": "bash build-video.sh",
+    "all": "npm run audio && npm run record && npm run video"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0",
+    "dotenv": "^16.4.5"
+  }
+}
