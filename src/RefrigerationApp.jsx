@@ -1116,142 +1116,147 @@ const REF_EQ_TOPICS = [
 function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
   const [topic, setTopic] = useState("wc");
   useEffect(() => { if (initialTopic && open) setTopic(initialTopic); }, [initialTopic, open]);
+  const isWide = useIsDesktop();
   if (!open) return null;
 
   const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const sel = REF_EQ_TOPICS.find(t => t.id === topic);
-  const stepStyle = { background: K.cardAlt, border: `1px solid ${K.border}`, padding: "10px 12px", marginBottom: 8, fontSize: 10.5, lineHeight: 2, fontFamily: FM };
+  const stepStyle = { background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px 22px" : "10px 12px", marginBottom: isWide ? 12 : 8, fontSize: isWide ? 16 : 10.5, lineHeight: 2, fontFamily: FM };
   const numStyle = { color: K.accent, fontWeight: 700 };
-  const resultStyle = { background: K.card, border: `2px solid ${sel.color}`, padding: "10px 12px", textAlign: "center", marginTop: 4 };
+  const resultStyle = { background: K.card, border: `2px solid ${sel.color}`, padding: isWide ? "18px 22px" : "10px 12px", textAlign: "center", marginTop: isWide ? 10 : 4 };
+  const labelStyle = { color: K.inkLight, fontSize: isWide ? 12 : 9, marginBottom: isWide ? 6 : 4 };
+  const noteStyle = { color: K.inkLight, fontSize: isWide ? 13 : 9, marginTop: isWide ? 6 : 4 };
+  const resultLabelStyle = { fontSize: isWide ? 12 : 9, color: K.inkLight, marginBottom: isWide ? 4 : 2 };
+  const resultValueStyle = { fontSize: isWide ? 24 : 16, fontFamily: FD, color: sel.color };
 
   function renderContent() {
     switch (topic) {
       case "wc": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>W_comp = h₂ − h₁</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>Isentropic compression from saturated vapor (state 1) to superheated vapor (state 2). This is the sole work input.</div>
+          <div style={noteStyle}>Isentropic compression from saturated vapor (state 1) to superheated vapor (state 2). This is the sole work input.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 1 — h₁ at evaporator exit (sat. vapor at P_low)</div>
+          <div style={labelStyle}>STEP 1 — h₁ at evaporator exit (sat. vapor at P_low)</div>
           <div>h₁ = h_g at P_low = <span style={numStyle}>{f(cycle.states[0].P)}</span> kPa</div>
           <div>h₁ = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 2 — h₂ after isentropic compression to P_high</div>
+          <div style={labelStyle}>STEP 2 — h₂ after isentropic compression to P_high</div>
           <div>s₂ = s₁ = <span style={numStyle}>{f(cycle.s1)}</span> kJ/kg·K (isentropic)</div>
           <div>h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg, T₂ = <span style={numStyle}>{f(cycle.T2)}</span>°C</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: 16, fontFamily: FD, color: sel.color }}>W_comp = {f(cycle.h2)} − {f(cycle.h1)} = <strong>{f(cycle.wComp)}</strong> kJ/kg</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>W_comp = {f(cycle.h2)} − {f(cycle.h1)} = <strong>{f(cycle.wComp)}</strong> kJ/kg</div>
         </div>
       </>);
       case "qe": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>Q_evap = h₁ − h₄</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>Heat absorbed in the evaporator at constant pressure. This is the useful cooling effect — the "purpose" of refrigeration.</div>
+          <div style={noteStyle}>Heat absorbed in the evaporator at constant pressure. This is the useful cooling effect — the "purpose" of refrigeration.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>VALUES</div>
+          <div style={labelStyle}>VALUES</div>
           <div>h₁ = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg (sat. vapor at evap. exit)</div>
           <div>h₄ = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg (two-phase at valve exit)</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: 16, fontFamily: FD, color: sel.color }}>Q_evap = {f(cycle.h1)} − {f(cycle.h4)} = <strong>{f(cycle.qEvap)}</strong> kJ/kg</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>Q_evap = {f(cycle.h1)} − {f(cycle.h4)} = <strong>{f(cycle.qEvap)}</strong> kJ/kg</div>
         </div>
       </>);
       case "qc": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>Q_cond = h₂ − h₃</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>Heat rejected in the condenser. Includes desuperheating and condensation at constant pressure.</div>
+          <div style={noteStyle}>Heat rejected in the condenser. Includes desuperheating and condensation at constant pressure.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>VALUES</div>
+          <div style={labelStyle}>VALUES</div>
           <div>h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg (superheated at comp. exit)</div>
           <div>h₃ = <span style={numStyle}>{f(cycle.h3)}</span> kJ/kg (sat. liquid at cond. exit)</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>VERIFY — Energy balance</div>
+          <div style={labelStyle}>VERIFY — Energy balance</div>
           <div>Q_cond = Q_evap + W_comp = {f(cycle.qEvap)} + {f(cycle.wComp)} = <span style={numStyle}>{f(cycle.qEvap + cycle.wComp)}</span></div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: 16, fontFamily: FD, color: sel.color }}>Q_cond = {f(cycle.h2)} − {f(cycle.h3)} = <strong>{f(cycle.qCond)}</strong> kJ/kg</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>Q_cond = {f(cycle.h2)} − {f(cycle.h3)} = <strong>{f(cycle.qCond)}</strong> kJ/kg</div>
         </div>
       </>);
       case "copc": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>COP_cooling = Q_evap / W_comp</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>The COP can exceed 1 because we are moving heat, not creating it. A COP of 3 means 3 units of cooling per unit of work.</div>
+          <div style={noteStyle}>The COP can exceed 1 because we are moving heat, not creating it. A COP of 3 means 3 units of cooling per unit of work.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>CALCULATION</div>
+          <div style={labelStyle}>CALCULATION</div>
           <div>COP_cool = {f(cycle.qEvap)} / {f(cycle.wComp)}</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: 16, fontFamily: FD, color: sel.color }}>COP_cooling = <strong>{cycle.copCool.toFixed(2)}</strong></div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>COP_cooling = <strong>{cycle.copCool.toFixed(2)}</strong></div>
         </div>
       </>);
       case "coph": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>COP_heating = Q_cond / W_comp</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>In heat pump mode, the useful output is Q_cond (heat delivered to the warm space). Always equals COP_cooling + 1.</div>
+          <div style={noteStyle}>In heat pump mode, the useful output is Q_cond (heat delivered to the warm space). Always equals COP_cooling + 1.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>CALCULATION</div>
+          <div style={labelStyle}>CALCULATION</div>
           <div>COP_heat = {f(cycle.qCond)} / {f(cycle.wComp)}</div>
           <div style={{ color: K.inkLight, marginTop: 4 }}>Or: COP_heat = COP_cool + 1 = {cycle.copCool.toFixed(2)} + 1 = <span style={numStyle}>{(cycle.copCool + 1).toFixed(2)}</span></div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: 16, fontFamily: FD, color: sel.color }}>COP_heating = <strong>{cycle.copHeat.toFixed(2)}</strong></div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>COP_heating = <strong>{cycle.copHeat.toFixed(2)}</strong></div>
         </div>
       </>);
       case "x4": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>FORMULA</div>
+          <div style={labelStyle}>FORMULA</div>
           <div>x₄ = (h₄ − h_f) / (h_g − h_f) at P_low</div>
-          <div style={{ color: K.inkLight, fontSize: 9, marginTop: 4 }}>Unlike the Rankine cycle (where x₄ uses entropy), refrigeration quality is found from enthalpy because the expansion is isenthalpic (h₃ = h₄), NOT isentropic.</div>
+          <div style={noteStyle}>Unlike the Rankine cycle (where x₄ uses entropy), refrigeration quality is found from enthalpy because the expansion is isenthalpic (h₃ = h₄), NOT isentropic.</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 1 — h₄ from isenthalpic expansion</div>
+          <div style={labelStyle}>STEP 1 — h₄ from isenthalpic expansion</div>
           <div>h₄ = h₃ = h_f at P_high = <span style={numStyle}>{f(cycle.h3)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STEP 2 — Sat. properties at P_low = {f(cycle.states[0].P)} kPa</div>
+          <div style={labelStyle}>STEP 2 — Sat. properties at P_low = {f(cycle.states[0].P)} kPa</div>
           <div>h_f = <span style={numStyle}>{cycle.x4 < 1 ? f((cycle.h4 - cycle.x4 * cycle.h1) / (1 - cycle.x4)) : "—"}</span> kJ/kg</div>
           <div>h_g = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg</div>
         </div>
         <div style={resultStyle}>
-          <div style={{ fontSize: 9, color: K.inkLight, marginBottom: 2 }}>RESULT</div>
-          <div style={{ fontSize: 16, fontFamily: FD, color: sel.color }}>x₄ = <strong>{cycle.x4.toFixed(4)}</strong> ({(cycle.x4 * 100).toFixed(1)}% vapor)</div>
+          <div style={resultLabelStyle}>RESULT</div>
+          <div style={resultValueStyle}>x₄ = <strong>{cycle.x4.toFixed(4)}</strong> ({(cycle.x4 * 100).toFixed(1)}% vapor)</div>
         </div>
       </>);
       case "states": return (<>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STATE 1 — Saturated Vapor at P_low (Evaporator Exit)</div>
+          <div style={labelStyle}>STATE 1 — Saturated Vapor at P_low (Evaporator Exit)</div>
           <div>P₁ = <span style={numStyle}>{f(cycle.states[0].P)}</span> kPa → sat. vapor properties</div>
           <div>T₁ = <span style={numStyle}>{f(cycle.T1)}</span>°C, h₁ = h_g = <span style={numStyle}>{f(cycle.h1)}</span>, s₁ = s_g = <span style={numStyle}>{f(cycle.s1)}</span></div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STATE 2 — Superheated Vapor at P_high (Compressor Exit)</div>
+          <div style={labelStyle}>STATE 2 — Superheated Vapor at P_high (Compressor Exit)</div>
           <div>Isentropic: s₂ = s₁ = <span style={numStyle}>{f(cycle.s2)}</span> kJ/kg·K</div>
           <div>T₂ = <span style={numStyle}>{f(cycle.T2)}</span>°C, h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg</div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STATE 3 — Saturated Liquid at P_high (Condenser Exit)</div>
+          <div style={labelStyle}>STATE 3 — Saturated Liquid at P_high (Condenser Exit)</div>
           <div>P₃ = <span style={numStyle}>{f(cycle.states[2].P)}</span> kPa → sat. liquid properties</div>
           <div>T₃ = <span style={numStyle}>{f(cycle.T3)}</span>°C, h₃ = h_f = <span style={numStyle}>{f(cycle.h3)}</span>, s₃ = s_f = <span style={numStyle}>{f(cycle.s3)}</span></div>
         </div>
         <div style={stepStyle}>
-          <div style={{ color: K.inkLight, fontSize: 9, marginBottom: 4 }}>STATE 4 — Two-Phase Mixture at P_low (Valve Exit)</div>
+          <div style={labelStyle}>STATE 4 — Two-Phase Mixture at P_low (Valve Exit)</div>
           <div>Isenthalpic: h₄ = h₃ = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg</div>
           <div>x₄ = <span style={numStyle}>{cycle.x4.toFixed(4)}</span>, T₄ = <span style={numStyle}>{f(cycle.T4)}</span>°C, s₄ = <span style={numStyle}>{f(cycle.s4)}</span></div>
         </div>
@@ -1262,15 +1267,15 @@ function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: 420, width: "100%", padding: "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontFamily: FD, color: K.ink }}>Solve: <span style={{ color: sel.color }}>{sel.title}</span></h2>
-          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "3px 12px", fontFamily: FM }}>Close</button>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 820 : 420, width: "100%", padding: isWide ? "36px 40px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 22 : 14, borderBottom: `2px solid ${K.ink}`, paddingBottom: 12 }}>
+          <h2 style={{ margin: 0, fontSize: isWide ? 28 : 16, fontFamily: FD, color: K.ink }}>Solve: <span style={{ color: sel.color }}>{sel.title}</span></h2>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 14 : 11, cursor: "pointer", padding: isWide ? "6px 20px" : "3px 12px", fontFamily: FM }}>Close</button>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 14 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isWide ? 8 : 5, marginBottom: isWide ? 22 : 14 }}>
           {REF_EQ_TOPICS.map(t => (
             <button key={t.id} onClick={() => setTopic(t.id)} style={{
-              padding: "4px 10px", fontSize: 9, fontFamily: FM,
+              padding: isWide ? "8px 18px" : "4px 10px", fontSize: isWide ? 14 : 9, fontFamily: FM,
               background: topic === t.id ? t.color : K.cardAlt,
               color: topic === t.id ? "#fff" : K.inkMed,
               border: `1px solid ${topic === t.id ? t.color : K.border}`,
@@ -1280,7 +1285,7 @@ function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
           ))}
         </div>
         {renderContent()}
-        <button onClick={onClose} style={{ width: "100%", padding: "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: 12, fontFamily: FD, cursor: "pointer", marginTop: 12 }}>Close</button>
+        <button onClick={onClose} style={{ width: "100%", padding: isWide ? "14px" : "10px", background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: isWide ? 16 : 12, fontFamily: FD, cursor: "pointer", marginTop: 14 }}>Close</button>
       </div>
     </div>
   );
