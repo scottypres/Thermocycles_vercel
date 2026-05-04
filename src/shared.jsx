@@ -31,6 +31,113 @@ export function lerp(x, x0, x1, y0, y1) {
   return y0 + ((x - x0) / (x1 - x0)) * (y1 - y0);
 }
 
+/* ───────── Unit System ─────────
+   Internal calculations stay in SI (°C, kPa, kJ/kg, kJ/kg·K).
+   These helpers only convert at the display layer. */
+export const UNITS = {
+  T: [
+    { id: "C", label: "°C", to: v => v },
+    { id: "K", label: "K", to: v => v + 273.15 },
+    { id: "F", label: "°F", to: v => v * 9 / 5 + 32 },
+  ],
+  P: [
+    { id: "kPa", label: "kPa", to: v => v },
+    { id: "bar", label: "bar", to: v => v / 100 },
+    { id: "MPa", label: "MPa", to: v => v / 1000 },
+    { id: "psi", label: "psi", to: v => v * 0.145038 },
+    { id: "atm", label: "atm", to: v => v / 101.325 },
+  ],
+  h: [
+    { id: "kJ/kg", label: "kJ/kg", to: v => v },
+    { id: "BTU/lb", label: "BTU/lb", to: v => v * 0.429923 },
+  ],
+  s: [
+    { id: "kJ/kg·K", label: "kJ/kg·K", to: v => v },
+    { id: "BTU/lb·°R", label: "BTU/lb·°R", to: v => v * 0.238846 },
+  ],
+};
+
+export const DEFAULT_UNITS = { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
+
+export function loadUnits() {
+  try {
+    const raw = document.cookie.split("; ").find(c => c.startsWith("units="))?.split("=")[1];
+    if (!raw) return { ...DEFAULT_UNITS };
+    return { ...DEFAULT_UNITS, ...JSON.parse(decodeURIComponent(raw)) };
+  } catch { return { ...DEFAULT_UNITS }; }
+}
+
+export function saveUnits(units) {
+  try { document.cookie = `units=${encodeURIComponent(JSON.stringify(units))};path=/;max-age=31536000`; } catch {}
+}
+
+function pick(kind, units) {
+  const list = UNITS[kind];
+  return list.find(u => u.id === units[kind]) || list[0];
+}
+
+const fixed = (v, d) => {
+  const a = Math.abs(v);
+  if (!isFinite(v)) return String(v);
+  return v.toFixed(d ?? (a < 10 ? 2 : a < 1000 ? 1 : 0));
+};
+
+export const fmtT = (v, units, d) => `${fixed(pick("T", units).to(v), d ?? 1)} ${pick("T", units).label}`;
+export const fmtP = (v, units, d) => `${fixed(pick("P", units).to(v), d ?? (units.P === "kPa" ? 0 : units.P === "MPa" ? 3 : 2))} ${pick("P", units).label}`;
+export const fmtH = (v, units, d) => `${fixed(pick("h", units).to(v), d ?? 1)} ${pick("h", units).label}`;
+export const fmtS = (v, units, d) => `${fixed(pick("s", units).to(v), d ?? 3)} ${pick("s", units).label}`;
+export const cvtT = (v, units) => pick("T", units).to(v);
+export const cvtP = (v, units) => pick("P", units).to(v);
+export const cvtH = (v, units) => pick("h", units).to(v);
+export const cvtS = (v, units) => pick("s", units).to(v);
+export const lblT = (units) => pick("T", units).label;
+export const lblP = (units) => pick("P", units).label;
+export const lblH = (units) => pick("h", units).label;
+export const lblS = (units) => pick("s", units).label;
+
+/* Units selector popover */
+export function UnitsPopover({ open, units, onChange, onClose, anchor, K, FD, FM }) {
+  if (!open) return null;
+  const Group = ({ kind, label }) => (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ fontFamily: FM, fontSize: 11, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {UNITS[kind].map(u => {
+          const active = units[kind] === u.id;
+          return <button key={u.id} onClick={() => onChange({ ...units, [kind]: u.id })} style={{
+            padding: "5px 12px", fontSize: 12, fontFamily: FM,
+            background: active ? K.accent : K.cardAlt,
+            color: active ? "#fff" : K.inkMed,
+            border: `1px solid ${active ? K.accent : K.border}`,
+            cursor: "pointer", borderRadius: 3, fontWeight: active ? 700 : 400, transition: "all 0.15s",
+          }}>{u.label}</button>;
+        })}
+      </div>
+    </div>
+  );
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "60px 10px", overflowY: "auto" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: K.card, border: `1.5px solid ${K.border}`, padding: "20px 22px", maxWidth: 380, width: "100%", color: K.ink }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
+          <h3 style={{ margin: 0, fontFamily: FD, fontSize: 18, color: K.ink }}>Units</h3>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "3px 12px", fontFamily: FM }}>Close</button>
+        </div>
+        <Group kind="T" label="Temperature" />
+        <Group kind="P" label="Pressure" />
+        <Group kind="h" label="Specific Enthalpy / Energy" />
+        <Group kind="s" label="Specific Entropy" />
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+          <button onClick={() => onChange({ ...DEFAULT_UNITS })} style={{ background: "none", border: `1px solid ${K.border}`, padding: "6px 14px", color: K.inkMed, fontSize: 11, fontFamily: FM, cursor: "pointer" }}>Reset to SI</button>
+          <button onClick={onClose} style={{ background: K.accent, border: "none", padding: "6px 18px", color: "#fff", fontSize: 12, fontFamily: FD, cursor: "pointer" }}>Done</button>
+        </div>
+        <div style={{ marginTop: 10, fontSize: 10, color: K.inkLight, fontStyle: "italic", lineHeight: 1.5 }}>
+          Affects displayed values across performance, state table, lock buttons, drag-point box, energy cards. Sliders and equation modal stay in SI.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ───────── Slider ───────── */
 export function ParamSlider({ label, unit, value, min, max, step, onChange, color, textScale }) {
   const sc = textScale || 1;

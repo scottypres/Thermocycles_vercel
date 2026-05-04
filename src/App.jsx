@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { GuidedTour, WelcomePopup, RANKINE_TOUR_STEPS } from "./GuidedTour.jsx";
+import { UnitsPopover, loadUnits, saveUnits, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
 
 /* ───────── Steam Property Data ───────── */
 const STEAM_TABLE = [
@@ -407,7 +408,8 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight, textScale }) {
 }
 
 /* ───────── Interactive T-s Diagram ───────── */
-function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale }) {
+function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const sz = px => px * (textScale || 1);
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
@@ -631,7 +633,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {(() => {
-          const label = `${dragPoint.T.toFixed(0)}°C, ${dragPoint.s.toFixed(2)} kJ/kg·K`;
+          const label = `${fmtT(dragPoint.T, u, 0)}, ${fmtS(dragPoint.s, u, 2)}`;
           const w = sz(8) * 0.6 * label.length + sz(8);
           const flipLeft = dpx + sz(12) + w > TS_W - 2;
           const rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
@@ -769,7 +771,8 @@ const pvDomeLeft = STEAM_TABLE.filter(r => r.P <= 22064).map(r => ({ v: r.vf, P:
 const pvDomeRight = [...STEAM_TABLE].filter(r => r.P <= 22064).reverse().map(r => ({ v: r.vg, P: r.P }));
 const pvDomeCurve = [...pvDomeLeft, ...pvDomeRight];
 
-function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPLowChange, showPvAreas, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale }) {
+function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPLowChange, showPvAreas, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const sz = px => px * (textScale || 1);
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
@@ -1021,7 +1024,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {(() => {
-          const label = `${dpP.toFixed(0)} kPa, ${dpV.toFixed(4)} m³/kg`;
+          const label = `${fmtP(dpP, u)}, ${dpV.toFixed(4)} m³/kg`;
           const w = sz(8) * 0.6 * label.length + sz(8);
           const flipLeft = dpx + sz(12) + w > PV_W - 2;
           const rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
@@ -1231,8 +1234,9 @@ function ComponentModal({ component, cycle, onClose }) {
 }
 
 /* ───────── Schematic ───────── */
-function SchematicDiagram({ cycle, textScale }) {
+function SchematicDiagram({ cycle, textScale, units }) {
   const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
   const mk = [
@@ -1298,17 +1302,17 @@ function SchematicDiagram({ cycle, textScale }) {
       ))}
       {/* Energy */}
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#mO)" />
-      <text x={180} y={8} fill={K.heatIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_in = {fmt(cycle.qIn)} kJ/kg</text>
+      <text x={180} y={8} fill={K.heatIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#mB)" />
-      <text x={180} y={324} fill={K.heatOut} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cycle.qOut)} kJ/kg</text>
+      <text x={180} y={324} fill={K.heatOut} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
       <line x1={314} y1={172} x2={331} y2={172} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#mG)" />
       <text x={336} y={166} fill={K.workOut} fontSize={sz(7.5)} textAnchor="start" fontFamily={FM} fontWeight="700">W_t</text>
-      <text x={336} y={177} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cycle.wTurbine)}</text>
-      <text x={336} y={187} fill={K.workOut} fontSize={sz(6)} textAnchor="start" fontFamily={FM} fontWeight="700">kJ/kg</text>
+      <text x={336} y={177} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wTurbine, u))}</text>
+      <text x={336} y={187} fill={K.workOut} fontSize={sz(6)} textAnchor="start" fontFamily={FM} fontWeight="700">{lblH(u)}</text>
       <line x1={53} y1={172} x2={33} y2={172} stroke={K.workIn} strokeWidth={1.8} markerEnd="url(#mY)" />
       <text x={29} y={162} fill={K.workIn} fontSize={sz(7.5)} textAnchor="end" fontFamily={FM} fontWeight="700">W_p</text>
-      <text x={29} y={173} fill={K.workIn} fontSize={sz(7)} textAnchor="end" fontFamily={FM} fontWeight="700">−{fmt(cycle.wPump)}</text>
-      <text x={29} y={183} fill={K.workIn} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontWeight="700">kJ/kg</text>
+      <text x={29} y={173} fill={K.workIn} fontSize={sz(7)} textAnchor="end" fontFamily={FM} fontWeight="700">−{fmt(cvtH(cycle.wPump, u))}</text>
+      <text x={29} y={183} fill={K.workIn} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontWeight="700">{lblH(u)}</text>
     </svg>
     <ComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);
@@ -1642,11 +1646,12 @@ function ParamSlider({ label, unit, value, min, max, step, onChange, color }) {
 }
 
 /* ───────── State Table ───────── */
-function StateTable({ cycle, onSelectState, textScale }) {
+function StateTable({ cycle, onSelectState, textScale, units }) {
   const isWide = useIsDesktop();
   const sc = textScale || 1;
   const sz = (px) => Math.round(px * sc);
-  const fmt = v => v < 10 ? v.toFixed(3) : v < 100 ? v.toFixed(2) : v.toFixed(1);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
+  const fmt = v => Math.abs(v) < 10 ? v.toFixed(3) : Math.abs(v) < 100 ? v.toFixed(2) : v.toFixed(1);
   const qualities = cycle.states.map(s => {
     const info = getPhaseInfo(s.s, s.T);
     if (info.phase === "subcooled") return "0 (sub.)";
@@ -1659,7 +1664,7 @@ function StateTable({ cycle, onSelectState, textScale }) {
       <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: sz(isWide ? 18 : 12) }}>
         <thead>
           <tr style={{ borderBottom: `2px solid ${K.ink}` }}>
-            {["State","T (°C)","P (kPa)","h (kJ/kg)","s (kJ/kg·K)","x"].map(h => (
+            {["State", `T (${lblT(u)})`, `P (${lblP(u)})`, `h (${lblH(u)})`, `s (${lblS(u)})`, "x"].map(h => (
               <th key={h} style={{ padding: isWide ? "8px 6px" : "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: sz(isWide ? 15 : 11), fontStyle: "italic" }}>{h}</th>
             ))}
           </tr>
@@ -1677,10 +1682,10 @@ function StateTable({ cycle, onSelectState, textScale }) {
                   <svg width="8" height="8" viewBox="0 0 8 8" style={{ opacity: 0.4 }}><circle cx="4" cy="4" r="3" fill="none" stroke={K.accent} strokeWidth="1"/><circle cx="4" cy="4" r="1" fill={K.accent}/></svg>
                 </span>
               </td>
-              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.T)}</td>
-              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.P)}</td>
-              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.h)}</td>
-              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.s)}</td>
+              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtT(s.T, u))}</td>
+              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtP(s.P, u))}</td>
+              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtH(s.h, u))}</td>
+              <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtS(s.s, u))}</td>
               <td style={{ padding: isWide ? "10px 6px" : "6px 3px", textAlign: "center", color: K.inkMed, fontSize: sz(isWide ? 15 : 11) }}>{qualities[i]}</td>
             </tr>
           ))}
@@ -1734,6 +1739,9 @@ function RankinePage({ onBack }) {
   const [tSup, setTSup] = useState(() => initNum("tSup", 450));
   const [shareCopied, setShareCopied] = useState(false);
   const [eqsCopied, setEqsCopied] = useState(false);
+  const [units, setUnits] = useState(() => loadUnits());
+  const [showUnits, setShowUnits] = useState(false);
+  const handleUnitsChange = useCallback((u) => { setUnits(u); saveUnits(u); }, []);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
@@ -1791,10 +1799,12 @@ function RankinePage({ onBack }) {
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <button data-tour="theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
+          <button onClick={() => setShowUnits(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Units</button>
           <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
         </div>
       </div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
+      <UnitsPopover open={showUnits} units={units} onChange={handleUnitsChange} onClose={() => setShowUnits(false)} K={K} FD={FD} FM={FM} />
       <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); }} />
       <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
@@ -1802,7 +1812,7 @@ function RankinePage({ onBack }) {
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         {[
           { l: "η thermal", v: `${(cycle.eta * 100).toFixed(1)}%`, c: K.accent },
-          { l: "W net", v: fmt(cycle.wNet), c: K.workOut, s: "kJ/kg" },
+          { l: "W net", v: fmt(cvtH(cycle.wNet, units)), c: K.workOut, s: lblH(units) },
           { l: "BWR", v: `${(cycle.bwr * 100).toFixed(2)}%`, c: K.workIn },
         ].map((m, i) => (
           <div key={i} style={{ textAlign: "center", padding: desktop ? "8px 0" : "4px 0" }}>
@@ -1817,7 +1827,7 @@ function RankinePage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>System Schematic</h3>
-          <div data-tour="schematic"><SchematicDiagram cycle={cycle} textScale={textScale} /></div>
+          <div data-tour="schematic"><SchematicDiagram cycle={cycle} textScale={textScale} units={units} /></div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
@@ -1845,15 +1855,15 @@ function RankinePage({ onBack }) {
           <div data-tour="lock-buttons" style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockV(false); } }}
               style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
-              {lockS ? "🔒" : "🔓"} Lock s = {dragPoint.s.toFixed(2)}
+              {lockS ? "🔒" : "🔓"} Lock s = {cvtS(dragPoint.s, units).toFixed(2)} {lblS(units)}
             </button>
             <button onClick={() => { setLockT(l => !l); if (!lockT) { setLockS(false); setLockP(false); setLockV(false); } }}
               style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
-              {lockT ? "🔒" : "🔓"} Lock T = {dragPoint.T.toFixed(0)}°C
+              {lockT ? "🔒" : "🔓"} Lock T = {fmtT(dragPoint.T, units, 0)}
             </button>
           </div>
           <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} showAreas={showAreas} onPHighChange={setPHigh} onPLowChange={setPLow}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
         {/* P-v Diagram */}
@@ -1868,7 +1878,7 @@ function RankinePage({ onBack }) {
           <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockV(false); setLockS(false); setLockT(false); } }}
               style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
-              {lockP ? "🔒" : "🔓"} Lock P = {(dragPoint.P != null ? dragPoint.P : stToP(dragPoint.s, dragPoint.T)).toFixed(0)} kPa
+              {lockP ? "🔒" : "🔓"} Lock P = {fmtP(dragPoint.P != null ? dragPoint.P : stToP(dragPoint.s, dragPoint.T), units)}
             </button>
             <button onClick={() => { setLockV(l => !l); if (!lockV) { setLockP(false); setLockS(false); setLockT(false); } }}
               style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockV ? K.accent : K.cardAlt, color: lockV ? "#fff" : K.inkMed, border: `1px solid ${lockV ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockV ? 700 : 400, transition: "all 0.15s" }}>
@@ -1876,7 +1886,7 @@ function RankinePage({ onBack }) {
             </button>
           </div>
           <PvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockP={lockP} lockV={lockV} onPHighChange={setPHigh} onPLowChange={setPLow} showPvAreas={showPvAreas}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>
       <EquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} />
@@ -1889,12 +1899,12 @@ function RankinePage({ onBack }) {
           <ParamSlider label="Condenser Pressure (P low)" unit="kPa" color={K.heatOut} value={pLow} min={5} max={100} step={1} onChange={setPLow} textScale={textScale} />
           <ParamSlider label="Superheat Temperature (T₃)" unit="°C" color={K.workOut} value={adjustedTSup} min={minTSup} max={600} step={5} onChange={v => setTSup(v)} textScale={textScale} />
           <div style={{ marginTop: 6, fontSize: sz(desktop ? 15 : 9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
-            T_sat at P_high = {tSatHigh.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
+            T_sat at P_high = {fmtT(tSatHigh, units)} &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
-          <StateTable cycle={cycle} onSelectState={setDragPoint} textScale={textScale} />
+          <StateTable cycle={cycle} onSelectState={setDragPoint} textScale={textScale} units={units} />
         </div>
       </div>
 
@@ -1907,8 +1917,8 @@ function RankinePage({ onBack }) {
             <div style={{ fontSize: sz(desktop ? 15 : 9), fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
-                { l: "Q in (Boiler)", v: fmt(cycle.qIn), u: "kJ/kg", c: K.heatIn, topic: "qin" },
-                { l: "Q out (Cond.)", v: "−" + fmt(cycle.qOut), u: "kJ/kg", c: K.heatOut, topic: "qout" },
+                { l: "Q in (Boiler)", v: fmt(cvtH(cycle.qIn, units)), u: lblH(units), c: K.heatIn, topic: "qin" },
+                { l: "Q out (Cond.)", v: "−" + fmt(cvtH(cycle.qOut, units)), u: lblH(units), c: K.heatOut, topic: "qout" },
               ].map((e, i) => (
                 <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
                   <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
@@ -1923,8 +1933,8 @@ function RankinePage({ onBack }) {
             <div style={{ fontSize: sz(desktop ? 15 : 9), fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Work</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
-                { l: "W turbine", v: fmt(cycle.wTurbine), u: "kJ/kg", c: K.workOut, topic: "wt" },
-                { l: "W pump", v: "−" + fmt(cycle.wPump), u: "kJ/kg", c: K.workIn, topic: "wp" },
+                { l: "W turbine", v: fmt(cvtH(cycle.wTurbine, units)), u: lblH(units), c: K.workOut, topic: "wt" },
+                { l: "W pump", v: "−" + fmt(cvtH(cycle.wPump, units)), u: lblH(units), c: K.workIn, topic: "wp" },
               ].map((e, i) => (
                 <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
                   <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
@@ -1938,11 +1948,11 @@ function RankinePage({ onBack }) {
         <div style={{ marginTop: desktop ? 15 : 8, display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: 8 }}>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
             <div style={{ fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_in + Q_out (Q_out &lt; 0)</div>
-            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.accent }}>≈ {fmt(cycle.qIn - cycle.qOut)} kJ/kg</div>
+            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.accent }}>≈ {fmt(cvtH(cycle.qIn - cycle.qOut, units))} {lblH(units)}</div>
           </div>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
             <div style={{ fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>W_net = W_t + W_p (W_p &lt; 0)</div>
-            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.workOut }}>= {fmt(cycle.wNet)} kJ/kg</div>
+            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.workOut }}>= {fmt(cvtH(cycle.wNet, units))} {lblH(units)}</div>
           </div>
         </div>
       </div>

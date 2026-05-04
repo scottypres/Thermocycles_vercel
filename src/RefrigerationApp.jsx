@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop } from "./shared.jsx";
+import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop, UnitsPopover, loadUnits, saveUnits, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
 let K = K_LIGHT;
 import { REFRIGERANTS, interpRefrigerant, getRefrigerantDomeBounds, getRefrigerantPhaseInfo, getDefaultPressures } from "./refrigerantData.js";
 import { GuidedTour, WelcomePopup, REF_TOUR_STEPS } from "./GuidedTour.jsx";
@@ -252,8 +252,9 @@ const TS_W = 360, TS_H = 285;
 const TS_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const TS_PLOT = { x: TS_PAD.l, y: TS_PAD.t, w: TS_W - TS_PAD.l - TS_PAD.r, h: TS_H - TS_PAD.t - TS_PAD.b };
 
-function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale }) {
+function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
   const sz = px => px * (textScale || 1);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
@@ -502,7 +503,7 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
         <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {(() => {
-          const label = `${dragPoint.T.toFixed(0)}°C, ${dragPoint.s.toFixed(2)} kJ/kg·K`;
+          const label = `${fmtT(dragPoint.T, u, 0)}, ${fmtS(dragPoint.s, u, 2)}`;
           const w = sz(8) * 0.6 * label.length + sz(8);
           const flipLeft = dpx + sz(12) + w > TS_W - 2;
           const rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
@@ -546,8 +547,9 @@ const PH_W = 360, PH_H = 285;
 const PH_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const PH_PLOT = { x: PH_PAD.l, y: PH_PAD.t, w: PH_W - PH_PAD.l - PH_PAD.r, h: PH_H - PH_PAD.t - PH_PAD.b };
 
-function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale }) {
+function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
   const sz = px => px * (textScale || 1);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
@@ -795,7 +797,7 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
         <circle cx={dpx} cy={dpy} r={9} fill="rgba(192,57,43,0.15)" stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {(() => {
-          const label = `${(dragPoint.P || cycle.states[0].P).toFixed(0)} kPa, ${(dragPoint.h || cycle.h1).toFixed(1)} kJ/kg`;
+          const label = `${fmtP(dragPoint.P || cycle.states[0].P, u)}, ${fmtH(dragPoint.h || cycle.h1, u, 1)}`;
           const w = sz(8) * 0.6 * label.length + sz(8);
           const flipLeft = dpx + sz(12) + w > PH_W - 2;
           const rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
@@ -977,8 +979,9 @@ function RefComponentModal({ component, cycle, onClose }) {
 }
 
 /* ───────── Schematic ───────── */
-function RefSchematicDiagram({ cycle, textScale }) {
+function RefSchematicDiagram({ cycle, textScale, units }) {
   const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
   const mk = [
@@ -1045,16 +1048,16 @@ function RefSchematicDiagram({ cycle, textScale }) {
       ))}
       {/* Energy labels */}
       <line x1={180} y1={10} x2={180} y2={30} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#rB)" />
-      <text x={180} y={8} fill={K.heatOut} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_cond = {fmt(cycle.qCond)} kJ/kg</text>
+      <text x={180} y={8} fill={K.heatOut} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_cond = {fmt(cvtH(cycle.qCond, u))} {lblH(u)}</text>
       <line x1={180} y1={298} x2={180} y2={312} stroke={K.heatIn} strokeWidth={1.8} />
       <path d="M176,302 L180,298 L184,302" fill="none" stroke={K.heatIn} strokeWidth={1.5} />
       <rect x={180 - sz(70)} y={318 - sz(8)} width={sz(140)} height={sz(14)} fill={K.card} />
-      <text x={180} y={318} fill={K.heatIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_evap = {fmt(cycle.qEvap)} kJ/kg</text>
+      <text x={180} y={318} fill={K.heatIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>Q_evap = {fmt(cvtH(cycle.qEvap, u))} {lblH(u)}</text>
       <line x1={8} y1={172} x2={33} y2={172} stroke={K.workIn} strokeWidth={1.8} />
       <path d="M29,168 L33,172 L29,176" fill="none" stroke={K.workIn} strokeWidth={1.5} />
       <text x={14} y={160} fill={K.workIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
-      <text x={14} y={188} fill={K.workIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>{fmt(cycle.wComp)}</text>
-      <text x={14} y={198} fill={K.workIn} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>kJ/kg</text>
+      <text x={14} y={188} fill={K.workIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>{fmt(cvtH(cycle.wComp, u))}</text>
+      <text x={14} y={198} fill={K.workIn} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>{lblH(u)}</text>
     </svg>
     <RefComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);
@@ -1360,10 +1363,11 @@ function RefrigerantInfoModal({ open, onClose, currentRef }) {
 }
 
 /* ───────── State Table (Refrigeration) ───────── */
-function RefStateTable({ cycle, refData, onSelectState, textScale }) {
+function RefStateTable({ cycle, refData, onSelectState, textScale, units }) {
   const isWide = useIsDesktop();
   const sc = textScale || 1;
   const sz = (px) => Math.round(px * sc);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(3) : Math.abs(v) < 100 ? v.toFixed(2) : v.toFixed(1);
   const descs = ["Sat. Vapor", "Superheated", "Sat. Liquid", "Two-Phase"];
   return (
@@ -1371,7 +1375,7 @@ function RefStateTable({ cycle, refData, onSelectState, textScale }) {
       <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: sz(isWide ? 16 : 10) }}>
         <thead>
           <tr style={{ borderBottom: `2px solid ${K.ink}` }}>
-            {["State","Desc","T (°C)","P (kPa)","h (kJ/kg)","s (kJ/kg·K)","x"].map(h => (
+            {["State","Desc",`T (${lblT(u)})`,`P (${lblP(u)})`,`h (${lblH(u)})`,`s (${lblS(u)})`,"x"].map(h => (
               <th key={h} style={{ padding: isWide ? "8px 4px" : "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: sz(isWide ? 14 : 9), fontStyle: "italic" }}>{h}</th>
             ))}
           </tr>
@@ -1390,10 +1394,10 @@ function RefStateTable({ cycle, refData, onSelectState, textScale }) {
                 </span>
               </td>
               <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.inkLight, fontSize: sz(isWide ? 12 : 8) }}>{descs[i]}</td>
-              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.T)}</td>
-              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.P)}</td>
-              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.h)}</td>
-              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.s)}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtT(s.T, u))}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtP(s.P, u))}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtH(s.h, u))}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtS(s.s, u))}</td>
               <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.inkMed, fontSize: sz(isWide ? 14 : 9) }}>
                 {i === 0 ? "1 (sat.v)" : i === 1 ? "— (sup.)" : i === 2 ? "0 (sat.l)" : cycle.x4.toFixed(3)}
               </td>
@@ -1444,6 +1448,9 @@ export default function RefrigerationPage({ onBack }) {
   const [pLow, setPLow] = useState(() => initNum("pLow", getDefaultPressures(REFRIGERANTS[initRefIdx]).pLow));
   const [shareCopied, setShareCopied] = useState(false);
   const [eqsCopied, setEqsCopied] = useState(false);
+  const [units, setUnits] = useState(() => loadUnits());
+  const [showUnits, setShowUnits] = useState(false);
+  const handleUnitsChange = useCallback((up) => { setUnits(up); saveUnits(up); }, []);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
@@ -1553,6 +1560,7 @@ export default function RefrigerationPage({ onBack }) {
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
             <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
+            <button onClick={() => setShowUnits(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Units</button>
             <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
@@ -1573,6 +1581,7 @@ export default function RefrigerationPage({ onBack }) {
 
       <RefInfoModal open={showInfo} onClose={() => setShowInfo(false)} />
       <RefrigerantInfoModal open={showRefInfo} onClose={() => setShowRefInfo(false)} currentRef={refData} />
+      <UnitsPopover open={showUnits} units={units} onChange={handleUnitsChange} onClose={() => setShowUnits(false)} K={K} FD={FD} FM={FM} />
       <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); }} />
       <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
@@ -1581,7 +1590,7 @@ export default function RefrigerationPage({ onBack }) {
         {[
           { l: "COP cooling", v: cycle.copCool.toFixed(2), c: K.accent },
           { l: "COP heating", v: cycle.copHeat.toFixed(2), c: K.heatOut },
-          { l: "W comp", v: fmt(cycle.wComp), c: K.workIn, s: "kJ/kg" },
+          { l: "W comp", v: fmt(cvtH(cycle.wComp, units)), c: K.workIn, s: lblH(units) },
         ].map((m, i) => (
           <div key={i} style={{ textAlign: "center", padding: desktop ? "8px 0" : "4px 0" }}>
             <div style={{ fontSize: sz(desktop ? 15 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
@@ -1595,7 +1604,7 @@ export default function RefrigerationPage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— {refData.name}</span></h3>
-          <div data-tour="ref-schematic"><RefSchematicDiagram cycle={cycle} textScale={textScale} /></div>
+          <div data-tour="ref-schematic"><RefSchematicDiagram cycle={cycle} textScale={textScale} units={units} /></div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams</span></h3>
@@ -1623,16 +1632,16 @@ export default function RefrigerationPage({ onBack }) {
           <div data-tour="ref-lock-buttons" style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockH(false); } }}
               style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
-              {lockS ? "\u{1F512}" : "\u{1F513}"} Lock s = {dragPoint.s.toFixed(2)}
+              {lockS ? "\u{1F512}" : "\u{1F513}"} Lock s = {cvtS(dragPoint.s, units).toFixed(2)} {lblS(units)}
             </button>
             <button onClick={() => { setLockT(l => !l); if (!lockT) { setLockS(false); setLockP(false); setLockH(false); } }}
               style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
-              {lockT ? "\u{1F512}" : "\u{1F513}"} Lock T = {dragPoint.T.toFixed(0)}°C
+              {lockT ? "\u{1F512}" : "\u{1F513}"} Lock T = {fmtT(dragPoint.T, units, 0)}
             </button>
           </div>
           <RefTsDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handleTsDrag} lockS={lockS} lockT={lockT} showAreas={showTsAreas}
             onPHighChange={setPHigh} onPLowChange={setPLow}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
         {/* P-h Diagram */}
@@ -1647,16 +1656,16 @@ export default function RefrigerationPage({ onBack }) {
           <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockH(false); setLockS(false); setLockT(false); } }}
               style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
-              {lockP ? "\u{1F512}" : "\u{1F513}"} Lock P = {(dragPoint.P || effectivePLow).toFixed(0)} kPa
+              {lockP ? "\u{1F512}" : "\u{1F513}"} Lock P = {fmtP(dragPoint.P || effectivePLow, units)}
             </button>
             <button onClick={() => { setLockH(l => !l); if (!lockH) { setLockP(false); setLockS(false); setLockT(false); } }}
               style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockH ? K.accent : K.cardAlt, color: lockH ? "#fff" : K.inkMed, border: `1px solid ${lockH ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockH ? 700 : 400, transition: "all 0.15s" }}>
-              {lockH ? "\u{1F512}" : "\u{1F513}"} Lock h = {(dragPoint.h || cycle.h1).toFixed(0)} kJ/kg
+              {lockH ? "\u{1F512}" : "\u{1F513}"} Lock h = {fmtH(dragPoint.h || cycle.h1, units, 0)}
             </button>
           </div>
           <RefPhDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handlePhDrag} lockP={lockP} lockH={lockH} showAreas={showPhAreas}
             onPHighChange={setPHigh} onPLowChange={setPLow}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>
       <RefEquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} />
@@ -1668,12 +1677,12 @@ export default function RefrigerationPage({ onBack }) {
           <ParamSlider label="Condenser Pressure (P high)" unit="kPa" color={K.heatOut} value={effectivePHigh} min={Math.round(pMin + (pMax - pMin) * 0.2)} max={pMax} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPHigh} textScale={textScale} />
           <ParamSlider label="Evaporator Pressure (P low)" unit="kPa" color={K.heatIn} value={effectivePLow} min={pMin} max={Math.round(pMin + (pMax - pMin) * 0.6)} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPLow} textScale={textScale} />
           <div style={{ marginTop: 6, fontSize: sz(desktop ? 15 : 9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
-            T_evap = {cycle.Tsat_low.toFixed(1)}°C &nbsp;|&nbsp; T_cond = {cycle.Tsat_high.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
+            T_evap = {fmtT(cycle.Tsat_low, units)} &nbsp;|&nbsp; T_cond = {fmtT(cycle.Tsat_high, units)} &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
-          <RefStateTable cycle={cycle} refData={refData} onSelectState={setDragPoint} textScale={textScale} />
+          <RefStateTable cycle={cycle} refData={refData} onSelectState={setDragPoint} textScale={textScale} units={units} />
         </div>
       </div>
 
@@ -1686,8 +1695,8 @@ export default function RefrigerationPage({ onBack }) {
             <div style={{ fontSize: sz(desktop ? 15 : 9), fontFamily: FM, color: K.inkLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${K.border}`, textAlign: "center" }}>Heat Transfer</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
-                { l: "Q evap (Cooling)", v: fmt(cycle.qEvap), u: "kJ/kg", c: K.heatIn, topic: "qe" },
-                { l: "Q cond (Rejected)", v: fmt(cycle.qCond), u: "kJ/kg", c: K.heatOut, topic: "qc" },
+                { l: "Q evap (Cooling)", v: fmt(cvtH(cycle.qEvap, units)), u: lblH(units), c: K.heatIn, topic: "qe" },
+                { l: "Q cond (Rejected)", v: fmt(cvtH(cycle.qCond, units)), u: lblH(units), c: K.heatOut, topic: "qc" },
               ].map((e, i) => (
                 <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
                   <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
@@ -1703,8 +1712,8 @@ export default function RefrigerationPage({ onBack }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
               <div onClick={() => { setEqTopic("wc"); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
                 <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>W compressor</div>
-                <div style={{ fontSize: sz(desktop ? 35 : 16), fontFamily: FD, color: K.workIn }}>{fmt(cycle.wComp)}</div>
-                <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, marginTop: 2 }}>kJ/kg</div>
+                <div style={{ fontSize: sz(desktop ? 35 : 16), fontFamily: FD, color: K.workIn }}>{fmt(cvtH(cycle.wComp, units))}</div>
+                <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{lblH(units)}</div>
               </div>
             </div>
           </div>
@@ -1712,11 +1721,11 @@ export default function RefrigerationPage({ onBack }) {
         <div style={{ marginTop: desktop ? 15 : 8, display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: 8 }}>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
             <div style={{ fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Verify: Q_evap + W_comp</div>
-            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.accent }}>= {fmt(cycle.qEvap + cycle.wComp)} kJ/kg</div>
+            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.accent }}>= {fmt(cvtH(cycle.qEvap + cycle.wComp, units))} {lblH(units)}</div>
           </div>
           <div style={{ padding: desktop ? "14px 18px" : "8px 10px", background: K.cardAlt, border: `1px solid ${K.border}`, textAlign: "center" }}>
             <div style={{ fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontStyle: "italic", marginBottom: 2 }}>Q_cond (should match)</div>
-            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.heatOut }}>= {fmt(cycle.qCond)} kJ/kg</div>
+            <div style={{ fontSize: sz(desktop ? 25 : 12), fontFamily: FD, color: K.heatOut }}>= {fmt(cvtH(cycle.qCond, units))} {lblH(units)}</div>
           </div>
         </div>
       </div>
