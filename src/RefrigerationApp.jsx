@@ -401,7 +401,7 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
   const tGridVals = Array.from({ length: 7 }, (_, i) => Math.round(tMin + i * tStep));
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${TS_W} ${TS_H}`} style={{ width: "100%", maxWidth: 420, touchAction: "none", cursor: "crosshair" }}
+    <svg ref={svgRef} viewBox={`0 0 ${TS_W} ${TS_H}`} style={{ width: "100%", touchAction: "none", cursor: "crosshair" }}
       onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
       onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}>
       {/* Grid */}
@@ -687,7 +687,7 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
   if (pGridVals.length < 4) for (let p = pBase; p <= Math.pow(10, pMaxLog); p *= 1.5) pGridVals.push(Math.round(p));
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${PH_W} ${PH_H}`} style={{ width: "100%", maxWidth: 420, touchAction: "none", cursor: "crosshair" }}
+    <svg ref={svgRef} viewBox={`0 0 ${PH_W} ${PH_H}`} style={{ width: "100%", touchAction: "none", cursor: "crosshair" }}
       onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
       onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}>
       {hGridVals.map((h, i) => <line key={`hg${i}`} x1={mapH(h)} y1={PH_PLOT.y} x2={mapH(h)} y2={PH_PLOT.y + PH_PLOT.h} stroke={K.gridMajor} strokeWidth={0.5} />)}
@@ -956,7 +956,7 @@ function RefSchematicDiagram({ cycle, textScale }) {
     { id: "rM", c: K.inkMed }, { id: "rK", c: K.ink },
   ];
   return (<>
-    <svg viewBox="-28 0 360 320" style={{ width: "100%", maxWidth: 420, display: "block", margin: "0 auto" }}>
+    <svg viewBox="-28 0 360 320" style={{ width: "100%", display: "block", margin: "0 auto" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
