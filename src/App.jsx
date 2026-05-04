@@ -1234,11 +1234,24 @@ function ComponentModal({ component, cycle, onClose }) {
 }
 
 /* ───────── Schematic ───────── */
-function SchematicDiagram({ cycle, textScale, units }) {
+function SchematicDiagram({ cycle, textScale, units, animating, animProgress }) {
   const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
+
+  // Sprite position along 1→2→3→4→1 path (state markers at the four corners)
+  const corners = [{ x: 85, y: 273 }, { x: 85, y: 82 }, { x: 290, y: 57 }, { x: 290, y: 273 }];
+  let spriteX = 85, spriteY = 273;
+  if (animating != null) {
+    const p = ((animProgress || 0) % 1 + 1) % 1;
+    const segIdx = Math.min(3, Math.floor(p * 4));
+    const frac = (p * 4) - segIdx;
+    const a = corners[segIdx];
+    const b = corners[(segIdx + 1) % 4];
+    spriteX = a.x + (b.x - a.x) * frac;
+    spriteY = a.y + (b.y - a.y) * frac;
+  }
   const mk = [
     { id: "mO", c: K.heatIn }, { id: "mB", c: K.heatOut }, { id: "mG", c: K.workOut },
     { id: "mY", c: K.workIn }, { id: "mK", c: K.ink },
@@ -1313,6 +1326,13 @@ function SchematicDiagram({ cycle, textScale, units }) {
       <text x={29} y={162} fill={K.workIn} fontSize={sz(7.5)} textAnchor="end" fontFamily={FM} fontWeight="700">W_p</text>
       <text x={29} y={173} fill={K.workIn} fontSize={sz(7)} textAnchor="end" fontFamily={FM} fontWeight="700">−{fmt(cvtH(cycle.wPump, u))}</text>
       <text x={29} y={183} fill={K.workIn} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontWeight="700">{lblH(u)}</text>
+      {animating && <>
+        <circle cx={spriteX} cy={spriteY} r={7} fill={K.accent} opacity={0.9} />
+        <circle cx={spriteX} cy={spriteY} r={12} fill="none" stroke={K.accent} strokeWidth={1.5} opacity={0.5}>
+          <animate attributeName="r" values="7;14;7" dur="1.2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.6;0.1;0.6" dur="1.2s" repeatCount="indefinite" />
+        </circle>
+      </>}
     </svg>
     <ComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);
@@ -1742,6 +1762,8 @@ function RankinePage({ onBack }) {
   const [units, setUnits] = useState(() => loadUnits());
   const [showUnits, setShowUnits] = useState(false);
   const handleUnitsChange = useCallback((u) => { setUnits(u); saveUnits(u); }, []);
+  const [animating, setAnimating] = useState(false);
+  const [animProgress, setAnimProgress] = useState(0);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
@@ -1767,6 +1789,29 @@ function RankinePage({ onBack }) {
   const cycle = useMemo(() => calculateCycle(pHigh, pLow, adjustedTSup), [pHigh, pLow, adjustedTSup]);
   const phaseInfo = useMemo(() => getPhaseInfo(dragPoint.s, dragPoint.T), [dragPoint]);
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+
+  // Animate the cycle: dragPoint walks along 1→2→3→4→1 (~6s loop)
+  useEffect(() => {
+    if (!animating) return;
+    const segMs = 1500;
+    const totalMs = segMs * 4;
+    let raf;
+    const t0 = performance.now();
+    const tick = (now) => {
+      const elapsed = (now - t0) % totalMs;
+      const segIdx = Math.floor(elapsed / segMs);
+      const frac = (elapsed - segIdx * segMs) / segMs;
+      const a = cycle.states[segIdx];
+      const b = cycle.states[(segIdx + 1) % 4];
+      const s = a.s + (b.s - a.s) * frac;
+      const T = a.T + (b.T - a.T) * frac;
+      setDragPoint({ s, T });
+      setAnimProgress(elapsed / totalMs);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [animating, cycle]);
 
   const desktop = useIsDesktop();
   const gap = desktop ? 25 : 12;
@@ -1827,7 +1872,7 @@ function RankinePage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>System Schematic</h3>
-          <div data-tour="schematic"><SchematicDiagram cycle={cycle} textScale={textScale} units={units} /></div>
+          <div data-tour="schematic"><SchematicDiagram cycle={cycle} textScale={textScale} units={units} animating={animating} animProgress={animProgress} /></div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
@@ -1842,6 +1887,10 @@ function RankinePage({ onBack }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
             <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setAnimating(a => !a)} style={{
+                background: animating ? K.accent : "none", border: `1px solid ${animating ? K.accent : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
+                color: animating ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              }}>{animating ? "⏸ Pause" : "▶ Animate"}</button>
               <button data-tour="eta-areas" onClick={() => setShowAreas(a => !a)} style={{
                 background: showAreas ? K.workOut : "none", border: `1px solid ${showAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: showAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
@@ -1870,10 +1919,16 @@ function RankinePage({ onBack }) {
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
             <span>P–v Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
-            <button data-tour="pv-areas" onClick={() => setShowPvAreas(a => !a)} style={{
-              background: showPvAreas ? K.workOut : "none", border: `1px solid ${showPvAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
-              color: showPvAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
-            }}>W areas</button>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setAnimating(a => !a)} style={{
+                background: animating ? K.accent : "none", border: `1px solid ${animating ? K.accent : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
+                color: animating ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              }}>{animating ? "⏸ Pause" : "▶ Animate"}</button>
+              <button data-tour="pv-areas" onClick={() => setShowPvAreas(a => !a)} style={{
+                background: showPvAreas ? K.workOut : "none", border: `1px solid ${showPvAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
+                color: showPvAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              }}>W areas</button>
+            </div>
           </div>
           <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockV(false); setLockS(false); setLockT(false); } }}

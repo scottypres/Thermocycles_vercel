@@ -979,11 +979,23 @@ function RefComponentModal({ component, cycle, onClose }) {
 }
 
 /* ───────── Schematic ───────── */
-function RefSchematicDiagram({ cycle, textScale, units }) {
+function RefSchematicDiagram({ cycle, textScale, units, animating, animProgress }) {
   const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
+
+  const corners = [{ x: 68, y: 273 }, { x: 68, y: 82 }, { x: 273, y: 57 }, { x: 273, y: 273 }];
+  let spriteX = 68, spriteY = 273;
+  if (animating != null) {
+    const p = ((animProgress || 0) % 1 + 1) % 1;
+    const segIdx = Math.min(3, Math.floor(p * 4));
+    const frac = (p * 4) - segIdx;
+    const a = corners[segIdx];
+    const b = corners[(segIdx + 1) % 4];
+    spriteX = a.x + (b.x - a.x) * frac;
+    spriteY = a.y + (b.y - a.y) * frac;
+  }
   const mk = [
     { id: "rO", c: K.heatIn }, { id: "rB", c: K.heatOut }, { id: "rY", c: K.workIn },
     { id: "rM", c: K.inkMed }, { id: "rK", c: K.ink },
@@ -1058,6 +1070,13 @@ function RefSchematicDiagram({ cycle, textScale, units }) {
       <text x={14} y={160} fill={K.workIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontWeight="500">W_comp</text>
       <text x={14} y={188} fill={K.workIn} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>{fmt(cvtH(cycle.wComp, u))}</text>
       <text x={14} y={198} fill={K.workIn} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>{lblH(u)}</text>
+      {animating && <>
+        <circle cx={spriteX} cy={spriteY} r={7} fill={K.accent} opacity={0.9} />
+        <circle cx={spriteX} cy={spriteY} r={12} fill="none" stroke={K.accent} strokeWidth={1.5} opacity={0.5}>
+          <animate attributeName="r" values="7;14;7" dur="1.2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.6;0.1;0.6" dur="1.2s" repeatCount="indefinite" />
+        </circle>
+      </>}
     </svg>
     <RefComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
   </>);
@@ -1451,6 +1470,8 @@ export default function RefrigerationPage({ onBack }) {
   const [units, setUnits] = useState(() => loadUnits());
   const [showUnits, setShowUnits] = useState(false);
   const handleUnitsChange = useCallback((up) => { setUnits(up); saveUnits(up); }, []);
+  const [animating, setAnimating] = useState(false);
+  const [animProgress, setAnimProgress] = useState(0);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
@@ -1493,6 +1514,31 @@ export default function RefrigerationPage({ onBack }) {
 
   const phaseInfo = useMemo(() => getRefrigerantPhaseInfo(table, dragPoint.s, dragPoint.T), [table, dragPoint.s, dragPoint.T]);
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+
+  // Animate the cycle: dragPoint walks 1→2→3→4→1 (~6s loop)
+  useEffect(() => {
+    if (!animating) return;
+    const segMs = 1500;
+    const totalMs = segMs * 4;
+    let raf;
+    const t0 = performance.now();
+    const tick = (now) => {
+      const elapsed = (now - t0) % totalMs;
+      const segIdx = Math.floor(elapsed / segMs);
+      const frac = (elapsed - segIdx * segMs) / segMs;
+      const a = cycle.states[segIdx];
+      const b = cycle.states[(segIdx + 1) % 4];
+      const s = a.s + (b.s - a.s) * frac;
+      const T = a.T + (b.T - a.T) * frac;
+      const h = a.h + (b.h - a.h) * frac;
+      const P = a.P + (b.P - a.P) * frac;
+      setDragPoint({ s, T, h, P });
+      setAnimProgress(elapsed / totalMs);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [animating, cycle]);
 
   const desktop = useIsDesktop();
   const gap = desktop ? 25 : 12;
@@ -1604,7 +1650,7 @@ export default function RefrigerationPage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— {refData.name}</span></h3>
-          <div data-tour="ref-schematic"><RefSchematicDiagram cycle={cycle} textScale={textScale} units={units} /></div>
+          <div data-tour="ref-schematic"><RefSchematicDiagram cycle={cycle} textScale={textScale} units={units} animating={animating} animProgress={animProgress} /></div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams</span></h3>
@@ -1619,6 +1665,10 @@ export default function RefrigerationPage({ onBack }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
             <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setAnimating(a => !a)} style={{
+                background: animating ? K.accent : "none", border: `1px solid ${animating ? K.accent : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
+                color: animating ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              }}>{animating ? "⏸ Pause" : "▶ Animate"}</button>
               <button data-tour="ref-cop-areas" onClick={() => setShowTsAreas(a => !a)} style={{
                 background: showTsAreas ? K.workIn : "none", border: `1px solid ${showTsAreas ? K.workIn : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: showTsAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
@@ -1648,10 +1698,16 @@ export default function RefrigerationPage({ onBack }) {
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
             <span>P–h Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
-            <button data-tour="ref-energy-areas" onClick={() => setShowPhAreas(a => !a)} style={{
-              background: showPhAreas ? K.workIn : "none", border: `1px solid ${showPhAreas ? K.workIn : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
-              color: showPhAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
-            }}>Energy areas</button>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setAnimating(a => !a)} style={{
+                background: animating ? K.accent : "none", border: `1px solid ${animating ? K.accent : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
+                color: animating ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              }}>{animating ? "⏸ Pause" : "▶ Animate"}</button>
+              <button data-tour="ref-energy-areas" onClick={() => setShowPhAreas(a => !a)} style={{
+                background: showPhAreas ? K.workIn : "none", border: `1px solid ${showPhAreas ? K.workIn : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
+                color: showPhAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              }}>Energy areas</button>
+            </div>
           </div>
           <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockH(false); setLockS(false); setLockT(false); } }}
