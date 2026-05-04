@@ -1334,17 +1334,18 @@ function RefrigerantInfoModal({ open, onClose, currentRef }) {
 
 /* ───────── State Table (Refrigeration) ───────── */
 function RefStateTable({ cycle, refData, onSelectState, textScale }) {
+  const isWide = useIsDesktop();
   const sc = textScale || 1;
   const sz = (px) => Math.round(px * sc);
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(3) : Math.abs(v) < 100 ? v.toFixed(2) : v.toFixed(1);
   const descs = ["Sat. Vapor", "Superheated", "Sat. Liquid", "Two-Phase"];
   return (
     <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: sz(10) }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FM, fontSize: sz(isWide ? 16 : 10) }}>
         <thead>
           <tr style={{ borderBottom: `2px solid ${K.ink}` }}>
             {["State","Desc","T (°C)","P (kPa)","h (kJ/kg)","s (kJ/kg·K)","x"].map(h => (
-              <th key={h} style={{ padding: "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: sz(9), fontStyle: "italic" }}>{h}</th>
+              <th key={h} style={{ padding: isWide ? "8px 4px" : "6px 3px", color: K.inkMed, fontWeight: 400, textAlign: "center", fontSize: sz(isWide ? 14 : 9), fontStyle: "italic" }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -1355,25 +1356,25 @@ function RefStateTable({ cycle, refData, onSelectState, textScale }) {
               style={{ borderBottom: `0.5px solid ${K.gridMajor}`, cursor: "pointer", transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = K.cardAlt}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.accent, fontFamily: FD, fontSize: sz(13) }}>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.accent, fontFamily: FD, fontSize: sz(isWide ? 20 : 13) }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
                   {s.label}
                   <svg width="8" height="8" viewBox="0 0 8 8" style={{ opacity: 0.4 }}><circle cx="4" cy="4" r="3" fill="none" stroke={K.accent} strokeWidth="1"/><circle cx="4" cy="4" r="1" fill={K.accent}/></svg>
                 </span>
               </td>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.inkLight, fontSize: sz(8) }}>{descs[i]}</td>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.T)}</td>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.P)}</td>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.h)}</td>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.s)}</td>
-              <td style={{ padding: "6px 3px", textAlign: "center", color: K.inkMed, fontSize: sz(9) }}>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.inkLight, fontSize: sz(isWide ? 12 : 8) }}>{descs[i]}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.T)}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.P)}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.h)}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(s.s)}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.inkMed, fontSize: sz(isWide ? 14 : 9) }}>
                 {i === 0 ? "1 (sat.v)" : i === 1 ? "— (sup.)" : i === 2 ? "0 (sat.l)" : cycle.x4.toFixed(3)}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div style={{ marginTop: 6, fontSize: sz(8), color: K.inkLight, fontStyle: "italic", textAlign: "center" }}>
+      <div style={{ marginTop: 6, fontSize: sz(isWide ? 13 : 8), color: K.inkLight, fontStyle: "italic", textAlign: "center" }}>
         Tap a row to visualize that state point
       </div>
     </div>
@@ -1400,12 +1401,22 @@ export default function RefrigerationPage({ onBack }) {
   const handleScaleChange = useCallback((s) => { setTextScale(s); document.cookie = `textScale=${s};path=/;max-age=31536000`; }, []);
   const sz = (px) => Math.round(px * textScale);
 
-  const [refIdx, setRefIdx] = useState(0);
+  const initParams = (() => {
+    try { return new URLSearchParams(window.location.search); } catch { return new URLSearchParams(); }
+  })();
+  const initNum = (key, def) => { const v = parseFloat(initParams.get(key)); return isNaN(v) ? def : v; };
+  const initRefIdx = (() => {
+    const v = parseInt(initParams.get("ref"), 10);
+    return Number.isInteger(v) && v >= 0 && v < REFRIGERANTS.length ? v : 0;
+  })();
+  const [refIdx, setRefIdx] = useState(initRefIdx);
   const refData = REFRIGERANTS[refIdx];
   const defaults = useMemo(() => getDefaultPressures(refData), [refData]);
 
-  const [pHigh, setPHigh] = useState(() => getDefaultPressures(REFRIGERANTS[0]).pHigh);
-  const [pLow, setPLow] = useState(() => getDefaultPressures(REFRIGERANTS[0]).pLow);
+  const [pHigh, setPHigh] = useState(() => initNum("pHigh", getDefaultPressures(REFRIGERANTS[initRefIdx]).pHigh));
+  const [pLow, setPLow] = useState(() => initNum("pLow", getDefaultPressures(REFRIGERANTS[initRefIdx]).pLow));
+  const [shareCopied, setShareCopied] = useState(false);
+  const [eqsCopied, setEqsCopied] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
@@ -1425,8 +1436,10 @@ export default function RefrigerationPage({ onBack }) {
   const pMin = Math.round(table[0].P);
   const pMax = Math.round(table[table.length - 2].P);
 
-  // Clamp pressures on refrigerant change
+  // Clamp pressures on refrigerant change (but skip first render when URL provides values)
+  const skipFirstClamp = useRef(initParams.has("pHigh") || initParams.has("pLow"));
   useEffect(() => {
+    if (skipFirstClamp.current) { skipFirstClamp.current = false; return; }
     const d = getDefaultPressures(refData);
     setPHigh(d.pHigh);
     setPLow(d.pLow);
@@ -1681,11 +1694,44 @@ export default function RefrigerationPage({ onBack }) {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px" }}>
+      <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
         <button data-tour="ref-dark-mode" onClick={toggleDarkMode} style={{
           background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
           color: K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{darkMode ? "\u2600 Light Mode" : "\u263E Dark Mode"}</button>
+        <button onClick={() => {
+          const u = `${window.location.origin}${window.location.pathname}?view=refrigeration&ref=${refIdx}&pHigh=${effectivePHigh}&pLow=${effectivePLow}`;
+          navigator.clipboard.writeText(u).then(() => { setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); });
+        }} style={{
+          background: shareCopied ? K.workOut : "none", border: `1px solid ${shareCopied ? K.workOut : K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
+          color: shareCopied ? "#fff" : K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
+        }}>{shareCopied ? "\u2713 Link Copied" : "\uD83D\uDD17 Share Setup"}</button>
+        <button onClick={() => {
+          const text = [
+            `VAPOR-COMPRESSION REFRIGERATION CYCLE \u2014 Solution`,
+            `Refrigerant: ${refData.name} (${refData.formula})`,
+            `Inputs: P_high (cond) = ${effectivePHigh} kPa, P_low (evap) = ${effectivePLow} kPa`,
+            `T_evap = ${cycle.Tsat_low.toFixed(2)} \u00B0C, T_cond = ${cycle.Tsat_high.toFixed(2)} \u00B0C`,
+            ``,
+            `State 1 (sat. vapor at P_low):     T = ${cycle.states[0].T.toFixed(2)} \u00B0C, P = ${cycle.states[0].P.toFixed(1)} kPa, h = ${cycle.states[0].h.toFixed(2)} kJ/kg, s = ${cycle.states[0].s.toFixed(4)} kJ/kg\u00B7K`,
+            `State 2 (after isentropic comp.):  T = ${cycle.states[1].T.toFixed(2)} \u00B0C, P = ${cycle.states[1].P.toFixed(1)} kPa, h = ${cycle.states[1].h.toFixed(2)} kJ/kg, s = ${cycle.states[1].s.toFixed(4)} kJ/kg\u00B7K`,
+            `State 3 (sat. liquid at P_high):   T = ${cycle.states[2].T.toFixed(2)} \u00B0C, P = ${cycle.states[2].P.toFixed(1)} kPa, h = ${cycle.states[2].h.toFixed(2)} kJ/kg, s = ${cycle.states[2].s.toFixed(4)} kJ/kg\u00B7K`,
+            `State 4 (after expansion, two-ph): T = ${cycle.states[3].T.toFixed(2)} \u00B0C, P = ${cycle.states[3].P.toFixed(1)} kPa, h = ${cycle.states[3].h.toFixed(2)} kJ/kg, s = ${cycle.states[3].s.toFixed(4)} kJ/kg\u00B7K, x_4 = ${cycle.x4.toFixed(4)}`,
+            ``,
+            `Compressor:  W_comp = h2 \u2212 h1 = ${fmt(cycle.wComp)} kJ/kg`,
+            `Evaporator:  Q_evap = h1 \u2212 h4 = ${fmt(cycle.qEvap)} kJ/kg  (cooling effect)`,
+            `Condenser:   Q_cond = h2 \u2212 h3 = ${fmt(cycle.qCond)} kJ/kg  (rejected)`,
+            `Throttle:    h3 = h4 (isenthalpic)`,
+            ``,
+            `COP_cooling = Q_evap / W_comp = ${cycle.copCool.toFixed(3)}`,
+            `COP_heating = Q_cond / W_comp = ${cycle.copHeat.toFixed(3)}`,
+            `Energy balance check: Q_evap + W_comp = ${fmt(cycle.qEvap + cycle.wComp)} kJ/kg \u2248 Q_cond = ${fmt(cycle.qCond)} kJ/kg`,
+          ].join("\n");
+          navigator.clipboard.writeText(text).then(() => { setEqsCopied(true); setTimeout(() => setEqsCopied(false), 2000); });
+        }} style={{
+          background: eqsCopied ? K.accent : "none", border: `1px solid ${eqsCopied ? K.accent : K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
+          color: eqsCopied ? "#fff" : K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
+        }}>{eqsCopied ? "\u2713 Copied" : "\uD83D\uDCCB Copy Solution"}</button>
       </div>
       <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
         Vapor-Compression Refrigeration · {refData.name} ({refData.formula})

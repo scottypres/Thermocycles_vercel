@@ -1717,9 +1717,15 @@ function RankinePage({ onBack }) {
   const handleScaleChange = useCallback((s) => { setTextScale(s); document.cookie = `textScale=${s};path=/;max-age=31536000`; }, []);
   const sz = (px) => Math.round(px * textScale);
 
-  const [pHigh, setPHigh] = useState(4000);
-  const [pLow, setPLow] = useState(20);
-  const [tSup, setTSup] = useState(450);
+  const initParams = (() => {
+    try { return new URLSearchParams(window.location.search); } catch { return new URLSearchParams(); }
+  })();
+  const initNum = (key, def) => { const v = parseFloat(initParams.get(key)); return isNaN(v) ? def : v; };
+  const [pHigh, setPHigh] = useState(() => initNum("pHigh", 4000));
+  const [pLow, setPLow] = useState(() => initNum("pLow", 20));
+  const [tSup, setTSup] = useState(() => initNum("tSup", 450));
+  const [shareCopied, setShareCopied] = useState(false);
+  const [eqsCopied, setEqsCopied] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
@@ -1933,11 +1939,42 @@ function RankinePage({ onBack }) {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px" }}>
+      <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
         <button data-tour="dark-mode" onClick={toggleDarkMode} style={{
           background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
           color: K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{darkMode ? "☀ Light Mode" : "☾ Dark Mode"}</button>
+        <button onClick={() => {
+          const u = `${window.location.origin}${window.location.pathname}?view=rankine&pHigh=${pHigh}&pLow=${pLow}&tSup=${adjustedTSup}`;
+          navigator.clipboard.writeText(u).then(() => { setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); });
+        }} style={{
+          background: shareCopied ? K.workOut : "none", border: `1px solid ${shareCopied ? K.workOut : K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
+          color: shareCopied ? "#fff" : K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
+        }}>{shareCopied ? "✓ Link Copied" : "🔗 Share Setup"}</button>
+        <button onClick={() => {
+          const text = [
+            `RANKINE CYCLE — Solution`,
+            `Inputs: P_high = ${pHigh} kPa, P_low = ${pLow} kPa, T_3 = ${adjustedTSup} °C`,
+            ``,
+            `State 1 (sat. liquid at P_low):  T = ${cycle.states[0].T.toFixed(2)} °C, h = ${cycle.states[0].h.toFixed(2)} kJ/kg, s = ${cycle.states[0].s.toFixed(4)} kJ/kg·K`,
+            `State 2 (after pump, P_high):   T = ${cycle.states[1].T.toFixed(2)} °C, h = ${cycle.states[1].h.toFixed(2)} kJ/kg, s = ${cycle.states[1].s.toFixed(4)} kJ/kg·K`,
+            `State 3 (boiler exit, P_high):  T = ${cycle.states[2].T.toFixed(2)} °C, h = ${cycle.states[2].h.toFixed(2)} kJ/kg, s = ${cycle.states[2].s.toFixed(4)} kJ/kg·K`,
+            `State 4 (turbine exit, P_low):  T = ${cycle.states[3].T.toFixed(2)} °C, h = ${cycle.states[3].h.toFixed(2)} kJ/kg, s = ${cycle.states[3].s.toFixed(4)} kJ/kg·K, x_4 = ${cycle.x4.toFixed(4)}`,
+            ``,
+            `Pump:      W_pump  = h2 − h1 = ${fmt(cycle.wPump)} kJ/kg`,
+            `Boiler:    Q_in    = h3 − h2 = ${fmt(cycle.qIn)} kJ/kg`,
+            `Turbine:   W_turb  = h3 − h4 = ${fmt(cycle.wTurbine)} kJ/kg`,
+            `Condenser: Q_out   = h4 − h1 = ${fmt(cycle.qOut)} kJ/kg`,
+            ``,
+            `W_net = W_turb − W_pump = ${fmt(cycle.wNet)} kJ/kg`,
+            `η_th  = W_net / Q_in    = ${(cycle.eta * 100).toFixed(2)} %`,
+            `BWR   = W_pump / W_turb = ${(cycle.bwr * 100).toFixed(2)} %`,
+          ].join("\n");
+          navigator.clipboard.writeText(text).then(() => { setEqsCopied(true); setTimeout(() => setEqsCopied(false), 2000); });
+        }} style={{
+          background: eqsCopied ? K.accent : "none", border: `1px solid ${eqsCopied ? K.accent : K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
+          color: eqsCopied ? "#fff" : K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
+        }}>{eqsCopied ? "✓ Copied" : "📋 Copy Solution"}</button>
       </div>
       <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
         Ideal Rankine Cycle · Simplified Steam Properties
@@ -1954,10 +1991,33 @@ function RankinePage({ onBack }) {
 import LandingPage from "./LandingPage.jsx";
 import RefrigerationPage from "./RefrigerationApp.jsx";
 
-export default function App() {
-  const [page, setPage] = useState("landing");
+const viewFromURL = () => {
+  if (typeof window === "undefined") return "landing";
+  const v = new URLSearchParams(window.location.search).get("view");
+  if (v === "rankine") return "rankine";
+  if (v === "refrigeration") return "refrigeration";
+  return "landing";
+};
 
-  if (page === "landing") return <LandingPage onNavigate={setPage} />;
-  if (page === "refrigeration") return <RefrigerationPage onBack={() => setPage("landing")} />;
-  return <RankinePage onBack={() => setPage("landing")} />;
+export default function App() {
+  const [page, setPage] = useState(viewFromURL);
+
+  useEffect(() => {
+    const sync = () => setPage(viewFromURL());
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
+
+  const navigate = (next) => {
+    if (next === page) return;
+    const url = next === "landing"
+      ? window.location.pathname
+      : `${window.location.pathname}?view=${next}`;
+    window.history.pushState(null, "", url);
+    setPage(next);
+  };
+
+  if (page === "landing") return <LandingPage onNavigate={navigate} />;
+  if (page === "refrigeration") return <RefrigerationPage onBack={() => navigate("landing")} />;
+  return <RankinePage onBack={() => navigate("landing")} />;
 }
