@@ -35,19 +35,20 @@ export function lerp(x, x0, x1, y0, y1) {
 export function ParamSlider({ label, unit, value, min, max, step, onChange, color, textScale }) {
   const sc = textScale || 1;
   const sz = (px) => Math.round(px * sc);
+  const desktop = useIsDesktop();
   const pct = ((value - min) / (max - min)) * 100;
   return (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-        <span style={{ fontSize: sz(10), fontFamily: FM, color: K.inkMed }}>{label}</span>
-        <span style={{ fontSize: sz(14), fontFamily: FD, color: color || K.accent }}>{value.toFixed(0)} <span style={{ fontSize: sz(10), fontFamily: FM, color: K.inkLight }}>{unit}</span></span>
+    <div style={{ marginBottom: desktop ? 24 : 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: desktop ? 8 : 5 }}>
+        <span style={{ fontSize: sz(desktop ? 16 : 10), fontFamily: FM, color: K.inkMed }}>{label}</span>
+        <span style={{ fontSize: sz(desktop ? 22 : 14), fontFamily: FD, color: color || K.accent }}>{value.toFixed(0)} <span style={{ fontSize: sz(desktop ? 14 : 10), fontFamily: FM, color: K.inkLight }}>{unit}</span></span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
-        style={{ width: "100%", height: 3, appearance: "none", WebkitAppearance: "none", background: `linear-gradient(to right, ${color || K.accent} 0%, ${color || K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`, borderRadius: 0, outline: "none", cursor: "pointer" }} />
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3 }}>
-        <span style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM }}>{min}</span>
-        <span style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM }}>{max}</span>
+        style={{ width: "100%", height: desktop ? 4 : 3, appearance: "none", WebkitAppearance: "none", background: `linear-gradient(to right, ${color || K.accent} 0%, ${color || K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`, borderRadius: 0, outline: "none", cursor: "pointer" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: desktop ? 5 : 3 }}>
+        <span style={{ fontSize: sz(desktop ? 13 : 8), color: K.inkLight, fontFamily: FM }}>{min}</span>
+        <span style={{ fontSize: sz(desktop ? 13 : 8), color: K.inkLight, fontFamily: FM }}>{max}</span>
       </div>
     </div>
   );
