@@ -1,4 +1,13 @@
-# React + Vite
+# ThermoCycles Studio
+
+Interactive thermodynamic cycle analysis (Rankine + vapor-compression refrigeration).
+Live: https://thermocycles-vercel.vercel.app/
+
+**Instructional video:** https://www.youtube.com/watch?v=2sEMSVImMmo
+
+---
+
+## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
