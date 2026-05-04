@@ -1828,21 +1828,51 @@ function RankinePage({ onBack }) {
   const phaseInfo = useMemo(() => getPhaseInfo(dragPoint.s, dragPoint.T), [dragPoint]);
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
 
-  // Animate the cycle: dragPoint walks along 1→2→3→4→1 (~6s loop at 1×)
+  // Animate the cycle: dragPoint walks along 1→2→3→4→1 (~6s loop at 1×).
+  // Segments 1→2, 3→4, 4→1 are straight in (s, T); 2→3 walks the curved
+  // boilerPath so the cursor traces the actual drawn boiler line through the dome.
   useEffect(() => {
     if (!animating) return;
     const segMs = 1500 / Math.max(0.05, animSpeed);
     const totalMs = segMs * 4;
+    const walkPath = (pts, frac) => {
+      if (!pts || pts.length === 0) return null;
+      if (pts.length === 1) return pts[0];
+      const lens = [];
+      let total = 0;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i], b = pts[i + 1];
+        const len = Math.hypot(b.s - a.s, b.T - a.T);
+        lens.push(len); total += len;
+      }
+      if (total === 0) return pts[0];
+      let target = frac * total;
+      for (let i = 0; i < lens.length; i++) {
+        if (target <= lens[i] || i === lens.length - 1) {
+          const a = pts[i], b = pts[i + 1];
+          const f = lens[i] === 0 ? 0 : Math.min(1, target / lens[i]);
+          return { s: a.s + (b.s - a.s) * f, T: a.T + (b.T - a.T) * f };
+        }
+        target -= lens[i];
+      }
+      return pts[pts.length - 1];
+    };
     let raf;
     const t0 = performance.now();
     const tick = (now) => {
       const elapsed = (now - t0) % totalMs;
       const segIdx = Math.floor(elapsed / segMs);
       const frac = (elapsed - segIdx * segMs) / segMs;
-      const a = cycle.states[segIdx];
-      const b = cycle.states[(segIdx + 1) % 4];
-      const s = a.s + (b.s - a.s) * frac;
-      const T = a.T + (b.T - a.T) * frac;
+      let s, T;
+      if (segIdx === 1 && cycle.boilerPath) {
+        const pt = walkPath(cycle.boilerPath, frac);
+        s = pt.s; T = pt.T;
+      } else {
+        const a = cycle.states[segIdx];
+        const b = cycle.states[(segIdx + 1) % 4];
+        s = a.s + (b.s - a.s) * frac;
+        T = a.T + (b.T - a.T) * frac;
+      }
       setDragPoint({ s, T });
       setAnimProgress(elapsed / totalMs);
       raf = requestAnimationFrame(tick);
