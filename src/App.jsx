@@ -630,10 +630,14 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         {/* Drag point + value box on top */}
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
-        <rect x={dpx + sz(12)} y={dpy - sz(22)} width={sz(70)} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-        <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>
-          {dragPoint.T.toFixed(0)}°C, {dragPoint.s.toFixed(2)}
-        </text>
+        {(() => {
+          const label = `${dragPoint.T.toFixed(0)}°C, ${dragPoint.s.toFixed(2)} kJ/kg·K`;
+          const w = sz(8) * 0.6 * label.length + sz(8);
+          return <>
+            <rect x={dpx + sz(12)} y={dpy - sz(22)} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
+            <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
+          </>;
+        })()}
         {/* Instruction hint */}
         <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
       </>}
@@ -1012,10 +1016,14 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         {/* Drag point + value box on top */}
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
-        <rect x={dpx + sz(12)} y={dpy - sz(22)} width={sz(80)} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-        <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>
-          {(dpP).toFixed(0)} kPa, {dpV.toFixed(4)}
-        </text>
+        {(() => {
+          const label = `${dpP.toFixed(0)} kPa, ${dpV.toFixed(4)} m³/kg`;
+          const w = sz(8) * 0.6 * label.length + sz(8);
+          return <>
+            <rect x={dpx + sz(12)} y={dpy - sz(22)} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
+            <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
+          </>;
+        })()}
         {/* Instruction hint */}
         <text x={PV_W - 8} y={PV_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockV ? "v locked" : "tap & drag"}</text>
       </>}
