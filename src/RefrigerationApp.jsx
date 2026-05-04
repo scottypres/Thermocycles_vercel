@@ -257,6 +257,7 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
+  const [activeArea, setActiveArea] = useState("qEvap");
 
   // Auto-scale axes from refrigerant data
   const table = refData.table;
@@ -438,9 +439,9 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
         ].join(" ");
         return (
           <>
-            <path d={qEvapD} fill={`${K.heatIn}18`} stroke="none" />
-            <path d={qCondD} fill={`${K.heatOut}18`} stroke="none" />
-            <path d={cycleFillD} fill={`${K.workIn}25`} stroke="none" />
+            {activeArea === "qEvap" && <path d={qEvapD} fill={`${K.heatIn}28`} stroke="none" />}
+            {activeArea === "qCond" && <path d={qCondD} fill={`${K.heatOut}28`} stroke="none" />}
+            {activeArea === "wComp" && <path d={cycleFillD} fill={`${K.workIn}30`} stroke="none" />}
           </>
         );
       })()}
@@ -516,15 +517,22 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
       {showAreas && (() => {
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
         const lx = TS_PLOT.x + 6, ly = TS_PLOT.y + 4;
+        const dot = (k) => activeArea === k ? 1 : 0.35;
         return (
           <>
             <rect x={lx} y={ly} width={sz(160)} height={sz(52)} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
-            <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
-            <text x={lx + sz(17)} y={ly + sz(12)} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
-            <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
-            <text x={lx + sz(17)} y={ly + sz(25)} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM}>Q_cond (1→3) = {fmt(cycle.qCond)} kJ/kg</text>
-            <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workIn}40`} stroke={K.workIn} strokeWidth={0.6} />
-            <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workIn} fontSize={sz(8)} fontFamily={FM}>W_comp (1→2) = {fmt(cycle.wComp)} kJ/kg</text>
+            <g onClick={() => setActiveArea("qEvap")} style={{ cursor: "pointer" }} opacity={dot("qEvap")}>
+              <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={activeArea === "qEvap" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(12)} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "qEvap" ? 700 : 400}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
+            </g>
+            <g onClick={() => setActiveArea("qCond")} style={{ cursor: "pointer" }} opacity={dot("qCond")}>
+              <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={activeArea === "qCond" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(25)} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "qCond" ? 700 : 400}>Q_cond (1→3) = {fmt(cycle.qCond)} kJ/kg</text>
+            </g>
+            <g onClick={() => setActiveArea("wComp")} style={{ cursor: "pointer" }} opacity={dot("wComp")}>
+              <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workIn}40`} stroke={K.workIn} strokeWidth={activeArea === "wComp" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workIn} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "wComp" ? 700 : 400}>W_comp (1→2) = {fmt(cycle.wComp)} kJ/kg</text>
+            </g>
             <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">COP = {cycle.copCool.toFixed(2)}</text>
           </>
         );
@@ -543,6 +551,7 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
+  const [activeArea, setActiveArea] = useState("qEvap");
 
   const table = refData.table;
   const hMin = Math.floor(table[0].hf / 20) * 20 - 20;
@@ -724,9 +733,9 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
         ].join(" ");
         return (
           <>
-            <path d={qEvapD} fill={`${K.heatIn}25`} stroke="none" />
-            <path d={qCondD} fill={`${K.heatOut}25`} stroke="none" />
-            <path d={wCompD} fill={`${K.workIn}20`} stroke="none" />
+            {activeArea === "qEvap" && <path d={qEvapD} fill={`${K.heatIn}40`} stroke="none" />}
+            {activeArea === "qCond" && <path d={qCondD} fill={`${K.heatOut}40`} stroke="none" />}
+            {activeArea === "wComp" && <path d={wCompD} fill={`${K.workIn}30`} stroke="none" />}
           </>
         );
       })()}
@@ -801,15 +810,22 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
       {showAreas && (() => {
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
         const lx = PH_PLOT.x + 6, ly = PH_PLOT.y + 4;
+        const dot = (k) => activeArea === k ? 1 : 0.35;
         return (
           <>
             <rect x={lx} y={ly} width={sz(160)} height={sz(52)} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
-            <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
-            <text x={lx + sz(17)} y={ly + sz(12)} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
-            <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
-            <text x={lx + sz(17)} y={ly + sz(25)} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM}>Q_cond (2→3) = {fmt(cycle.qCond)} kJ/kg</text>
-            <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workIn}40`} stroke={K.workIn} strokeWidth={0.6} />
-            <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workIn} fontSize={sz(8)} fontFamily={FM}>W_comp (1→2) = {fmt(cycle.wComp)} kJ/kg</text>
+            <g onClick={() => setActiveArea("qEvap")} style={{ cursor: "pointer" }} opacity={dot("qEvap")}>
+              <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={activeArea === "qEvap" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(12)} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "qEvap" ? 700 : 400}>Q_evap (4→1) = {fmt(cycle.qEvap)} kJ/kg</text>
+            </g>
+            <g onClick={() => setActiveArea("qCond")} style={{ cursor: "pointer" }} opacity={dot("qCond")}>
+              <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={activeArea === "qCond" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(25)} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "qCond" ? 700 : 400}>Q_cond (2→3) = {fmt(cycle.qCond)} kJ/kg</text>
+            </g>
+            <g onClick={() => setActiveArea("wComp")} style={{ cursor: "pointer" }} opacity={dot("wComp")}>
+              <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workIn}40`} stroke={K.workIn} strokeWidth={activeArea === "wComp" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workIn} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "wComp" ? 700 : 400}>W_comp (1→2) = {fmt(cycle.wComp)} kJ/kg</text>
+            </g>
             <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">COP = {cycle.copCool.toFixed(2)}</text>
           </>
         );

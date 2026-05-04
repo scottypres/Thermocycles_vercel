@@ -412,7 +412,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null); // "boiler" | "condenser" | null
-  const [areaToggles, setAreaToggles] = useState({ qIn: true, qOut: true, wNet: true });
+  const [activeArea, setActiveArea] = useState("qIn");
 
   const domePathD = domeCurve.map((p, i) => `${i === 0 ? "M" : "L"}${mapS(p.s).toFixed(1)},${mapT(p.T).toFixed(1)}`).join(" ") + " Z";
   const boilerD = cycle.boilerPath.map((p, i) => `${i === 0 ? "M" : "L"}${mapS(p.s).toFixed(1)},${mapT(p.T).toFixed(1)}`).join(" ");
@@ -567,9 +567,9 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         ].join(" ");
         return (
           <>
-            {areaToggles.qIn && <path d={qInD} fill={`${K.heatIn}18`} stroke="none" />}
-            {areaToggles.qOut && <path d={qOutD} fill={`${K.heatOut}18`} stroke="none" />}
-            {areaToggles.wNet && <path d={cycleFillD} fill={`${K.workOut}25`} stroke="none" />}
+            {activeArea === "qIn" && <path d={qInD} fill={`${K.heatIn}28`} stroke="none" />}
+            {activeArea === "qOut" && <path d={qOutD} fill={`${K.heatOut}28`} stroke="none" />}
+            {activeArea === "wNet" && <path d={cycleFillD} fill={`${K.workOut}30`} stroke="none" />}
           </>
         );
       })()}
@@ -648,24 +648,25 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
         const lx = TS_PLOT.x + 6;
         const ly = TS_PLOT.y + 4;
-        const toggle = (key) => setAreaToggles(prev => ({ ...prev, [key]: !prev[key] }));
+        const select = (key) => setActiveArea(key);
+        const dot = (k) => activeArea === k ? 1 : 0.35;
         return (
           <>
             <rect x={lx} y={ly} width={sz(152)} height={sz(52)} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             {/* Q_in */}
-            <g onClick={() => toggle("qIn")} style={{ cursor: "pointer" }} opacity={areaToggles.qIn ? 1 : 0.35}>
-              <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={0.6} />
-              <text x={lx + sz(17)} y={ly + sz(12)} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM}>Q_in (1→3) = {fmt(cycle.qIn)} kJ/kg</text>
+            <g onClick={() => select("qIn")} style={{ cursor: "pointer" }} opacity={dot("qIn")}>
+              <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={activeArea === "qIn" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(12)} fill={K.heatIn} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "qIn" ? 700 : 400}>Q_in (1→3) = {fmt(cycle.qIn)} kJ/kg</text>
             </g>
             {/* Q_out */}
-            <g onClick={() => toggle("qOut")} style={{ cursor: "pointer" }} opacity={areaToggles.qOut ? 1 : 0.35}>
-              <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={0.6} />
-              <text x={lx + sz(17)} y={ly + sz(25)} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM}>Q_out (4→1) = −{fmt(cycle.qOut)} kJ/kg</text>
+            <g onClick={() => select("qOut")} style={{ cursor: "pointer" }} opacity={dot("qOut")}>
+              <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={activeArea === "qOut" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(25)} fill={K.heatOut} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "qOut" ? 700 : 400}>Q_out (4→1) = −{fmt(cycle.qOut)} kJ/kg</text>
             </g>
             {/* W_net */}
-            <g onClick={() => toggle("wNet")} style={{ cursor: "pointer" }} opacity={areaToggles.wNet ? 1 : 0.35}>
-              <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
-              <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(8)} fontFamily={FM}>W_net (1→3→4→1) = {fmt(cycle.wNet)} kJ/kg</text>
+            <g onClick={() => select("wNet")} style={{ cursor: "pointer" }} opacity={dot("wNet")}>
+              <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={activeArea === "wNet" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "wNet" ? 700 : 400}>W_net (1→3→4→1) = {fmt(cycle.wNet)} kJ/kg</text>
             </g>
             {/* η */}
             <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
@@ -775,7 +776,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
   const lockedVRef = useRef(null);
   const lockedPRef = useRef(null);
   const lineDragRef = useRef(null);
-  const [areaToggles, setAreaToggles] = useState({ wTurbine: true, wPump: true, wNet: true });
+  const [activeArea, setActiveArea] = useState("wTurbine");
 
   // Capture exact lock values when locks activate
   useEffect(() => {
@@ -948,9 +949,9 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         ].join(" ");
         return (
           <>
-            {areaToggles.wTurbine && <path d={wExpD} fill={`${K.workOut}18`} stroke="none" />}
-            {areaToggles.wPump && <path d={wCompD} fill={`${K.workIn}18`} stroke="none" />}
-            {areaToggles.wNet && <path d={wNetD} fill={`${K.workOut}25`} stroke="none" />}
+            {activeArea === "wTurbine" && <path d={wExpD} fill={`${K.workOut}28`} stroke="none" />}
+            {activeArea === "wPump" && <path d={wCompD} fill={`${K.workIn}28`} stroke="none" />}
+            {activeArea === "wNet" && <path d={wNetD} fill={`${K.workOut}30`} stroke="none" />}
           </>
         );
       })()}
@@ -1038,24 +1039,25 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         const boxW = sz(168);
         const lx = PV_PLOT.x + PV_PLOT.w - boxW - 6;
         const ly = PV_PLOT.y + 4;
-        const toggle = (key) => setAreaToggles(prev => ({ ...prev, [key]: !prev[key] }));
+        const select = (key) => setActiveArea(key);
+        const dot = (k) => activeArea === k ? 1 : 0.35;
         return (
           <>
             <rect x={lx} y={ly} width={boxW} height={sz(52)} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
             {/* W_turbine */}
-            <g onClick={() => toggle("wTurbine")} style={{ cursor: "pointer" }} opacity={areaToggles.wTurbine ? 1 : 0.35}>
-              <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}30`} stroke={K.workOut} strokeWidth={0.6} />
-              <text x={lx + sz(17)} y={ly + sz(12)} fill={K.workOut} fontSize={sz(8)} fontFamily={FM}>W_turbine (3→4) = {fmt(cycle.wTurbine)} kJ/kg</text>
+            <g onClick={() => select("wTurbine")} style={{ cursor: "pointer" }} opacity={dot("wTurbine")}>
+              <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}30`} stroke={K.workOut} strokeWidth={activeArea === "wTurbine" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(12)} fill={K.workOut} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "wTurbine" ? 700 : 400}>W_turbine (3→4) = {fmt(cycle.wTurbine)} kJ/kg</text>
             </g>
             {/* W_pump */}
-            <g onClick={() => toggle("wPump")} style={{ cursor: "pointer" }} opacity={areaToggles.wPump ? 1 : 0.35}>
-              <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workIn}30`} stroke={K.workIn} strokeWidth={0.6} />
-              <text x={lx + sz(17)} y={ly + sz(25)} fill={K.workIn} fontSize={sz(8)} fontFamily={FM}>W_pump (1→2) = −{fmt(cycle.wPump)} kJ/kg</text>
+            <g onClick={() => select("wPump")} style={{ cursor: "pointer" }} opacity={dot("wPump")}>
+              <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workIn}30`} stroke={K.workIn} strokeWidth={activeArea === "wPump" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(25)} fill={K.workIn} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "wPump" ? 700 : 400}>W_pump (1→2) = −{fmt(cycle.wPump)} kJ/kg</text>
             </g>
             {/* W_net */}
-            <g onClick={() => toggle("wNet")} style={{ cursor: "pointer" }} opacity={areaToggles.wNet ? 1 : 0.35}>
-              <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={0.6} />
-              <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(8)} fontFamily={FM}>W_net = {fmt(cycle.wNet)} kJ/kg</text>
+            <g onClick={() => select("wNet")} style={{ cursor: "pointer" }} opacity={dot("wNet")}>
+              <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={activeArea === "wNet" ? 1.4 : 0.6} />
+              <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(8)} fontFamily={FM} fontWeight={activeArea === "wNet" ? 700 : 400}>W_net = {fmt(cycle.wNet)} kJ/kg</text>
             </g>
             {/* BWR */}
             <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(8)} fontFamily={FD} fontWeight="bold">BWR = {(cycle.bwr * 100).toFixed(1)}%</text>
