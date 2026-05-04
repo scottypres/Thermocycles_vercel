@@ -457,19 +457,18 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
 
   const handleStart = useCallback((e) => {
     if (e.touches && e.touches.length === 0) return;
+    if (e.preventDefault) e.preventDefault();
     const r = getSvgXY(e);
     if (r) {
       // Check if click is near "Boiler" or "Condenser" text labels
       if (Math.abs(r.px - boilerTextX) < 25 && Math.abs(r.py - boilerTextY) < 10) {
         lineDragRef.current = "boiler";
         if (onLineDragStart) onLineDragStart("boiler");
-        e.preventDefault();
         return;
       }
       if (Math.abs(r.px - condTextX) < 30 && Math.abs(r.py - condTextY) < 10) {
         lineDragRef.current = "condenser";
         if (onLineDragStart) onLineDragStart("condenser");
-        e.preventDefault();
         return;
       }
     }
@@ -517,7 +516,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
   const phaseInfo = getPhaseInfo(dragPoint.s, dragPoint.T);
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${TS_W} ${TS_H}`} style={{ width: "100%", touchAction: "none", cursor: "crosshair" }}
+    <svg ref={svgRef} viewBox={`0 0 ${TS_W} ${TS_H}`} style={{ width: "100%", touchAction: "none", cursor: "crosshair", userSelect: "none", WebkitUserSelect: "none", MozUserSelect: "none" }}
       onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
       onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}>
       {/* Fine grid */}
@@ -835,18 +834,17 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
 
   const handleStart = useCallback((e) => {
     if (e.touches && e.touches.length === 0) return;
+    if (e.preventDefault) e.preventDefault();
     const r = getSvgXY(e);
     if (r) {
       if (Math.abs(r.px - boilerTextX) < 25 && Math.abs(r.py - boilerTextY) < 10) {
         lineDragRef.current = "boiler";
         if (onLineDragStart) onLineDragStart("boiler");
-        e.preventDefault();
         return;
       }
       if (Math.abs(r.px - condTextX) < 30 && Math.abs(r.py - condTextY) < 10) {
         lineDragRef.current = "condenser";
         if (onLineDragStart) onLineDragStart("condenser");
-        e.preventDefault();
         return;
       }
     }
@@ -901,7 +899,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
   const vGridVals = [0.001, 0.01, 0.1, 1, 10, 100];
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${PV_W} ${PV_H}`} style={{ width: "100%", touchAction: "none", cursor: "crosshair" }}
+    <svg ref={svgRef} viewBox={`0 0 ${PV_W} ${PV_H}`} style={{ width: "100%", touchAction: "none", cursor: "crosshair", userSelect: "none", WebkitUserSelect: "none", MozUserSelect: "none" }}
       onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
       onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}>
       {/* Grid */}
