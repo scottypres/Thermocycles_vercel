@@ -88,7 +88,8 @@ function calculateRefrigerationCycle(ref, pHigh, pLow) {
 
 /* ───────── Particle Visualizer (matches steam cycle dynamics) ───────── */
 const NUM_PARTICLES = 600;
-function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
+function RefParticleVisualizer({ phaseInfo, temperature, criticalT, fillHeight, textScale }) {
+  const ts = textScale || 1;
   const canvasRef = useRef(null);
   const particlesRef = useRef(null);
   const animRef = useRef(null);
@@ -215,32 +216,32 @@ function RefParticleVisualizer({ phaseInfo, temperature, criticalT }) {
     phase === "superheated" ? "Superheated Vapor" : "Supercritical";
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", ...(fillHeight ? { flex: 1, display: "flex", flexDirection: "column" } : {}) }}>
       <canvas ref={canvasRef} width={W} height={H}
-        style={{ width: "100%", height: "auto", display: "block", border: `1.5px solid ${K.ink}`, background: K.cardAlt }} />
+        style={{ width: "100%", display: "block", border: `1.5px solid ${K.ink}`, background: K.cardAlt, ...(fillHeight ? { flex: 1, height: 0 } : { height: "auto" }) }} />
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
         {phase === "two-phase" ? (
-          <div style={{ background: "rgba(255,255,255,0.88)", padding: "8px 18px", border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
-            <div style={{ fontSize: 28, fontFamily: FD, color: K.accent, lineHeight: 1.1 }}>{(quality * 100).toFixed(1)}%</div>
-            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkMed, letterSpacing: 1, marginTop: 2 }}>QUALITY (x)</div>
+          <div style={{ background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: fillHeight ? `${18 * ts}px ${38 * ts}px` : `${8 * ts}px ${18 * ts}px`, border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
+            <div style={{ fontSize: (fillHeight ? 44 : 28) * ts, fontFamily: FD, color: K.accent, lineHeight: fillHeight ? 1.02 : 1.1 }}>{(quality * 100).toFixed(1)}%</div>
+            <div style={{ fontSize: (fillHeight ? 13 : 9) * ts, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: (fillHeight ? 4 : 2) * ts }}>QUALITY (x)</div>
           </div>
         ) : (
-          <div style={{ background: "rgba(255,255,255,0.88)", padding: "8px 18px", border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
-            <div style={{ fontSize: 28, fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>{phaseLabel}</div>
-            <div style={{ fontSize: 9, fontFamily: FM, color: K.inkMed, letterSpacing: 1, marginTop: 2 }}>{phase === "subcooled" ? "x = 0 (all liquid)" : "x = 1 (all vapor)"}</div>
+          <div style={{ background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: fillHeight ? `${18 * ts}px ${38 * ts}px` : `${8 * ts}px ${18 * ts}px`, border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
+            <div style={{ fontSize: (fillHeight ? 44 : 28) * ts, fontFamily: FD, color: K.ink, lineHeight: fillHeight ? 1.02 : 1.1 }}>{phaseLabel}</div>
+            <div style={{ fontSize: (fillHeight ? 13 : 9) * ts, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: (fillHeight ? 4 : 2) * ts }}>{phase === "subcooled" ? "x = 0 (all liquid)" : "x = 1 (all vapor)"}</div>
           </div>
         )}
       </div>
       <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 6 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.liquidBlue }} />
-          <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>Liquid</span>
+          <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>Liquid</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.vaporRed }} />
-          <span style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>Vapor</span>
+          <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>Vapor</span>
         </div>
-        <div style={{ fontSize: 9, fontFamily: FM, color: K.inkLight }}>T = {temperature.toFixed(0)}°C</div>
+        <div style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>T = {temperature.toFixed(0)}°C</div>
       </div>
     </div>
   );
@@ -1402,10 +1403,10 @@ export default function RefrigerationPage({ onBack }) {
   const [eqTopic, setEqTopic] = useState(null);
   const [showRefInfo, setShowRefInfo] = useState(false);
   const [showTour, setShowTour] = useState(() => {
-    try { return !localStorage.getItem("tourSeen_refrigeration"); } catch { return false; }
+    try { return !localStorage.getItem("tourSeen"); } catch { return false; }
   });
   const [forcedTour, setForcedTour] = useState(() => {
-    try { return !localStorage.getItem("tourSeen_refrigeration"); } catch { return false; }
+    try { return !localStorage.getItem("tourSeen"); } catch { return false; }
   });
   const [showWelcome] = useState(false);
   const [showTsAreas, setShowTsAreas] = useState(false);
@@ -1439,9 +1440,9 @@ export default function RefrigerationPage({ onBack }) {
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
 
   const desktop = useIsDesktop();
-  const gap = desktop ? 16 : 12;
-  const card = { margin: `${gap}px ${gap}px 0`, padding: desktop ? "18px" : "14px", background: K.card, border: `1px solid ${K.border}` };
-  const sec = { margin: "0 0 10px 0", fontSize: sz(desktop ? 14 : 12), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 6 };
+  const gap = desktop ? 25 : 12;
+  const card = { margin: `${gap}px ${gap}px 0`, padding: desktop ? "24px" : "14px", background: K.card, border: `1px solid ${K.border}` };
+  const sec = { margin: "0 0 14px 0", fontSize: sz(desktop ? 22.50 : 12), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   // Sync drag from T-s
   const handleTsDrag = useCallback((pt) => {
@@ -1477,7 +1478,7 @@ export default function RefrigerationPage({ onBack }) {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1100 : 480, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1489,29 +1490,29 @@ export default function RefrigerationPage({ onBack }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ padding: "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+      <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: desktop ? 14 : 10, flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 10px", color: K.inkMed, fontSize: 10, cursor: "pointer", fontFamily: FM }}>← Back</button>}
+            {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "8px 16px" : "5px 10px", color: K.inkMed, fontSize: sz(desktop ? 15 : 10), cursor: "pointer", fontFamily: FM }}>← Back</button>}
             <div>
-              <div style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
-              <h1 style={{ margin: 0, fontSize: sz(20), fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
+              <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
+              <h1 style={{ margin: 0, fontSize: sz(desktop ? 35 : 20), fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
                 Refrigeration <span style={{ color: K.heatOut, fontStyle: "italic" }}>Cycle</span>
               </h1>
-              <div style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Vapor-Compression Cycle Analysis</div>
+              <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Vapor-Compression Cycle Analysis</div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: "7px 14px", color: "#fff", fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Theory</button>
-            <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: "7px 14px", color: "#fff", fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
-            <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: "7px 14px", color: K.inkMed, fontSize: sz(11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
+            <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
+            <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
         {/* Refrigerant selector */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: desktop ? 8 : 5 }}>
           {REFRIGERANTS.map((r, i) => (
             <button key={r.id} onClick={() => setRefIdx(i)} style={{
-              padding: "4px 10px", fontSize: sz(9), fontFamily: FM,
+              padding: desktop ? "6px 14px" : "4px 10px", fontSize: sz(desktop ? 13 : 9), fontFamily: FM,
               background: i === refIdx ? K.heatOut : K.cardAlt,
               color: i === refIdx ? "#fff" : K.inkMed,
               border: `1px solid ${i === refIdx ? K.heatOut : K.border}`,
@@ -1524,60 +1525,60 @@ export default function RefrigerationPage({ onBack }) {
 
       <RefInfoModal open={showInfo} onClose={() => setShowInfo(false)} />
       <RefrigerantInfoModal open={showRefInfo} onClose={() => setShowRefInfo(false)} currentRef={refData} />
-      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_refrigeration", "1"); }} />
-      <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen_refrigeration", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
+      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); }} />
+      <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance bar */}
-      <div style={{ margin: `${gap}px ${gap}px 0`, padding: "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         {[
           { l: "COP cooling", v: cycle.copCool.toFixed(2), c: K.accent },
           { l: "COP heating", v: cycle.copHeat.toFixed(2), c: K.heatOut },
           { l: "W comp", v: fmt(cycle.wComp), c: K.workIn, s: "kJ/kg" },
         ].map((m, i) => (
-          <div key={i} style={{ textAlign: "center", padding: "4px 0" }}>
-            <div style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
-            <div style={{ fontSize: sz(desktop ? 24 : 20), fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
-            {m.s && <div style={{ fontSize: sz(8), color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
+          <div key={i} style={{ textAlign: "center", padding: desktop ? "8px 0" : "4px 0" }}>
+            <div style={{ fontSize: sz(desktop ? 15 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
+            <div style={{ fontSize: sz(desktop ? 40 : 20), fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
+            {m.s && <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
           </div>
         ))}
       </div>
 
       {/* Row: Schematic + Phase Visualizer */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
-        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— {refData.name}</span></h3>
+        <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— {refData.name}</span></h3>
           <div data-tour="ref-schematic"><RefSchematicDiagram cycle={cycle} textScale={textScale} /></div>
         </div>
-        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams</span></h3>
-          <RefParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} criticalT={refData.criticalT} />
+        <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
+          <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams</span></h3>
+          <RefParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} criticalT={refData.criticalT} fillHeight={desktop} textScale={textScale} />
         </div>
       </div>
 
       {/* Row: T-s + P-h Diagrams */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         {/* T-s Diagram */}
-        <div data-tour="ref-ts-diagram" style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: 8 }}>
-            <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
+        <div data-tour="ref-ts-diagram" style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
+            <span>T–s Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <div style={{ display: "flex", gap: 6 }}>
               <button data-tour="ref-cop-areas" onClick={() => setShowTsAreas(a => !a)} style={{
-                background: showTsAreas ? K.workIn : "none", border: `1px solid ${showTsAreas ? K.workIn : K.border}`, padding: "3px 8px",
-                color: showTsAreas ? "#fff" : K.inkMed, fontSize: sz(9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+                background: showTsAreas ? K.workIn : "none", border: `1px solid ${showTsAreas ? K.workIn : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
+                color: showTsAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
               }}>COP areas</button>
               <button data-tour="ref-fx" onClick={() => setShowEqs(true)} style={{
-                background: "none", border: `1px solid ${K.border}`, padding: "3px 8px",
-                color: K.inkMed, fontSize: sz(9), fontFamily: FM, cursor: "pointer", borderRadius: 4,
+                background: "none", border: `1px solid ${K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
+                color: K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4,
               }}>f(x)</button>
             </div>
           </div>
-          <div data-tour="ref-lock-buttons" style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <div data-tour="ref-lock-buttons" style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockS(l => !l); if (!lockS) { setLockT(false); setLockP(false); setLockH(false); } }}
-              style={{ flex: 1, padding: "5px 0", fontSize: sz(9), fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockS ? K.accent : K.cardAlt, color: lockS ? "#fff" : K.inkMed, border: `1px solid ${lockS ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockS ? 700 : 400, transition: "all 0.15s" }}>
               {lockS ? "\u{1F512}" : "\u{1F513}"} Lock s = {dragPoint.s.toFixed(2)}
             </button>
             <button onClick={() => { setLockT(l => !l); if (!lockT) { setLockS(false); setLockP(false); setLockH(false); } }}
-              style={{ flex: 1, padding: "5px 0", fontSize: sz(9), fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockT ? K.accent : K.cardAlt, color: lockT ? "#fff" : K.inkMed, border: `1px solid ${lockT ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockT ? 700 : 400, transition: "all 0.15s" }}>
               {lockT ? "\u{1F512}" : "\u{1F513}"} Lock T = {dragPoint.T.toFixed(0)}°C
             </button>
           </div>
@@ -1587,21 +1588,21 @@ export default function RefrigerationPage({ onBack }) {
         </div>
 
         {/* P-h Diagram */}
-        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: 8 }}>
-            <span>P–h Diagram <span style={{ fontFamily: FM, fontSize: 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
+        <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...sec, marginBottom: desktop ? 15 : 8 }}>
+            <span>P–h Diagram <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— interactive</span></span>
             <button data-tour="ref-energy-areas" onClick={() => setShowPhAreas(a => !a)} style={{
-              background: showPhAreas ? K.workIn : "none", border: `1px solid ${showPhAreas ? K.workIn : K.border}`, padding: "3px 8px",
-              color: showPhAreas ? "#fff" : K.inkMed, fontSize: sz(9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
+              background: showPhAreas ? K.workIn : "none", border: `1px solid ${showPhAreas ? K.workIn : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
+              color: showPhAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
             }}>Energy areas</button>
           </div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: desktop ? 15 : 8 }}>
             <button onClick={() => { setLockP(l => !l); if (!lockP) { setLockH(false); setLockS(false); setLockT(false); } }}
-              style={{ flex: 1, padding: "5px 0", fontSize: sz(9), fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockP ? K.accent : K.cardAlt, color: lockP ? "#fff" : K.inkMed, border: `1px solid ${lockP ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockP ? 700 : 400, transition: "all 0.15s" }}>
               {lockP ? "\u{1F512}" : "\u{1F513}"} Lock P = {(dragPoint.P || effectivePLow).toFixed(0)} kPa
             </button>
             <button onClick={() => { setLockH(l => !l); if (!lockH) { setLockP(false); setLockS(false); setLockT(false); } }}
-              style={{ flex: 1, padding: "5px 0", fontSize: sz(9), fontFamily: FM, background: lockH ? K.accent : K.cardAlt, color: lockH ? "#fff" : K.inkMed, border: `1px solid ${lockH ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockH ? 700 : 400, transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: desktop ? "7px 0" : "5px 0", fontSize: sz(desktop ? 15 : 9), fontFamily: FM, background: lockH ? K.accent : K.cardAlt, color: lockH ? "#fff" : K.inkMed, border: `1px solid ${lockH ? K.accent : K.border}`, cursor: "pointer", borderRadius: 4, fontWeight: lockH ? 700 : 400, transition: "all 0.15s" }}>
               {lockH ? "\u{1F512}" : "\u{1F513}"} Lock h = {(dragPoint.h || cycle.h1).toFixed(0)} kJ/kg
             </button>
           </div>
@@ -1614,16 +1615,16 @@ export default function RefrigerationPage({ onBack }) {
 
       {/* Row: Sliders + Table */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
-        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : { ...card, padding: "16px" }}>
+        <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : { ...card, padding: "16px" }}>
           <h3 style={sec}>Cycle Parameters</h3>
           <ParamSlider label="Condenser Pressure (P high)" unit="kPa" color={K.heatOut} value={effectivePHigh} min={Math.round(pMin + (pMax - pMin) * 0.2)} max={pMax} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPHigh} textScale={textScale} />
           <ParamSlider label="Evaporator Pressure (P low)" unit="kPa" color={K.heatIn} value={effectivePLow} min={pMin} max={Math.round(pMin + (pMax - pMin) * 0.6)} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPLow} textScale={textScale} />
-          <div style={{ marginTop: 6, fontSize: sz(9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
+          <div style={{ marginTop: 6, fontSize: sz(desktop ? 15 : 9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
             T_evap = {cycle.Tsat_low.toFixed(1)}°C &nbsp;|&nbsp; T_cond = {cycle.Tsat_high.toFixed(1)}°C &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
         </div>
-        <div style={desktop ? { padding: "18px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: sz(9), color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
+        <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
           <RefStateTable cycle={cycle} refData={refData} onSelectState={setDragPoint} textScale={textScale} />
         </div>
       </div>

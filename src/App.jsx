@@ -176,7 +176,8 @@ function tempColor(T, quality) {
   return `rgb(${r},${g},${b})`;
 }
 
-function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
+function ParticleVisualizer({ phaseInfo, temperature, fillHeight, textScale }) {
+  const ts = textScale || 1;
   const canvasRef = useRef(null);
   const particlesRef = useRef(null);
   const animRef = useRef(null);
@@ -362,26 +363,26 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
       }}>
         {phase === "two-phase" && (
           <div style={{
-            background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: fillHeight ? "18px 38px" : "8px 18px",
+            background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: fillHeight ? `${18 * ts}px ${38 * ts}px` : `${8 * ts}px ${18 * ts}px`,
             border: `1.5px solid ${K.ink}`, textAlign: "center",
           }}>
-            <div style={{ fontSize: fillHeight ? 44 : 28, fontFamily: FD, color: K.accent, lineHeight: fillHeight ? 1.02 : 1.1 }}>
+            <div style={{ fontSize: (fillHeight ? 44 : 28) * ts, fontFamily: FD, color: K.accent, lineHeight: fillHeight ? 1.02 : 1.1 }}>
               {(quality * 100).toFixed(1)}%
             </div>
-            <div style={{ fontSize: fillHeight ? 13 : 9, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: fillHeight ? 4 : 2 }}>
+            <div style={{ fontSize: (fillHeight ? 13 : 9) * ts, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: (fillHeight ? 4 : 2) * ts }}>
               QUALITY (x)
             </div>
           </div>
         )}
         {phase !== "two-phase" && (
           <div style={{
-            background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: fillHeight ? "18px 38px" : "8px 18px",
+            background: K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)", padding: fillHeight ? `${18 * ts}px ${38 * ts}px` : `${8 * ts}px ${18 * ts}px`,
             border: `1.5px solid ${K.ink}`, textAlign: "center",
           }}>
-            <div style={{ fontSize: fillHeight ? 44 : 28, fontFamily: FD, color: K.ink, lineHeight: fillHeight ? 1.02 : 1.1 }}>
+            <div style={{ fontSize: (fillHeight ? 44 : 28) * ts, fontFamily: FD, color: K.ink, lineHeight: fillHeight ? 1.02 : 1.1 }}>
               {phaseLabel}
             </div>
-            <div style={{ fontSize: fillHeight ? 13 : 9, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: fillHeight ? 4 : 2 }}>
+            <div style={{ fontSize: (fillHeight ? 13 : 9) * ts, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: (fillHeight ? 4 : 2) * ts }}>
               {phase === "subcooled" ? "x = 0 (all liquid)" : "x = 1 (all vapor)"}
             </div>
           </div>
@@ -391,13 +392,13 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight }) {
       <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 6 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.liquidBlue }} />
-          <span style={{ fontSize: fillHeight ? 18 : 10, fontFamily: FM, color: K.inkLight }}>Liquid</span>
+          <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>Liquid</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.vaporRed }} />
-          <span style={{ fontSize: fillHeight ? 18 : 10, fontFamily: FM, color: K.inkLight }}>Vapor</span>
+          <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>Vapor</span>
         </div>
-        <div style={{ fontSize: fillHeight ? 18 : 10, fontFamily: FM, color: K.inkLight }}>
+        <div style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>
           T = {temperature.toFixed(0)}°C
         </div>
       </div>
@@ -1715,10 +1716,10 @@ function RankinePage({ onBack }) {
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
   const [showTour, setShowTour] = useState(() => {
-    try { return !localStorage.getItem("tourSeen_rankine"); } catch { return false; }
+    try { return !localStorage.getItem("tourSeen"); } catch { return false; }
   });
   const [forcedTour, setForcedTour] = useState(() => {
-    try { return !localStorage.getItem("tourSeen_rankine"); } catch { return false; }
+    try { return !localStorage.getItem("tourSeen"); } catch { return false; }
   });
   const [showWelcome] = useState(false);
   const [dragPoint, setDragPoint] = useState({ s: 4.2, T: 200 });
@@ -1757,7 +1758,7 @@ function RankinePage({ onBack }) {
       {/* Header */}
       <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 10px", color: K.inkMed, fontSize: 10, cursor: "pointer", fontFamily: FM }}>← Back</button>}
+          {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "8px 16px" : "5px 10px", color: K.inkMed, fontSize: sz(desktop ? 15 : 10), cursor: "pointer", fontFamily: FM }}>← Back</button>}
         <div>
           <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
           <h1 style={{ margin: 0, fontSize: sz(desktop ? 35 : 20), fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
@@ -1772,8 +1773,8 @@ function RankinePage({ onBack }) {
         </div>
       </div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
-      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen_rankine", "1"); }} />
-      <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen_rankine", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
+      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); }} />
+      <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
@@ -1798,7 +1799,7 @@ function RankinePage({ onBack }) {
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
-          <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} fillHeight={desktop} />
+          <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} fillHeight={desktop} textScale={textScale} />
         </div>
       </div>
 
