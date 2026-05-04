@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { GuidedTour, WelcomePopup, RANKINE_TOUR_STEPS } from "./GuidedTour.jsx";
-import { UnitsPopover, loadUnits, saveUnits, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
+import { SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
 
 /* ───────── Steam Property Data ───────── */
 const STEAM_TABLE = [
@@ -177,8 +177,9 @@ function tempColor(T, quality) {
   return `rgb(${r},${g},${b})`;
 }
 
-function ParticleVisualizer({ phaseInfo, temperature, fillHeight, textScale }) {
+function ParticleVisualizer({ phaseInfo, temperature, fillHeight, textScale, units }) {
   const ts = textScale || 1;
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const canvasRef = useRef(null);
   const particlesRef = useRef(null);
   const animRef = useRef(null);
@@ -400,7 +401,7 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight, textScale }) {
           <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>Vapor</span>
         </div>
         <div style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>
-          T = {temperature.toFixed(0)}°C
+          T = {fmtT(temperature, u, 0)}
         </div>
       </div>
     </div>
@@ -588,7 +589,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         const color = isBoiler ? K.heatIn : K.heatOut;
         const T = isBoiler ? cycle.Tsat_high : cycle.Tsat_low;
         const label = isBoiler ? "T_sat(high)" : "T_sat(low)";
-        const valueText = `${label} = ${T.toFixed(1)}°C`;
+        const valueText = `${label} = ${fmtT(T, u, 1)}`;
         const boxW = Math.max(sz(104), valueText.length * sz(5.7) + sz(16));
         const boxY = TS_PLOT.y + 2;
         return (<>
@@ -980,7 +981,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         const color = isBoiler ? K.heatIn : K.heatOut;
         const label = isBoiler ? "P_high" : "P_low";
         const P = isBoiler ? cycle.pHigh : cycle.pLow;
-        const valueText = `${label} = ${P} kPa`;
+        const valueText = `${label} = ${fmtP(P, u)}`;
         const boxW = Math.max(sz(96), valueText.length * sz(5.7) + sz(16));
         const boxY = PV_PLOT.y + 2;
         return (<>
@@ -1161,17 +1162,21 @@ const COMPONENT_INFO = {
   },
 };
 
-function ComponentModal({ component, cycle, onClose }) {
+function ComponentModal({ component, cycle, onClose, units }) {
   const isWide = useIsDesktop();
   if (!component) return null;
   const info = COMPONENT_INFO[component];
   const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
+  const cH2 = (v) => f(cvtH(v, u));
+  const cP2 = (v) => f(cvtP(v, u));
+  const lH2 = lblH(u), lP2 = lblP(u);
 
   const liveValues = {
-    boiler: { main: `Q_in = ${f(cycle.qIn)} kJ/kg`, detail: `h₃ − h₂ = ${f(cycle.h3)} − ${f(cycle.h2)}` },
-    turbine: { main: `W_t = ${f(cycle.wTurbine)} kJ/kg`, detail: `h₃ − h₄ = ${f(cycle.h3)} − ${f(cycle.h4)}, x₄ = ${cycle.x4.toFixed(4)}` },
-    condenser: { main: `Q_out = −${f(cycle.qOut)} kJ/kg`, detail: `−(h₄ − h₁) = −(${f(cycle.h4)} − ${f(cycle.h1)})` },
-    pump: { main: `W_p = −${f(cycle.wPump)} kJ/kg`, detail: `−v_f·(P_H − P_L) = −0.001 × (${f(cycle.states[2].P)} − ${f(cycle.states[0].P)}), BWR = ${(cycle.bwr * 100).toFixed(2)}%` },
+    boiler: { main: `Q_in = ${cH2(cycle.qIn)} ${lH2}`, detail: `h₃ − h₂ = ${cH2(cycle.h3)} − ${cH2(cycle.h2)}` },
+    turbine: { main: `W_t = ${cH2(cycle.wTurbine)} ${lH2}`, detail: `h₃ − h₄ = ${cH2(cycle.h3)} − ${cH2(cycle.h4)}, x₄ = ${cycle.x4.toFixed(4)}` },
+    condenser: { main: `Q_out = −${cH2(cycle.qOut)} ${lH2}`, detail: `−(h₄ − h₁) = −(${cH2(cycle.h4)} − ${cH2(cycle.h1)})` },
+    pump: { main: `W_p = −${cH2(cycle.wPump)} ${lH2}`, detail: `−v_f·(P_H − P_L) = −0.001 × (${cP2(cycle.states[2].P)} − ${cP2(cycle.states[0].P)}) ${lP2}, BWR = ${(cycle.bwr * 100).toFixed(2)}%` },
   };
   const live = liveValues[component];
 
@@ -1240,17 +1245,42 @@ function SchematicDiagram({ cycle, textScale, units, animating, animProgress }) 
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
 
-  // Sprite position along 1→2→3→4→1 path (state markers at the four corners)
-  const corners = [{ x: 85, y: 273 }, { x: 85, y: 82 }, { x: 290, y: 57 }, { x: 290, y: 273 }];
+  // Sprite path: each segment is a polyline that follows the pipes through
+  // its component (not corner-to-corner). The four segments correspond to
+  // 1→pump→2, 2→boiler→3, 3→turbine→4, 4→condenser→1.
+  const SEGMENTS = [
+    [{x:85,y:273}, {x:85,y:200}, {x:85,y:144}, {x:85,y:82}],
+    [{x:85,y:82}, {x:110,y:57}, {x:250,y:57}, {x:290,y:57}],
+    [{x:290,y:57}, {x:290,y:127}, {x:290,y:219}, {x:290,y:273}],
+    [{x:290,y:273}, {x:250,y:273}, {x:110,y:273}, {x:85,y:273}],
+  ];
+  const pointAlong = (waypoints, frac) => {
+    const lens = [];
+    let total = 0;
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const a = waypoints[i], b = waypoints[i+1];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      lens.push(len); total += len;
+    }
+    if (total === 0) return waypoints[0];
+    let target = frac * total;
+    for (let i = 0; i < lens.length; i++) {
+      if (target <= lens[i] || i === lens.length - 1) {
+        const a = waypoints[i], b = waypoints[i+1];
+        const f = lens[i] === 0 ? 0 : Math.min(1, target / lens[i]);
+        return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+      }
+      target -= lens[i];
+    }
+    return waypoints[waypoints.length - 1];
+  };
   let spriteX = 85, spriteY = 273;
   if (animating != null) {
     const p = ((animProgress || 0) % 1 + 1) % 1;
     const segIdx = Math.min(3, Math.floor(p * 4));
     const frac = (p * 4) - segIdx;
-    const a = corners[segIdx];
-    const b = corners[(segIdx + 1) % 4];
-    spriteX = a.x + (b.x - a.x) * frac;
-    spriteY = a.y + (b.y - a.y) * frac;
+    const pt = pointAlong(SEGMENTS[segIdx], frac);
+    spriteX = pt.x; spriteY = pt.y;
   }
   const mk = [
     { id: "mO", c: K.heatIn }, { id: "mB", c: K.heatOut }, { id: "mG", c: K.workOut },
@@ -1334,7 +1364,7 @@ function SchematicDiagram({ cycle, textScale, units, animating, animProgress }) 
         </circle>
       </>}
     </svg>
-    <ComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
+    <ComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} units={u} />
   </>);
 }
 
@@ -1407,13 +1437,19 @@ const EQ_TOPICS = [
   { id: "states", label: "States", title: "Finding State Point Properties", color: K.ink },
 ];
 
-function EquationsModal({ open, onClose, cycle, initialTopic }) {
+function EquationsModal({ open, onClose, cycle, initialTopic, units }) {
   const [topic, setTopic] = useState("wt");
   useEffect(() => { if (initialTopic && open) setTopic(initialTopic); }, [initialTopic, open]);
   const isWide = useIsDesktop();
   if (!open) return null;
 
   const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
+  const cT = (v) => f(cvtT(v, u));
+  const cP = (v) => f(cvtP(v, u));
+  const cH = (v) => f(cvtH(v, u));
+  const cS = (v) => { const x = cvtS(v, u); return Math.abs(x) < 10 ? x.toFixed(3) : x.toFixed(2); };
+  const lT = lblT(u), lP = lblP(u), lH = lblH(u), lS = lblS(u);
   const sel = EQ_TOPICS.find(t => t.id === topic);
 
   const stepStyle = { background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px 22px" : "10px 12px", marginBottom: isWide ? 12 : 8, fontSize: isWide ? 16 : 10.5, lineHeight: 2, fontFamily: FM };
@@ -1434,19 +1470,19 @@ function EquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 1 — Find h₃ (superheated steam at turbine inlet)</div>
-          <div>At P_high = <span style={numStyle}>{f(cycle.states[2].P)}</span> kPa, T₃ = <span style={numStyle}>{f(cycle.T3)}</span>°C:</div>
+          <div>At P_high = <span style={numStyle}>{cP(cycle.states[2].P)}</span> {lP}, T₃ = <span style={numStyle}>{cT(cycle.T3)}</span> {lT}:</div>
           <div>h₃ = h_g + c_p·(T₃ − T_sat)</div>
-          <div>h₃ = <span style={numStyle}>{f(cycle.h3)}</span> kJ/kg</div>
+          <div>h₃ = <span style={numStyle}>{cH(cycle.h3)}</span> {lH}</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 2 — Find h₄ (wet mixture at turbine exit)</div>
-          <div>Since s₄ = s₃ (isentropic): s₄ = <span style={numStyle}>{f(cycle.s4)}</span> kJ/kg·K</div>
+          <div>Since s₄ = s₃ (isentropic): s₄ = <span style={numStyle}>{cS(cycle.s4)}</span> {lS}</div>
           <div>x₄ = (s₄ − s_f) / (s_g − s_f) = <span style={numStyle}>{cycle.x4.toFixed(4)}</span></div>
-          <div>h₄ = h_f + x₄·(h_g − h_f) = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg</div>
+          <div>h₄ = h_f + x₄·(h_g − h_f) = <span style={numStyle}>{cH(cycle.h4)}</span> {lH}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>W_turbine = {f(cycle.h3)} − {f(cycle.h4)} = <strong>{f(cycle.wTurbine)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>W_turbine = {cH(cycle.h3)} − {cH(cycle.h4)} = <strong>{cH(cycle.wTurbine)}</strong> {lH}</div>
         </div>
       </>);
       case "wp": return (<>
@@ -1457,21 +1493,21 @@ function EquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 1 — Find h₁ (saturated liquid at condenser pressure)</div>
-          <div>At P_low = <span style={numStyle}>{f(cycle.states[0].P)}</span> kPa:</div>
-          <div>h₁ = h_f = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg</div>
+          <div>At P_low = <span style={numStyle}>{cP(cycle.states[0].P)}</span> {lP}:</div>
+          <div>h₁ = h_f = <span style={numStyle}>{cH(cycle.h1)}</span> {lH}</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 2 — Calculate pump work magnitude</div>
           <div>v_f ≈ 0.001 m³/kg</div>
-          <div>|W_pump| = 0.001 × ({f(cycle.states[2].P)} − {f(cycle.states[0].P)}) = {f(cycle.wPump)} kJ/kg</div>
+          <div>|W_pump| = 0.001 × ({cP(cycle.states[2].P)} − {cP(cycle.states[0].P)}) = {cH(cycle.wPump)} kJ/kg</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 3 — Find h₂</div>
-          <div>h₂ = h₁ + |W_pump| = {f(cycle.h1)} + {f(cycle.wPump)} = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg</div>
+          <div>h₂ = h₁ + |W_pump| = {cH(cycle.h1)} + {cH(cycle.wPump)} = <span style={numStyle}>{cH(cycle.h2)}</span> {lH}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>W_pump = <strong>−{f(cycle.wPump)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>W_pump = <strong>−{cH(cycle.wPump)}</strong> {lH}</div>
         </div>
       </>);
       case "qin": return (<>
@@ -1482,12 +1518,12 @@ function EquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>VALUES</div>
-          <div>h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg (compressed liquid entering boiler)</div>
-          <div>h₃ = <span style={numStyle}>{f(cycle.h3)}</span> kJ/kg (superheated steam leaving boiler)</div>
+          <div>h₂ = <span style={numStyle}>{cH(cycle.h2)}</span> {lH} (compressed liquid entering boiler)</div>
+          <div>h₃ = <span style={numStyle}>{cH(cycle.h3)}</span> {lH} (superheated steam leaving boiler)</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>Q_in = {f(cycle.h3)} − {f(cycle.h2)} = <strong>{f(cycle.qIn)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>Q_in = {cH(cycle.h3)} − {cH(cycle.h2)} = <strong>{cH(cycle.qIn)}</strong> {lH}</div>
         </div>
       </>);
       case "qout": return (<>
@@ -1498,12 +1534,12 @@ function EquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>VALUES</div>
-          <div>h₄ = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg (wet mixture entering condenser)</div>
-          <div>h₁ = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg (saturated liquid leaving condenser)</div>
+          <div>h₄ = <span style={numStyle}>{cH(cycle.h4)}</span> {lH} (wet mixture entering condenser)</div>
+          <div>h₁ = <span style={numStyle}>{cH(cycle.h1)}</span> {lH} (saturated liquid leaving condenser)</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>Q_out = −({f(cycle.h4)} − {f(cycle.h1)}) = <strong>−{f(cycle.qOut)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>Q_out = −({cH(cycle.h4)} − {cH(cycle.h1)}) = <strong>−{cH(cycle.qOut)}</strong> {lH}</div>
         </div>
       </>);
       case "eta": return (<>
@@ -1514,11 +1550,11 @@ function EquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 1 — Net work (W_p is negative)</div>
-          <div>W_net = W_t + W_p = {f(cycle.wTurbine)} + (−{f(cycle.wPump)}) = <span style={numStyle}>{f(cycle.wNet)}</span> kJ/kg</div>
+          <div>W_net = W_t + W_p = {cH(cycle.wTurbine)} + (−{cH(cycle.wPump)}) = <span style={numStyle}>{cH(cycle.wNet)}</span> {lH}</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 2 — Divide by heat input</div>
-          <div>η_th = {f(cycle.wNet)} / {f(cycle.qIn)}</div>
+          <div>η_th = {cH(cycle.wNet)} / {cH(cycle.qIn)}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
@@ -1533,15 +1569,15 @@ function EquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>METHOD 1 — From work terms</div>
-          <div>W_net = {f(cycle.wTurbine)} + (−{f(cycle.wPump)}) = <span style={numStyle}>{f(cycle.wNet)}</span> kJ/kg</div>
+          <div>W_net = {cH(cycle.wTurbine)} + (−{cH(cycle.wPump)}) = <span style={numStyle}>{cH(cycle.wNet)}</span> {lH}</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>METHOD 2 — From heat terms (verify)</div>
-          <div>W_net = {f(cycle.qIn)} + (−{f(cycle.qOut)}) = <span style={numStyle}>{f(cycle.qIn - cycle.qOut)}</span> kJ/kg</div>
+          <div>W_net = {cH(cycle.qIn)} + (−{cH(cycle.qOut)}) = <span style={numStyle}>{cH(cycle.qIn - cycle.qOut)}</span> {lH}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>W_net = <strong>{f(cycle.wNet)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>W_net = <strong>{cH(cycle.wNet)}</strong> {lH}</div>
         </div>
       </>);
       case "x4": return (<>
@@ -1552,20 +1588,20 @@ function EquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 1 — s₃ from superheated state</div>
-          <div>s₃ = s₄ = <span style={numStyle}>{f(cycle.s3)}</span> kJ/kg·K (isentropic)</div>
+          <div>s₃ = s₄ = <span style={numStyle}>{cS(cycle.s3)}</span> {lS} (isentropic)</div>
         </div>
         <div style={stepStyle}>
-          <div style={labelStyle}>STEP 2 — Look up sat. properties at P_low = {f(cycle.states[0].P)} kPa</div>
-          <div>s_f = <span style={numStyle}>{f(cycle.s1)}</span> kJ/kg·K</div>
-          <div>s_g = <span style={numStyle}>{interpSteam(cycle.states[0].P, "sg").toFixed(3)}</span> kJ/kg·K</div>
+          <div style={labelStyle}>STEP 2 — Look up sat. properties at P_low = {cP(cycle.states[0].P)} kPa</div>
+          <div>s_f = <span style={numStyle}>{cS(cycle.s1)}</span> {lS}</div>
+          <div>s_g = <span style={numStyle}>{cS(interpSteam(cycle.states[0].P, "sg"))}</span> {lS}</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 3 — Calculate quality</div>
-          <div>x₄ = ({f(cycle.s4)} − {f(cycle.s1)}) / ({interpSteam(cycle.states[0].P, "sg").toFixed(3)} − {f(cycle.s1)})</div>
+          <div>x₄ = ({cS(cycle.s4)} − {cS(cycle.s1)}) / ({cS(interpSteam(cycle.states[0].P, "sg"))} − {cS(cycle.s1)})</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 4 — Find h₄</div>
-          <div>h₄ = h_f + x₄·h_fg = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg</div>
+          <div>h₄ = h_f + x₄·h_fg = <span style={numStyle}>{cH(cycle.h4)}</span> {lH}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
@@ -1580,7 +1616,7 @@ function EquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>CALCULATION</div>
-          <div>BWR = |W_pump| / W_turbine = {f(cycle.wPump)} / {f(cycle.wTurbine)}</div>
+          <div>BWR = |W_pump| / W_turbine = {cH(cycle.wPump)} / {cH(cycle.wTurbine)}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
@@ -1590,23 +1626,23 @@ function EquationsModal({ open, onClose, cycle, initialTopic }) {
       case "states": return (<>
         <div style={stepStyle}>
           <div style={labelStyle}>STATE 1 — Saturated Liquid at P_low</div>
-          <div>P₁ = <span style={numStyle}>{f(cycle.states[0].P)}</span> kPa → look up sat. liquid properties</div>
-          <div>T₁ = T_sat = <span style={numStyle}>{f(cycle.T1)}</span>°C, h₁ = h_f = <span style={numStyle}>{f(cycle.h1)}</span>, s₁ = s_f = <span style={numStyle}>{f(cycle.s1)}</span></div>
+          <div>P₁ = <span style={numStyle}>{cP(cycle.states[0].P)}</span> {lP} → look up sat. liquid properties</div>
+          <div>T₁ = T_sat = <span style={numStyle}>{cT(cycle.T1)}</span> {lT}, h₁ = h_f = <span style={numStyle}>{cH(cycle.h1)}</span>, s₁ = s_f = <span style={numStyle}>{cS(cycle.s1)}</span></div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STATE 2 — Compressed Liquid at P_high</div>
-          <div>h₂ = h₁ + v_f·(P₂ − P₁) = {f(cycle.h1)} + 0.001×({f(cycle.states[2].P)} − {f(cycle.states[0].P)})</div>
-          <div>h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg, T₂ ≈ <span style={numStyle}>{f(cycle.T2)}</span>°C</div>
+          <div>h₂ = h₁ + v_f·(P₂ − P₁) = {cH(cycle.h1)} + 0.001×({cP(cycle.states[2].P)} − {cP(cycle.states[0].P)})</div>
+          <div>h₂ = <span style={numStyle}>{cH(cycle.h2)}</span> {lH}, T₂ ≈ <span style={numStyle}>{cT(cycle.T2)}</span> {lT}</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STATE 3 — Superheated Vapor at P_high, T₃</div>
-          <div>Given: P₃ = <span style={numStyle}>{f(cycle.states[2].P)}</span> kPa, T₃ = <span style={numStyle}>{f(cycle.T3)}</span>°C</div>
-          <div>Look up (or interpolate): h₃ = <span style={numStyle}>{f(cycle.h3)}</span>, s₃ = <span style={numStyle}>{f(cycle.s3)}</span></div>
+          <div>Given: P₃ = <span style={numStyle}>{cP(cycle.states[2].P)}</span> {lP}, T₃ = <span style={numStyle}>{cT(cycle.T3)}</span> {lT}</div>
+          <div>Look up (or interpolate): h₃ = <span style={numStyle}>{cH(cycle.h3)}</span>, s₃ = <span style={numStyle}>{cS(cycle.s3)}</span></div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STATE 4 — Wet Mixture at P_low</div>
-          <div>s₄ = s₃ = <span style={numStyle}>{f(cycle.s4)}</span> (isentropic expansion)</div>
-          <div>x₄ = <span style={numStyle}>{cycle.x4.toFixed(4)}</span>, h₄ = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg, T₄ = <span style={numStyle}>{f(cycle.T4)}</span>°C</div>
+          <div>s₄ = s₃ = <span style={numStyle}>{cS(cycle.s4)}</span> (isentropic expansion)</div>
+          <div>x₄ = <span style={numStyle}>{cycle.x4.toFixed(4)}</span>, h₄ = <span style={numStyle}>{cH(cycle.h4)}</span> {lH}, T₄ = <span style={numStyle}>{cT(cycle.T4)}</span> {lT}</div>
         </div>
       </>);
       default: return null;
@@ -1760,10 +1796,12 @@ function RankinePage({ onBack }) {
   const [shareCopied, setShareCopied] = useState(false);
   const [eqsCopied, setEqsCopied] = useState(false);
   const [units, setUnits] = useState(() => loadUnits());
-  const [showUnits, setShowUnits] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const handleUnitsChange = useCallback((u) => { setUnits(u); saveUnits(u); }, []);
   const [animating, setAnimating] = useState(false);
   const [animProgress, setAnimProgress] = useState(0);
+  const [animSpeed, setAnimSpeed] = useState(() => loadAnimSpeed());
+  const handleAnimSpeedChange = useCallback((v) => { setAnimSpeed(v); saveAnimSpeed(v); }, []);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
@@ -1790,10 +1828,10 @@ function RankinePage({ onBack }) {
   const phaseInfo = useMemo(() => getPhaseInfo(dragPoint.s, dragPoint.T), [dragPoint]);
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
 
-  // Animate the cycle: dragPoint walks along 1→2→3→4→1 (~6s loop)
+  // Animate the cycle: dragPoint walks along 1→2→3→4→1 (~6s loop at 1×)
   useEffect(() => {
     if (!animating) return;
-    const segMs = 1500;
+    const segMs = 1500 / Math.max(0.05, animSpeed);
     const totalMs = segMs * 4;
     let raf;
     const t0 = performance.now();
@@ -1811,7 +1849,7 @@ function RankinePage({ onBack }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [animating, cycle]);
+  }, [animating, cycle, animSpeed]);
 
   const desktop = useIsDesktop();
   const gap = desktop ? 25 : 12;
@@ -1844,12 +1882,16 @@ function RankinePage({ onBack }) {
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <button data-tour="theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
-          <button onClick={() => setShowUnits(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Units</button>
+          <button onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
           <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
         </div>
       </div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} />
-      <UnitsPopover open={showUnits} units={units} onChange={handleUnitsChange} onClose={() => setShowUnits(false)} K={K} FD={FD} FM={FM} />
+      <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} K={K} FD={FD} FM={FM}
+        textScale={textScale} onTextScaleChange={handleScaleChange}
+        darkMode={darkMode} onDarkModeToggle={toggleDarkMode}
+        units={units} onUnitsChange={handleUnitsChange}
+        animSpeed={animSpeed} onAnimSpeedChange={handleAnimSpeedChange} />
       <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); }} />
       <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
@@ -1876,7 +1918,7 @@ function RankinePage({ onBack }) {
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
-          <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} fillHeight={desktop} textScale={textScale} />
+          <ParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} fillHeight={desktop} textScale={textScale} units={units} />
         </div>
       </div>
 
@@ -1944,15 +1986,15 @@ function RankinePage({ onBack }) {
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>
-      <EquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} />
+      <EquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} units={units} />
 
       {/* Row: Sliders + Table (side by side on desktop) */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : { ...card, padding: "16px" }}>
           <h3 style={sec}>Cycle Parameters</h3>
-          <ParamSlider label="Boiler Pressure (P high)" unit="kPa" color={K.heatIn} value={pHigh} min={500} max={25000} step={100} onChange={setPHigh} textScale={textScale} />
-          <ParamSlider label="Condenser Pressure (P low)" unit="kPa" color={K.heatOut} value={pLow} min={5} max={100} step={1} onChange={setPLow} textScale={textScale} />
-          <ParamSlider label="Superheat Temperature (T₃)" unit="°C" color={K.workOut} value={adjustedTSup} min={minTSup} max={600} step={5} onChange={v => setTSup(v)} textScale={textScale} />
+          <ParamSlider label="Boiler Pressure (P high)" kind="P" color={K.heatIn} value={pHigh} min={500} max={25000} step={100} onChange={setPHigh} textScale={textScale} units={units} />
+          <ParamSlider label="Condenser Pressure (P low)" kind="P" color={K.heatOut} value={pLow} min={5} max={100} step={1} onChange={setPLow} textScale={textScale} units={units} />
+          <ParamSlider label="Superheat Temperature (T₃)" kind="T" color={K.workOut} value={adjustedTSup} min={minTSup} max={600} step={5} onChange={v => setTSup(v)} textScale={textScale} units={units} />
           <div style={{ marginTop: 6, fontSize: sz(desktop ? 15 : 9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
             T_sat at P_high = {fmtT(tSatHigh, units)} &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
@@ -2012,11 +2054,7 @@ function RankinePage({ onBack }) {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
-        <button data-tour="dark-mode" onClick={toggleDarkMode} style={{
-          background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
-          color: K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
-        }}>{darkMode ? "☀ Light Mode" : "☾ Dark Mode"}</button>
+      <div data-tour="dark-mode" style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
         <button onClick={() => {
           const u = `${window.location.origin}${window.location.pathname}?view=rankine&pHigh=${pHigh}&pLow=${pLow}&tSup=${adjustedTSup}`;
           navigator.clipboard.writeText(u).then(() => { setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); });
@@ -2025,21 +2063,26 @@ function RankinePage({ onBack }) {
           color: shareCopied ? "#fff" : K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{shareCopied ? "✓ Link Copied" : "🔗 Share Setup"}</button>
         <button onClick={() => {
+          const lT = lblT(units), lP = lblP(units), lH = lblH(units), lS = lblS(units);
+          const T_ = (v) => cvtT(v, units).toFixed(2);
+          const P_ = (v) => cvtP(v, units).toFixed(units.P === "MPa" ? 3 : units.P === "bar" || units.P === "atm" ? 2 : 0);
+          const H_ = (v) => cvtH(v, units).toFixed(2);
+          const S_ = (v) => cvtS(v, units).toFixed(4);
           const text = [
             `RANKINE CYCLE — Solution`,
-            `Inputs: P_high = ${pHigh} kPa, P_low = ${pLow} kPa, T_3 = ${adjustedTSup} °C`,
+            `Inputs: P_high = ${P_(pHigh)} ${lP}, P_low = ${P_(pLow)} ${lP}, T_3 = ${T_(adjustedTSup)} ${lT}`,
             ``,
-            `State 1 (sat. liquid at P_low):  T = ${cycle.states[0].T.toFixed(2)} °C, h = ${cycle.states[0].h.toFixed(2)} kJ/kg, s = ${cycle.states[0].s.toFixed(4)} kJ/kg·K`,
-            `State 2 (after pump, P_high):   T = ${cycle.states[1].T.toFixed(2)} °C, h = ${cycle.states[1].h.toFixed(2)} kJ/kg, s = ${cycle.states[1].s.toFixed(4)} kJ/kg·K`,
-            `State 3 (boiler exit, P_high):  T = ${cycle.states[2].T.toFixed(2)} °C, h = ${cycle.states[2].h.toFixed(2)} kJ/kg, s = ${cycle.states[2].s.toFixed(4)} kJ/kg·K`,
-            `State 4 (turbine exit, P_low):  T = ${cycle.states[3].T.toFixed(2)} °C, h = ${cycle.states[3].h.toFixed(2)} kJ/kg, s = ${cycle.states[3].s.toFixed(4)} kJ/kg·K, x_4 = ${cycle.x4.toFixed(4)}`,
+            `State 1 (sat. liquid at P_low):  T = ${T_(cycle.states[0].T)} ${lT}, h = ${H_(cycle.states[0].h)} ${lH}, s = ${S_(cycle.states[0].s)} ${lS}`,
+            `State 2 (after pump, P_high):   T = ${T_(cycle.states[1].T)} ${lT}, h = ${H_(cycle.states[1].h)} ${lH}, s = ${S_(cycle.states[1].s)} ${lS}`,
+            `State 3 (boiler exit, P_high):  T = ${T_(cycle.states[2].T)} ${lT}, h = ${H_(cycle.states[2].h)} ${lH}, s = ${S_(cycle.states[2].s)} ${lS}`,
+            `State 4 (turbine exit, P_low):  T = ${T_(cycle.states[3].T)} ${lT}, h = ${H_(cycle.states[3].h)} ${lH}, s = ${S_(cycle.states[3].s)} ${lS}, x_4 = ${cycle.x4.toFixed(4)}`,
             ``,
-            `Pump:      W_pump  = h2 − h1 = ${fmt(cycle.wPump)} kJ/kg`,
-            `Boiler:    Q_in    = h3 − h2 = ${fmt(cycle.qIn)} kJ/kg`,
-            `Turbine:   W_turb  = h3 − h4 = ${fmt(cycle.wTurbine)} kJ/kg`,
-            `Condenser: Q_out   = h4 − h1 = ${fmt(cycle.qOut)} kJ/kg`,
+            `Pump:      W_pump  = h2 − h1 = ${H_(cycle.wPump)} ${lH}`,
+            `Boiler:    Q_in    = h3 − h2 = ${H_(cycle.qIn)} ${lH}`,
+            `Turbine:   W_turb  = h3 − h4 = ${H_(cycle.wTurbine)} ${lH}`,
+            `Condenser: Q_out   = h4 − h1 = ${H_(cycle.qOut)} ${lH}`,
             ``,
-            `W_net = W_turb − W_pump = ${fmt(cycle.wNet)} kJ/kg`,
+            `W_net = W_turb − W_pump = ${H_(cycle.wNet)} ${lH}`,
             `η_th  = W_net / Q_in    = ${(cycle.eta * 100).toFixed(2)} %`,
             `BWR   = W_pump / W_turb = ${(cycle.bwr * 100).toFixed(2)} %`,
           ].join("\n");

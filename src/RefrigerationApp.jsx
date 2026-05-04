@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop, UnitsPopover, loadUnits, saveUnits, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
+import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop, SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
 let K = K_LIGHT;
 import { REFRIGERANTS, interpRefrigerant, getRefrigerantDomeBounds, getRefrigerantPhaseInfo, getDefaultPressures } from "./refrigerantData.js";
 import { GuidedTour, WelcomePopup, REF_TOUR_STEPS } from "./GuidedTour.jsx";
@@ -88,8 +88,9 @@ function calculateRefrigerationCycle(ref, pHigh, pLow) {
 
 /* ───────── Particle Visualizer (matches steam cycle dynamics) ───────── */
 const NUM_PARTICLES = 600;
-function RefParticleVisualizer({ phaseInfo, temperature, criticalT, fillHeight, textScale }) {
+function RefParticleVisualizer({ phaseInfo, temperature, criticalT, fillHeight, textScale, units }) {
   const ts = textScale || 1;
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const canvasRef = useRef(null);
   const particlesRef = useRef(null);
   const animRef = useRef(null);
@@ -241,7 +242,7 @@ function RefParticleVisualizer({ phaseInfo, temperature, criticalT, fillHeight, 
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: K.vaporRed }} />
           <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>Vapor</span>
         </div>
-        <div style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>T = {temperature.toFixed(0)}°C</div>
+        <div style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>T = {fmtT(temperature, u, 0)}</div>
       </div>
     </div>
   );
@@ -463,7 +464,7 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
         const color = isCond ? K.heatOut : K.heatIn;
         const T = isCond ? cycle.Tsat_high : cycle.Tsat_low;
         const label = isCond ? "T_cond" : "T_evap";
-        const valueText = `${label} = ${T.toFixed(1)}°C`;
+        const valueText = `${label} = ${fmtT(T, u, 1)}`;
         const boxW = Math.max(sz(104), valueText.length * sz(5.7) + sz(16));
         const boxX = TS_PLOT.x + 4;
         const boxY = TS_PLOT.y + 2;
@@ -757,7 +758,7 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
         const color = isCond ? K.heatOut : K.heatIn;
         const P = isCond ? st[1].P : st[0].P;
         const label = isCond ? "P_cond" : "P_evap";
-        const valueText = `${label} = ${P >= 1000 ? (P/1000).toFixed(1) + "k" : P} kPa`;
+        const valueText = `${label} = ${fmtP(P, u)}`;
         const boxW = Math.max(sz(104), valueText.length * sz(5.7) + sz(16));
         const boxX = PH_PLOT.x + 4;
         const boxY = PH_PLOT.y + 2;
@@ -920,18 +921,21 @@ const REF_COMPONENT_INFO = {
   },
 };
 
-function RefComponentModal({ component, cycle, onClose }) {
+function RefComponentModal({ component, cycle, onClose, units }) {
   const isWide = useIsDesktop();
   if (!component) return null;
   const info = REF_COMPONENT_INFO[component];
   const color = info.color();
   const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
+  const cH = (v) => f(cvtH(v, u));
+  const lH = lblH(u);
 
   const liveValues = {
-    compressor: { main: `W_comp = ${f(cycle.wComp)} kJ/kg`, detail: `h₂ − h₁ = ${f(cycle.h2)} − ${f(cycle.h1)}` },
-    condenser: { main: `Q_cond = ${f(cycle.qCond)} kJ/kg`, detail: `h₂ − h₃ = ${f(cycle.h2)} − ${f(cycle.h3)}` },
-    expvalve: { main: `h₃ = h₄ = ${f(cycle.h3)} kJ/kg`, detail: `x₄ = ${cycle.x4.toFixed(4)} (${(cycle.x4 * 100).toFixed(1)}% vapor)` },
-    evaporator: { main: `Q_evap = ${f(cycle.qEvap)} kJ/kg`, detail: `h₁ − h₄ = ${f(cycle.h1)} − ${f(cycle.h4)}` },
+    compressor: { main: `W_comp = ${cH(cycle.wComp)} ${lH}`, detail: `h₂ − h₁ = ${cH(cycle.h2)} − ${cH(cycle.h1)}` },
+    condenser: { main: `Q_cond = ${cH(cycle.qCond)} ${lH}`, detail: `h₂ − h₃ = ${cH(cycle.h2)} − ${cH(cycle.h3)}` },
+    expvalve: { main: `h₃ = h₄ = ${cH(cycle.h3)} ${lH}`, detail: `x₄ = ${cycle.x4.toFixed(4)} (${(cycle.x4 * 100).toFixed(1)}% vapor)` },
+    evaporator: { main: `Q_evap = ${cH(cycle.qEvap)} ${lH}`, detail: `h₁ − h₄ = ${cH(cycle.h1)} − ${cH(cycle.h4)}` },
   };
   const live = liveValues[component];
 
@@ -985,16 +989,40 @@ function RefSchematicDiagram({ cycle, textScale, units, animating, animProgress 
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
 
-  const corners = [{ x: 68, y: 273 }, { x: 68, y: 82 }, { x: 273, y: 57 }, { x: 273, y: 273 }];
+  // Sprite path follows the pipes through compressor, condenser, valve, evaporator
+  const SEGMENTS = [
+    [{x:68,y:273}, {x:68,y:207}, {x:68,y:137}, {x:68,y:82}],
+    [{x:68,y:82}, {x:110,y:57}, {x:250,y:57}, {x:273,y:57}],
+    [{x:273,y:57}, {x:273,y:152}, {x:273,y:192}, {x:273,y:273}],
+    [{x:273,y:273}, {x:250,y:273}, {x:110,y:273}, {x:68,y:273}],
+  ];
+  const pointAlong = (waypoints, frac) => {
+    const lens = [];
+    let total = 0;
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const a = waypoints[i], b = waypoints[i+1];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      lens.push(len); total += len;
+    }
+    if (total === 0) return waypoints[0];
+    let target = frac * total;
+    for (let i = 0; i < lens.length; i++) {
+      if (target <= lens[i] || i === lens.length - 1) {
+        const a = waypoints[i], b = waypoints[i+1];
+        const f = lens[i] === 0 ? 0 : Math.min(1, target / lens[i]);
+        return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+      }
+      target -= lens[i];
+    }
+    return waypoints[waypoints.length - 1];
+  };
   let spriteX = 68, spriteY = 273;
   if (animating != null) {
     const p = ((animProgress || 0) % 1 + 1) % 1;
     const segIdx = Math.min(3, Math.floor(p * 4));
     const frac = (p * 4) - segIdx;
-    const a = corners[segIdx];
-    const b = corners[(segIdx + 1) % 4];
-    spriteX = a.x + (b.x - a.x) * frac;
-    spriteY = a.y + (b.y - a.y) * frac;
+    const pt = pointAlong(SEGMENTS[segIdx], frac);
+    spriteX = pt.x; spriteY = pt.y;
   }
   const mk = [
     { id: "rO", c: K.heatIn }, { id: "rB", c: K.heatOut }, { id: "rY", c: K.workIn },
@@ -1078,7 +1106,7 @@ function RefSchematicDiagram({ cycle, textScale, units, animating, animProgress 
         </circle>
       </>}
     </svg>
-    <RefComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} />
+    <RefComponentModal component={activeComponent} cycle={cycle} onClose={() => setActiveComponent(null)} units={u} />
   </>);
 }
 
@@ -1151,13 +1179,19 @@ const REF_EQ_TOPICS = [
   { id: "states", label: "States", title: "State Point Properties", color: K.ink },
 ];
 
-function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
+function RefEquationsModal({ open, onClose, cycle, initialTopic, units }) {
   const [topic, setTopic] = useState("wc");
   useEffect(() => { if (initialTopic && open) setTopic(initialTopic); }, [initialTopic, open]);
   const isWide = useIsDesktop();
   if (!open) return null;
 
   const f = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
+  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
+  const cT = (v) => f(cvtT(v, u));
+  const cP = (v) => f(cvtP(v, u));
+  const cH = (v) => f(cvtH(v, u));
+  const cS = (v) => { const x = cvtS(v, u); return Math.abs(x) < 10 ? x.toFixed(3) : x.toFixed(2); };
+  const lT = lblT(u), lP = lblP(u), lH = lblH(u), lS = lblS(u);
   const sel = REF_EQ_TOPICS.find(t => t.id === topic);
   const stepStyle = { background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px 22px" : "10px 12px", marginBottom: isWide ? 12 : 8, fontSize: isWide ? 16 : 10.5, lineHeight: 2, fontFamily: FM };
   const numStyle = { color: K.accent, fontWeight: 700 };
@@ -1177,17 +1211,17 @@ function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 1 — h₁ at evaporator exit (sat. vapor at P_low)</div>
-          <div>h₁ = h_g at P_low = <span style={numStyle}>{f(cycle.states[0].P)}</span> kPa</div>
-          <div>h₁ = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg</div>
+          <div>h₁ = h_g at P_low = <span style={numStyle}>{cP(cycle.states[0].P)}</span> {lP}</div>
+          <div>h₁ = <span style={numStyle}>{cH(cycle.h1)}</span> {lH}</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 2 — h₂ after isentropic compression to P_high</div>
-          <div>s₂ = s₁ = <span style={numStyle}>{f(cycle.s1)}</span> kJ/kg·K (isentropic)</div>
-          <div>h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg, T₂ = <span style={numStyle}>{f(cycle.T2)}</span>°C</div>
+          <div>s₂ = s₁ = <span style={numStyle}>{cS(cycle.s1)}</span> {lS} (isentropic)</div>
+          <div>h₂ = <span style={numStyle}>{cH(cycle.h2)}</span> {lH}, T₂ = <span style={numStyle}>{cT(cycle.T2)}</span> {lT}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>W_comp = {f(cycle.h2)} − {f(cycle.h1)} = <strong>{f(cycle.wComp)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>W_comp = {cH(cycle.h2)} − {cH(cycle.h1)} = <strong>{cH(cycle.wComp)}</strong> {lH}</div>
         </div>
       </>);
       case "qe": return (<>
@@ -1198,12 +1232,12 @@ function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>VALUES</div>
-          <div>h₁ = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg (sat. vapor at evap. exit)</div>
-          <div>h₄ = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg (two-phase at valve exit)</div>
+          <div>h₁ = <span style={numStyle}>{cH(cycle.h1)}</span> {lH} (sat. vapor at evap. exit)</div>
+          <div>h₄ = <span style={numStyle}>{cH(cycle.h4)}</span> {lH} (two-phase at valve exit)</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>Q_evap = {f(cycle.h1)} − {f(cycle.h4)} = <strong>{f(cycle.qEvap)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>Q_evap = {cH(cycle.h1)} − {cH(cycle.h4)} = <strong>{cH(cycle.qEvap)}</strong> {lH}</div>
         </div>
       </>);
       case "qc": return (<>
@@ -1214,16 +1248,16 @@ function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>VALUES</div>
-          <div>h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg (superheated at comp. exit)</div>
-          <div>h₃ = <span style={numStyle}>{f(cycle.h3)}</span> kJ/kg (sat. liquid at cond. exit)</div>
+          <div>h₂ = <span style={numStyle}>{cH(cycle.h2)}</span> {lH} (superheated at comp. exit)</div>
+          <div>h₃ = <span style={numStyle}>{cH(cycle.h3)}</span> {lH} (sat. liquid at cond. exit)</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>VERIFY — Energy balance</div>
-          <div>Q_cond = Q_evap + W_comp = {f(cycle.qEvap)} + {f(cycle.wComp)} = <span style={numStyle}>{f(cycle.qEvap + cycle.wComp)}</span></div>
+          <div>Q_cond = Q_evap + W_comp = {cH(cycle.qEvap)} + {cH(cycle.wComp)} = <span style={numStyle}>{cH(cycle.qEvap + cycle.wComp)}</span></div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
-          <div style={resultValueStyle}>Q_cond = {f(cycle.h2)} − {f(cycle.h3)} = <strong>{f(cycle.qCond)}</strong> kJ/kg</div>
+          <div style={resultValueStyle}>Q_cond = {cH(cycle.h2)} − {cH(cycle.h3)} = <strong>{cH(cycle.qCond)}</strong> {lH}</div>
         </div>
       </>);
       case "copc": return (<>
@@ -1234,7 +1268,7 @@ function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>CALCULATION</div>
-          <div>COP_cool = {f(cycle.qEvap)} / {f(cycle.wComp)}</div>
+          <div>COP_cool = {cH(cycle.qEvap)} / {cH(cycle.wComp)}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
@@ -1249,7 +1283,7 @@ function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>CALCULATION</div>
-          <div>COP_heat = {f(cycle.qCond)} / {f(cycle.wComp)}</div>
+          <div>COP_heat = {cH(cycle.qCond)} / {cH(cycle.wComp)}</div>
           <div style={{ color: K.inkLight, marginTop: 4 }}>Or: COP_heat = COP_cool + 1 = {cycle.copCool.toFixed(2)} + 1 = <span style={numStyle}>{(cycle.copCool + 1).toFixed(2)}</span></div>
         </div>
         <div style={resultStyle}>
@@ -1265,12 +1299,12 @@ function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 1 — h₄ from isenthalpic expansion</div>
-          <div>h₄ = h₃ = h_f at P_high = <span style={numStyle}>{f(cycle.h3)}</span> kJ/kg</div>
+          <div>h₄ = h₃ = h_f at P_high = <span style={numStyle}>{cH(cycle.h3)}</span> {lH}</div>
         </div>
         <div style={stepStyle}>
-          <div style={labelStyle}>STEP 2 — Sat. properties at P_low = {f(cycle.states[0].P)} kPa</div>
-          <div>h_f = <span style={numStyle}>{cycle.x4 < 1 ? f((cycle.h4 - cycle.x4 * cycle.h1) / (1 - cycle.x4)) : "—"}</span> kJ/kg</div>
-          <div>h_g = <span style={numStyle}>{f(cycle.h1)}</span> kJ/kg</div>
+          <div style={labelStyle}>STEP 2 — Sat. properties at P_low = {cP(cycle.states[0].P)} {lP}</div>
+          <div>h_f = <span style={numStyle}>{cycle.x4 < 1 ? cH((cycle.h4 - cycle.x4 * cycle.h1) / (1 - cycle.x4)) : "—"}</span> {lH}</div>
+          <div>h_g = <span style={numStyle}>{cH(cycle.h1)}</span> {lH}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
@@ -1280,23 +1314,23 @@ function RefEquationsModal({ open, onClose, cycle, initialTopic }) {
       case "states": return (<>
         <div style={stepStyle}>
           <div style={labelStyle}>STATE 1 — Saturated Vapor at P_low (Evaporator Exit)</div>
-          <div>P₁ = <span style={numStyle}>{f(cycle.states[0].P)}</span> kPa → sat. vapor properties</div>
-          <div>T₁ = <span style={numStyle}>{f(cycle.T1)}</span>°C, h₁ = h_g = <span style={numStyle}>{f(cycle.h1)}</span>, s₁ = s_g = <span style={numStyle}>{f(cycle.s1)}</span></div>
+          <div>P₁ = <span style={numStyle}>{cP(cycle.states[0].P)}</span> {lP} → sat. vapor properties</div>
+          <div>T₁ = <span style={numStyle}>{cT(cycle.T1)}</span> {lT}, h₁ = h_g = <span style={numStyle}>{cH(cycle.h1)}</span>, s₁ = s_g = <span style={numStyle}>{cS(cycle.s1)}</span></div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STATE 2 — Superheated Vapor at P_high (Compressor Exit)</div>
-          <div>Isentropic: s₂ = s₁ = <span style={numStyle}>{f(cycle.s2)}</span> kJ/kg·K</div>
-          <div>T₂ = <span style={numStyle}>{f(cycle.T2)}</span>°C, h₂ = <span style={numStyle}>{f(cycle.h2)}</span> kJ/kg</div>
+          <div>Isentropic: s₂ = s₁ = <span style={numStyle}>{cS(cycle.s2)}</span> {lS}</div>
+          <div>T₂ = <span style={numStyle}>{cT(cycle.T2)}</span> {lT}, h₂ = <span style={numStyle}>{cH(cycle.h2)}</span> {lH}</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STATE 3 — Saturated Liquid at P_high (Condenser Exit)</div>
-          <div>P₃ = <span style={numStyle}>{f(cycle.states[2].P)}</span> kPa → sat. liquid properties</div>
-          <div>T₃ = <span style={numStyle}>{f(cycle.T3)}</span>°C, h₃ = h_f = <span style={numStyle}>{f(cycle.h3)}</span>, s₃ = s_f = <span style={numStyle}>{f(cycle.s3)}</span></div>
+          <div>P₃ = <span style={numStyle}>{cP(cycle.states[2].P)}</span> kPa → sat. liquid properties</div>
+          <div>T₃ = <span style={numStyle}>{cT(cycle.T3)}</span> {lT}, h₃ = h_f = <span style={numStyle}>{cH(cycle.h3)}</span>, s₃ = s_f = <span style={numStyle}>{cS(cycle.s3)}</span></div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STATE 4 — Two-Phase Mixture at P_low (Valve Exit)</div>
-          <div>Isenthalpic: h₄ = h₃ = <span style={numStyle}>{f(cycle.h4)}</span> kJ/kg</div>
-          <div>x₄ = <span style={numStyle}>{cycle.x4.toFixed(4)}</span>, T₄ = <span style={numStyle}>{f(cycle.T4)}</span>°C, s₄ = <span style={numStyle}>{f(cycle.s4)}</span></div>
+          <div>Isenthalpic: h₄ = h₃ = <span style={numStyle}>{cH(cycle.h4)}</span> {lH}</div>
+          <div>x₄ = <span style={numStyle}>{cycle.x4.toFixed(4)}</span>, T₄ = <span style={numStyle}>{cT(cycle.T4)}</span> {lT}, s₄ = <span style={numStyle}>{cS(cycle.s4)}</span></div>
         </div>
       </>);
       default: return null;
@@ -1468,10 +1502,12 @@ export default function RefrigerationPage({ onBack }) {
   const [shareCopied, setShareCopied] = useState(false);
   const [eqsCopied, setEqsCopied] = useState(false);
   const [units, setUnits] = useState(() => loadUnits());
-  const [showUnits, setShowUnits] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const handleUnitsChange = useCallback((up) => { setUnits(up); saveUnits(up); }, []);
   const [animating, setAnimating] = useState(false);
   const [animProgress, setAnimProgress] = useState(0);
+  const [animSpeed, setAnimSpeed] = useState(() => loadAnimSpeed());
+  const handleAnimSpeedChange = useCallback((v) => { setAnimSpeed(v); saveAnimSpeed(v); }, []);
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
@@ -1515,10 +1551,10 @@ export default function RefrigerationPage({ onBack }) {
   const phaseInfo = useMemo(() => getRefrigerantPhaseInfo(table, dragPoint.s, dragPoint.T), [table, dragPoint.s, dragPoint.T]);
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
 
-  // Animate the cycle: dragPoint walks 1→2→3→4→1 (~6s loop)
+  // Animate the cycle: dragPoint walks 1→2→3→4→1 (~6s loop at 1×)
   useEffect(() => {
     if (!animating) return;
-    const segMs = 1500;
+    const segMs = 1500 / Math.max(0.05, animSpeed);
     const totalMs = segMs * 4;
     let raf;
     const t0 = performance.now();
@@ -1538,7 +1574,7 @@ export default function RefrigerationPage({ onBack }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [animating, cycle]);
+  }, [animating, cycle, animSpeed]);
 
   const desktop = useIsDesktop();
   const gap = desktop ? 25 : 12;
@@ -1606,7 +1642,7 @@ export default function RefrigerationPage({ onBack }) {
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
             <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
-            <button onClick={() => setShowUnits(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Units</button>
+            <button onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
             <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
@@ -1627,7 +1663,11 @@ export default function RefrigerationPage({ onBack }) {
 
       <RefInfoModal open={showInfo} onClose={() => setShowInfo(false)} />
       <RefrigerantInfoModal open={showRefInfo} onClose={() => setShowRefInfo(false)} currentRef={refData} />
-      <UnitsPopover open={showUnits} units={units} onChange={handleUnitsChange} onClose={() => setShowUnits(false)} K={K} FD={FD} FM={FM} />
+      <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} K={K} FD={FD} FM={FM}
+        textScale={textScale} onTextScaleChange={handleScaleChange}
+        darkMode={darkMode} onDarkModeToggle={toggleDarkMode}
+        units={units} onUnitsChange={handleUnitsChange}
+        animSpeed={animSpeed} onAnimSpeedChange={handleAnimSpeedChange} />
       <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); }} />
       <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
@@ -1654,7 +1694,7 @@ export default function RefrigerationPage({ onBack }) {
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Phase Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams</span></h3>
-          <RefParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} criticalT={refData.criticalT} fillHeight={desktop} textScale={textScale} />
+          <RefParticleVisualizer phaseInfo={phaseInfo} temperature={dragPoint.T} criticalT={refData.criticalT} fillHeight={desktop} textScale={textScale} units={units} />
         </div>
       </div>
 
@@ -1724,14 +1764,14 @@ export default function RefrigerationPage({ onBack }) {
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>
-      <RefEquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} />
+      <RefEquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} units={units} />
 
       {/* Row: Sliders + Table */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : { ...card, padding: "16px" }}>
           <h3 style={sec}>Cycle Parameters</h3>
-          <ParamSlider label="Condenser Pressure (P high)" unit="kPa" color={K.heatOut} value={effectivePHigh} min={Math.round(pMin + (pMax - pMin) * 0.2)} max={pMax} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPHigh} textScale={textScale} />
-          <ParamSlider label="Evaporator Pressure (P low)" unit="kPa" color={K.heatIn} value={effectivePLow} min={pMin} max={Math.round(pMin + (pMax - pMin) * 0.6)} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPLow} textScale={textScale} />
+          <ParamSlider label="Condenser Pressure (P high)" kind="P" color={K.heatOut} value={effectivePHigh} min={Math.round(pMin + (pMax - pMin) * 0.2)} max={pMax} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPHigh} textScale={textScale} units={units} />
+          <ParamSlider label="Evaporator Pressure (P low)" kind="P" color={K.heatIn} value={effectivePLow} min={pMin} max={Math.round(pMin + (pMax - pMin) * 0.6)} step={Math.max(1, Math.round((pMax - pMin) / 100))} onChange={setPLow} textScale={textScale} units={units} />
           <div style={{ marginTop: 6, fontSize: sz(desktop ? 15 : 9), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
             T_evap = {fmtT(cycle.Tsat_low, units)} &nbsp;|&nbsp; T_cond = {fmtT(cycle.Tsat_high, units)} &nbsp;|&nbsp; x₄ = {cycle.x4.toFixed(3)}
           </div>
@@ -1786,11 +1826,7 @@ export default function RefrigerationPage({ onBack }) {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
-        <button data-tour="ref-dark-mode" onClick={toggleDarkMode} style={{
-          background: darkMode ? "#30363d" : "#f5f4f0", border: `1px solid ${K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
-          color: K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
-        }}>{darkMode ? "\u2600 Light Mode" : "\u263E Dark Mode"}</button>
+      <div data-tour="ref-dark-mode" style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
         <button onClick={() => {
           const u = `${window.location.origin}${window.location.pathname}?view=refrigeration&ref=${refIdx}&pHigh=${effectivePHigh}&pLow=${effectivePLow}`;
           navigator.clipboard.writeText(u).then(() => { setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); });
@@ -1799,25 +1835,30 @@ export default function RefrigerationPage({ onBack }) {
           color: shareCopied ? "#fff" : K.inkMed, fontSize: sz(desktop ? 13 : 10), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.2s",
         }}>{shareCopied ? "\u2713 Link Copied" : "\uD83D\uDD17 Share Setup"}</button>
         <button onClick={() => {
+          const lT = lblT(units), lP = lblP(units), lH = lblH(units), lS = lblS(units);
+          const T_ = (v) => cvtT(v, units).toFixed(2);
+          const P_ = (v) => cvtP(v, units).toFixed(units.P === "MPa" ? 3 : units.P === "bar" || units.P === "atm" ? 2 : 1);
+          const H_ = (v) => cvtH(v, units).toFixed(2);
+          const S_ = (v) => cvtS(v, units).toFixed(4);
           const text = [
             `VAPOR-COMPRESSION REFRIGERATION CYCLE \u2014 Solution`,
             `Refrigerant: ${refData.name} (${refData.formula})`,
-            `Inputs: P_high (cond) = ${effectivePHigh} kPa, P_low (evap) = ${effectivePLow} kPa`,
-            `T_evap = ${cycle.Tsat_low.toFixed(2)} \u00B0C, T_cond = ${cycle.Tsat_high.toFixed(2)} \u00B0C`,
+            `Inputs: P_high (cond) = ${P_(effectivePHigh)} ${lP}, P_low (evap) = ${P_(effectivePLow)} ${lP}`,
+            `T_evap = ${T_(cycle.Tsat_low)} ${lT}, T_cond = ${T_(cycle.Tsat_high)} ${lT}`,
             ``,
-            `State 1 (sat. vapor at P_low):     T = ${cycle.states[0].T.toFixed(2)} \u00B0C, P = ${cycle.states[0].P.toFixed(1)} kPa, h = ${cycle.states[0].h.toFixed(2)} kJ/kg, s = ${cycle.states[0].s.toFixed(4)} kJ/kg\u00B7K`,
-            `State 2 (after isentropic comp.):  T = ${cycle.states[1].T.toFixed(2)} \u00B0C, P = ${cycle.states[1].P.toFixed(1)} kPa, h = ${cycle.states[1].h.toFixed(2)} kJ/kg, s = ${cycle.states[1].s.toFixed(4)} kJ/kg\u00B7K`,
-            `State 3 (sat. liquid at P_high):   T = ${cycle.states[2].T.toFixed(2)} \u00B0C, P = ${cycle.states[2].P.toFixed(1)} kPa, h = ${cycle.states[2].h.toFixed(2)} kJ/kg, s = ${cycle.states[2].s.toFixed(4)} kJ/kg\u00B7K`,
-            `State 4 (after expansion, two-ph): T = ${cycle.states[3].T.toFixed(2)} \u00B0C, P = ${cycle.states[3].P.toFixed(1)} kPa, h = ${cycle.states[3].h.toFixed(2)} kJ/kg, s = ${cycle.states[3].s.toFixed(4)} kJ/kg\u00B7K, x_4 = ${cycle.x4.toFixed(4)}`,
+            `State 1 (sat. vapor at P_low):     T = ${T_(cycle.states[0].T)} ${lT}, P = ${P_(cycle.states[0].P)} ${lP}, h = ${H_(cycle.states[0].h)} ${lH}, s = ${S_(cycle.states[0].s)} ${lS}`,
+            `State 2 (after isentropic comp.):  T = ${T_(cycle.states[1].T)} ${lT}, P = ${P_(cycle.states[1].P)} ${lP}, h = ${H_(cycle.states[1].h)} ${lH}, s = ${S_(cycle.states[1].s)} ${lS}`,
+            `State 3 (sat. liquid at P_high):   T = ${T_(cycle.states[2].T)} ${lT}, P = ${P_(cycle.states[2].P)} ${lP}, h = ${H_(cycle.states[2].h)} ${lH}, s = ${S_(cycle.states[2].s)} ${lS}`,
+            `State 4 (after expansion, two-ph): T = ${T_(cycle.states[3].T)} ${lT}, P = ${P_(cycle.states[3].P)} ${lP}, h = ${H_(cycle.states[3].h)} ${lH}, s = ${S_(cycle.states[3].s)} ${lS}, x_4 = ${cycle.x4.toFixed(4)}`,
             ``,
-            `Compressor:  W_comp = h2 \u2212 h1 = ${fmt(cycle.wComp)} kJ/kg`,
-            `Evaporator:  Q_evap = h1 \u2212 h4 = ${fmt(cycle.qEvap)} kJ/kg  (cooling effect)`,
-            `Condenser:   Q_cond = h2 \u2212 h3 = ${fmt(cycle.qCond)} kJ/kg  (rejected)`,
+            `Compressor:  W_comp = h2 \u2212 h1 = ${H_(cycle.wComp)} ${lH}`,
+            `Evaporator:  Q_evap = h1 \u2212 h4 = ${H_(cycle.qEvap)} ${lH}  (cooling effect)`,
+            `Condenser:   Q_cond = h2 \u2212 h3 = ${H_(cycle.qCond)} ${lH}  (rejected)`,
             `Throttle:    h3 = h4 (isenthalpic)`,
             ``,
             `COP_cooling = Q_evap / W_comp = ${cycle.copCool.toFixed(3)}`,
             `COP_heating = Q_cond / W_comp = ${cycle.copHeat.toFixed(3)}`,
-            `Energy balance check: Q_evap + W_comp = ${fmt(cycle.qEvap + cycle.wComp)} kJ/kg \u2248 Q_cond = ${fmt(cycle.qCond)} kJ/kg`,
+            `Energy balance check: Q_evap + W_comp = ${H_(cycle.qEvap + cycle.wComp)} ${lH} \u2248 Q_cond = ${H_(cycle.qCond)} ${lH}`,
           ].join("\n");
           navigator.clipboard.writeText(text).then(() => { setEqsCopied(true); setTimeout(() => setEqsCopied(false), 2000); });
         }} style={{

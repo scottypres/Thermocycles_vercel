@@ -95,7 +95,99 @@ export const lblP = (units) => pick("P", units).label;
 export const lblH = (units) => pick("h", units).label;
 export const lblS = (units) => pick("s", units).label;
 
-/* Units selector popover */
+/* ───────── Animation speed cookie helpers ───────── */
+export function loadAnimSpeed() {
+  try {
+    const v = parseFloat(document.cookie.split("; ").find(c => c.startsWith("animSpeed="))?.split("=")[1]);
+    return isNaN(v) ? 1 : Math.max(0.25, Math.min(4, v));
+  } catch { return 1; }
+}
+export function saveAnimSpeed(v) {
+  try { document.cookie = `animSpeed=${v};path=/;max-age=31536000`; } catch {}
+}
+
+/* ───────── Settings modal: display size, theme, units, animation speed ───────── */
+export function SettingsModal({ open, onClose, K, FD, FM,
+  textScale, onTextScaleChange,
+  darkMode, onDarkModeToggle,
+  units, onUnitsChange,
+  animSpeed, onAnimSpeedChange,
+}) {
+  if (!open) return null;
+  const Section = ({ title, children }) => (
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ fontFamily: FM, fontSize: 11, color: K.inkLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8, paddingBottom: 4, borderBottom: `1px solid ${K.border}` }}>{title}</div>
+      {children}
+    </div>
+  );
+  const Pill = ({ active, onClick, children, color }) => (
+    <button onClick={onClick} style={{
+      padding: "5px 12px", fontSize: 12, fontFamily: FM,
+      background: active ? (color || K.accent) : K.cardAlt,
+      color: active ? "#fff" : K.inkMed,
+      border: `1px solid ${active ? (color || K.accent) : K.border}`,
+      cursor: "pointer", borderRadius: 3, fontWeight: active ? 700 : 400, transition: "all 0.15s",
+    }}>{children}</button>
+  );
+  const Slider = ({ value, min, max, step, onChange, fmt }) => {
+    const pct = ((value - min) / (max - min)) * 100;
+    return (
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <input type="range" min={min} max={max} step={step} value={value}
+            onChange={e => onChange(Number(e.target.value))}
+            style={{ flex: 1, height: 4, appearance: "none", WebkitAppearance: "none",
+              background: `linear-gradient(to right, ${K.accent} 0%, ${K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`,
+              borderRadius: 0, outline: "none", cursor: "pointer" }} />
+          <span style={{ fontFamily: FM, fontSize: 12, color: K.inkMed, minWidth: 60, textAlign: "right" }}>{fmt(value)}</span>
+        </div>
+      </div>
+    );
+  };
+  const UnitGroup = ({ kind, label }) => (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontFamily: FM, fontSize: 10, color: K.inkLight, marginBottom: 6 }}>{label}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {UNITS[kind].map(u => (
+          <Pill key={u.id} active={units[kind] === u.id} onClick={() => onUnitsChange({ ...units, [kind]: u.id })}>{u.label}</Pill>
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 10px", overflowY: "auto" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: K.card, border: `1.5px solid ${K.border}`, padding: "22px 24px", maxWidth: 460, width: "100%", color: K.ink, fontFamily: FM }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
+          <h3 style={{ margin: 0, fontFamily: FD, fontSize: 22, color: K.ink }}>Settings</h3>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "4px 14px", fontFamily: FM }}>Close</button>
+        </div>
+        <Section title={`Display size — ${Math.round(textScale * 100)}%`}>
+          <Slider value={textScale} min={0.8} max={1.6} step={0.05} onChange={onTextScaleChange} fmt={v => `${Math.round(v * 100)}%`} />
+        </Section>
+        <Section title="Theme">
+          <div style={{ display: "flex", gap: 6 }}>
+            <Pill active={!darkMode} onClick={() => { if (darkMode) onDarkModeToggle(); }}>☀ Light</Pill>
+            <Pill active={darkMode} onClick={() => { if (!darkMode) onDarkModeToggle(); }}>☾ Dark</Pill>
+          </div>
+        </Section>
+        <Section title="Units">
+          <UnitGroup kind="T" label="Temperature" />
+          <UnitGroup kind="P" label="Pressure" />
+          <UnitGroup kind="h" label="Specific enthalpy / energy" />
+          <UnitGroup kind="s" label="Specific entropy" />
+          <button onClick={() => onUnitsChange({ ...DEFAULT_UNITS })} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 12px", color: K.inkMed, fontSize: 11, fontFamily: FM, cursor: "pointer", marginTop: 4 }}>Reset to SI</button>
+        </Section>
+        <Section title={`Animation speed — ${animSpeed.toFixed(2)}×`}>
+          <Slider value={animSpeed} min={0.25} max={4} step={0.05} onChange={onAnimSpeedChange} fmt={v => `${v.toFixed(2)}×`} />
+          <div style={{ marginTop: 6, fontSize: 10, color: K.inkLight, fontStyle: "italic" }}>Affects the cycle animation toggle on each diagram.</div>
+        </Section>
+        <button onClick={onClose} style={{ width: "100%", padding: "10px", marginTop: 6, background: K.accent, border: "none", color: "#fff", fontSize: 13, fontWeight: 500, fontFamily: FD, cursor: "pointer" }}>Done</button>
+      </div>
+    </div>
+  );
+}
+
+/* Units selector popover (kept for backwards compat / direct use) */
 export function UnitsPopover({ open, units, onChange, onClose, anchor, K, FD, FM }) {
   if (!open) return null;
   const Group = ({ kind, label }) => (
@@ -138,24 +230,40 @@ export function UnitsPopover({ open, units, onChange, onClose, anchor, K, FD, FM
   );
 }
 
-/* ───────── Slider ───────── */
-export function ParamSlider({ label, unit, value, min, max, step, onChange, color, textScale }) {
+/* ───────── Slider ─────────
+   value/min/max are stored in SI; if `kind` and `units` are provided, the
+   readout, unit label, and min/max ticks display in the user's chosen units.
+   The native slider input stays in SI so step/handle behave consistently. */
+export function ParamSlider({ label, unit, kind, value, min, max, step, onChange, color, textScale, units }) {
   const sc = textScale || 1;
   const sz = (px) => Math.round(px * sc);
   const desktop = useIsDesktop();
   const pct = ((value - min) / (max - min)) * 100;
+  const conv = kind && units ? pick(kind, units) : null;
+  const dispVal = conv ? conv.to(value) : value;
+  const dispMin = conv ? conv.to(min) : min;
+  const dispMax = conv ? conv.to(max) : max;
+  const dispUnit = conv ? conv.label : unit;
+  const dispDigits = (v) => {
+    if (!conv) return 0;
+    const a = Math.abs(v);
+    if (kind === "P") return units.P === "MPa" ? 3 : units.P === "bar" || units.P === "atm" ? 2 : 0;
+    if (kind === "T") return 0;
+    return a < 10 ? 2 : 1;
+  };
+  const fmtTick = (v) => conv ? v.toFixed(dispDigits(v)) : String(v);
   return (
     <div style={{ marginBottom: desktop ? 24 : 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: desktop ? 8 : 5 }}>
         <span style={{ fontSize: sz(desktop ? 16 : 10), fontFamily: FM, color: K.inkMed }}>{label}</span>
-        <span style={{ fontSize: sz(desktop ? 22 : 14), fontFamily: FD, color: color || K.accent }}>{value.toFixed(0)} <span style={{ fontSize: sz(desktop ? 14 : 10), fontFamily: FM, color: K.inkLight }}>{unit}</span></span>
+        <span style={{ fontSize: sz(desktop ? 22 : 14), fontFamily: FD, color: color || K.accent }}>{dispVal.toFixed(dispDigits(dispVal))} <span style={{ fontSize: sz(desktop ? 14 : 10), fontFamily: FM, color: K.inkLight }}>{dispUnit}</span></span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
         style={{ width: "100%", height: desktop ? 4 : 3, appearance: "none", WebkitAppearance: "none", background: `linear-gradient(to right, ${color || K.accent} 0%, ${color || K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`, borderRadius: 0, outline: "none", cursor: "pointer" }} />
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: desktop ? 5 : 3 }}>
-        <span style={{ fontSize: sz(desktop ? 13 : 8), color: K.inkLight, fontFamily: FM }}>{min}</span>
-        <span style={{ fontSize: sz(desktop ? 13 : 8), color: K.inkLight, fontFamily: FM }}>{max}</span>
+        <span style={{ fontSize: sz(desktop ? 13 : 8), color: K.inkLight, fontFamily: FM }}>{fmtTick(dispMin)}</span>
+        <span style={{ fontSize: sz(desktop ? 13 : 8), color: K.inkLight, fontFamily: FM }}>{fmtTick(dispMax)}</span>
       </div>
     </div>
   );
