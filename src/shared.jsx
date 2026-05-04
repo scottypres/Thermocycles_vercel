@@ -99,11 +99,62 @@ export const lblS = (units) => pick("s", units).label;
 export function loadAnimSpeed() {
   try {
     const v = parseFloat(document.cookie.split("; ").find(c => c.startsWith("animSpeed="))?.split("=")[1]);
-    return isNaN(v) ? 1 : Math.max(0.15, Math.min(1, v));
-  } catch { return 1; }
+    return isNaN(v) ? 0.5 : Math.max(0.15, Math.min(1, v));
+  } catch { return 0.5; }
 }
 export function saveAnimSpeed(v) {
   try { document.cookie = `animSpeed=${v};path=/;max-age=31536000`; } catch {}
+}
+
+/* ───────── Settings modal helpers (defined outside so they aren't
+   re-created on every parent render — that would unmount the slider input
+   mid-drag). */
+function SettingsSection({ title, K, FM, children }) {
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ fontFamily: FM, fontSize: 11, color: K.inkLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8, paddingBottom: 4, borderBottom: `1px solid ${K.border}` }}>{title}</div>
+      {children}
+    </div>
+  );
+}
+function SettingsPill({ active, onClick, children, color, K, FM }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: "5px 12px", fontSize: 12, fontFamily: FM,
+      background: active ? (color || K.accent) : K.cardAlt,
+      color: active ? "#fff" : K.inkMed,
+      border: `1px solid ${active ? (color || K.accent) : K.border}`,
+      cursor: "pointer", borderRadius: 3, fontWeight: active ? 700 : 400, transition: "all 0.15s",
+    }}>{children}</button>
+  );
+}
+function SettingsSlider({ value, min, max, step, onChange, fmt, K, FM }) {
+  const pct = ((value - min) / (max - min)) * 100;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        onInput={e => onChange(Number(e.target.value))}
+        className="settings-slider"
+        style={{ flex: 1, height: 22, appearance: "none", WebkitAppearance: "none",
+          background: "transparent", outline: "none", cursor: "pointer", touchAction: "none", padding: 0, margin: 0,
+          backgroundImage: `linear-gradient(to right, ${K.accent} 0%, ${K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`,
+          backgroundSize: "100% 6px", backgroundPosition: "0 50%", backgroundRepeat: "no-repeat" }} />
+      <span style={{ fontFamily: FM, fontSize: 12, color: K.inkMed, minWidth: 60, textAlign: "right" }}>{fmt(value)}</span>
+    </div>
+  );
+}
+function SettingsUnitGroup({ kind, label, units, onUnitsChange, K, FM }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontFamily: FM, fontSize: 10, color: K.inkLight, marginBottom: 6 }}>{label}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {UNITS[kind].map(u => (
+          <SettingsPill key={u.id} K={K} FM={FM} active={units[kind] === u.id} onClick={() => onUnitsChange({ ...units, [kind]: u.id })}>{u.label}</SettingsPill>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /* ───────── Settings modal: display size, theme, units, animation speed ───────── */
@@ -114,49 +165,6 @@ export function SettingsModal({ open, onClose, K, FD, FM,
   animSpeed, onAnimSpeedChange,
 }) {
   if (!open) return null;
-  const Section = ({ title, children }) => (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ fontFamily: FM, fontSize: 11, color: K.inkLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8, paddingBottom: 4, borderBottom: `1px solid ${K.border}` }}>{title}</div>
-      {children}
-    </div>
-  );
-  const Pill = ({ active, onClick, children, color }) => (
-    <button onClick={onClick} style={{
-      padding: "5px 12px", fontSize: 12, fontFamily: FM,
-      background: active ? (color || K.accent) : K.cardAlt,
-      color: active ? "#fff" : K.inkMed,
-      border: `1px solid ${active ? (color || K.accent) : K.border}`,
-      cursor: "pointer", borderRadius: 3, fontWeight: active ? 700 : 400, transition: "all 0.15s",
-    }}>{children}</button>
-  );
-  const Slider = ({ value, min, max, step, onChange, fmt }) => {
-    const pct = ((value - min) / (max - min)) * 100;
-    return (
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <input type="range" min={min} max={max} step={step} value={value}
-            onChange={e => onChange(Number(e.target.value))}
-            onInput={e => onChange(Number(e.target.value))}
-            className="settings-slider"
-            style={{ flex: 1, height: 22, appearance: "none", WebkitAppearance: "none",
-              background: "transparent", outline: "none", cursor: "pointer", touchAction: "none", padding: 0, margin: 0,
-              backgroundImage: `linear-gradient(to right, ${K.accent} 0%, ${K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`,
-              backgroundSize: "100% 6px", backgroundPosition: "0 50%", backgroundRepeat: "no-repeat" }} />
-          <span style={{ fontFamily: FM, fontSize: 12, color: K.inkMed, minWidth: 60, textAlign: "right" }}>{fmt(value)}</span>
-        </div>
-      </div>
-    );
-  };
-  const UnitGroup = ({ kind, label }) => (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ fontFamily: FM, fontSize: 10, color: K.inkLight, marginBottom: 6 }}>{label}</div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {UNITS[kind].map(u => (
-          <Pill key={u.id} active={units[kind] === u.id} onClick={() => onUnitsChange({ ...units, [kind]: u.id })}>{u.label}</Pill>
-        ))}
-      </div>
-    </div>
-  );
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 10px", overflowY: "auto" }}>
       <style>{`
@@ -180,26 +188,26 @@ export function SettingsModal({ open, onClose, K, FD, FM,
           <h3 style={{ margin: 0, fontFamily: FD, fontSize: 22, color: K.ink }}>Settings</h3>
           <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "4px 14px", fontFamily: FM }}>Close</button>
         </div>
-        <Section title={`Display size — ${Math.round(textScale * 100)}%`}>
-          <Slider value={textScale} min={0.8} max={1.6} step={0.05} onChange={onTextScaleChange} fmt={v => `${Math.round(v * 100)}%`} />
-        </Section>
-        <Section title="Theme">
+        <SettingsSection K={K} FM={FM} title={`Display size — ${Math.round(textScale * 100)}%`}>
+          <SettingsSlider K={K} FM={FM} value={textScale} min={0.8} max={1.6} step={0.05} onChange={onTextScaleChange} fmt={v => `${Math.round(v * 100)}%`} />
+        </SettingsSection>
+        <SettingsSection K={K} FM={FM} title="Theme">
           <div style={{ display: "flex", gap: 6 }}>
-            <Pill active={!darkMode} onClick={() => { if (darkMode) onDarkModeToggle(); }}>☀ Light</Pill>
-            <Pill active={darkMode} onClick={() => { if (!darkMode) onDarkModeToggle(); }}>☾ Dark</Pill>
+            <SettingsPill K={K} FM={FM} active={!darkMode} onClick={() => { if (darkMode) onDarkModeToggle(); }}>☀ Light</SettingsPill>
+            <SettingsPill K={K} FM={FM} active={darkMode} onClick={() => { if (!darkMode) onDarkModeToggle(); }}>☾ Dark</SettingsPill>
           </div>
-        </Section>
-        <Section title="Units">
-          <UnitGroup kind="T" label="Temperature" />
-          <UnitGroup kind="P" label="Pressure" />
-          <UnitGroup kind="h" label="Specific enthalpy / energy" />
-          <UnitGroup kind="s" label="Specific entropy" />
+        </SettingsSection>
+        <SettingsSection K={K} FM={FM} title="Units">
+          <SettingsUnitGroup K={K} FM={FM} kind="T" label="Temperature" units={units} onUnitsChange={onUnitsChange} />
+          <SettingsUnitGroup K={K} FM={FM} kind="P" label="Pressure" units={units} onUnitsChange={onUnitsChange} />
+          <SettingsUnitGroup K={K} FM={FM} kind="h" label="Specific enthalpy / energy" units={units} onUnitsChange={onUnitsChange} />
+          <SettingsUnitGroup K={K} FM={FM} kind="s" label="Specific entropy" units={units} onUnitsChange={onUnitsChange} />
           <button onClick={() => onUnitsChange({ ...DEFAULT_UNITS })} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 12px", color: K.inkMed, fontSize: 11, fontFamily: FM, cursor: "pointer", marginTop: 4 }}>Reset to SI</button>
-        </Section>
-        <Section title={`Animation speed — ${animSpeed.toFixed(2)}×`}>
-          <Slider value={animSpeed} min={0.15} max={1} step={0.05} onChange={onAnimSpeedChange} fmt={v => `${v.toFixed(2)}×`} />
+        </SettingsSection>
+        <SettingsSection K={K} FM={FM} title={`Animation speed — ${animSpeed.toFixed(2)}×`}>
+          <SettingsSlider K={K} FM={FM} value={animSpeed} min={0.15} max={1} step={0.05} onChange={onAnimSpeedChange} fmt={v => `${v.toFixed(2)}×`} />
           <div style={{ marginTop: 6, fontSize: 10, color: K.inkLight, fontStyle: "italic" }}>1× ≈ 6 s loop. Lower values slow the cycle down for closer inspection.</div>
-        </Section>
+        </SettingsSection>
         <button onClick={onClose} style={{ width: "100%", padding: "10px", marginTop: 6, background: K.accent, border: "none", color: "#fff", fontSize: 13, fontWeight: 500, fontFamily: FD, cursor: "pointer" }}>Done</button>
       </div>
     </div>

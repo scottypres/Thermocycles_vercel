@@ -1581,9 +1581,11 @@ export default function RefrigerationPage({ onBack }) {
       }
       return pts[pts.length - 1];
     };
-    let raf;
+    let cancelled = false;
+    let rafId = 0;
     const t0 = performance.now();
     const tick = (now) => {
+      if (cancelled) return;
       const elapsed = (now - t0) % totalMs;
       const segIdx = Math.floor(elapsed / segMs);
       const frac = (elapsed - segIdx * segMs) / segMs;
@@ -1604,10 +1606,10 @@ export default function RefrigerationPage({ onBack }) {
       const P = a.P + (b.P - a.P) * frac;
       setDragPoint({ s, T, h, P });
       setAnimProgress(elapsed / totalMs);
-      raf = requestAnimationFrame(tick);
+      rafId = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    rafId = requestAnimationFrame(tick);
+    return () => { cancelled = true; cancelAnimationFrame(rafId); };
   }, [animating, cycle, animSpeed]);
 
   const desktop = useIsDesktop();
@@ -1676,7 +1678,7 @@ export default function RefrigerationPage({ onBack }) {
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
             <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
-            <button onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
+            <button data-tour="ref-settings" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
             <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
@@ -1860,7 +1862,7 @@ export default function RefrigerationPage({ onBack }) {
         </div>
       </div>
 
-      <div data-tour="ref-dark-mode" style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
+      <div data-tour="ref-share-solution" style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
         <button onClick={() => {
           const u = `${window.location.origin}${window.location.pathname}?view=refrigeration&ref=${refIdx}&pHigh=${effectivePHigh}&pLow=${effectivePLow}`;
           navigator.clipboard.writeText(u).then(() => { setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); });

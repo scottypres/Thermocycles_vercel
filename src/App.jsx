@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { GuidedTour, WelcomePopup, RANKINE_TOUR_STEPS } from "./GuidedTour.jsx";
-import { SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
+import { ParamSlider, SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
 
 /* ───────── Steam Property Data ───────── */
 const STEAM_TABLE = [
@@ -1681,26 +1681,6 @@ function EquationsModal({ open, onClose, cycle, initialTopic, units }) {
 }
 
 /* ───────── Slider ───────── */
-function ParamSlider({ label, unit, value, min, max, step, onChange, color }) {
-  const isWide = useIsDesktop();
-  const pct = ((value - min) / (max - min)) * 100;
-  return (
-    <div style={{ marginBottom: isWide ? 26 : 18 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-        <span style={{ fontSize: isWide ? 18 : 10, fontFamily: FM, color: K.inkMed }}>{label}</span>
-        <span style={{ fontSize: isWide ? 26 : 14, fontFamily: FD, color: color || K.accent }}>{value.toFixed(0)} <span style={{ fontSize: isWide ? 16 : 10, fontFamily: FM, color: K.inkLight }}>{unit}</span></span>
-      </div>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        style={{ width: "100%", height: isWide ? 6 : 3, appearance: "none", WebkitAppearance: "none", background: `linear-gradient(to right, ${color || K.accent} 0%, ${color || K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`, borderRadius: 0, outline: "none", cursor: "pointer" }} />
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-        <span style={{ fontSize: isWide ? 13 : 8, color: K.inkLight, fontFamily: FM }}>{min}</span>
-        <span style={{ fontSize: isWide ? 13 : 8, color: K.inkLight, fontFamily: FM }}>{max}</span>
-      </div>
-    </div>
-  );
-}
-
 /* ───────── State Table ───────── */
 function StateTable({ cycle, onSelectState, textScale, units }) {
   const isWide = useIsDesktop();
@@ -1857,9 +1837,11 @@ function RankinePage({ onBack }) {
       }
       return pts[pts.length - 1];
     };
-    let raf;
+    let cancelled = false;
+    let rafId = 0;
     const t0 = performance.now();
     const tick = (now) => {
+      if (cancelled) return;
       const elapsed = (now - t0) % totalMs;
       const segIdx = Math.floor(elapsed / segMs);
       const frac = (elapsed - segIdx * segMs) / segMs;
@@ -1875,10 +1857,10 @@ function RankinePage({ onBack }) {
       }
       setDragPoint({ s, T });
       setAnimProgress(elapsed / totalMs);
-      raf = requestAnimationFrame(tick);
+      rafId = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    rafId = requestAnimationFrame(tick);
+    return () => { cancelled = true; cancelAnimationFrame(rafId); };
   }, [animating, cycle, animSpeed]);
 
   const desktop = useIsDesktop();
@@ -1912,7 +1894,7 @@ function RankinePage({ onBack }) {
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <button data-tour="theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
-          <button onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
+          <button data-tour="settings" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
           <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
         </div>
       </div>
@@ -2084,7 +2066,7 @@ function RankinePage({ onBack }) {
         </div>
       </div>
 
-      <div data-tour="dark-mode" style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
+      <div data-tour="share-solution" style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
         <button onClick={() => {
           const u = `${window.location.origin}${window.location.pathname}?view=rankine&pHigh=${pHigh}&pLow=${pLow}&tSup=${adjustedTSup}`;
           navigator.clipboard.writeText(u).then(() => { setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); });
