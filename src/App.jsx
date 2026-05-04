@@ -633,9 +633,12 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         {(() => {
           const label = `${dragPoint.T.toFixed(0)}°C, ${dragPoint.s.toFixed(2)} kJ/kg·K`;
           const w = sz(8) * 0.6 * label.length + sz(8);
+          const flipLeft = dpx + sz(12) + w > TS_W - 2;
+          const rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
+          const textX = flipLeft ? rectX + sz(4) : dpx + sz(16);
           return <>
-            <rect x={dpx + sz(12)} y={dpy - sz(22)} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-            <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
+            <rect x={rectX} y={dpy - sz(22)} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
+            <text x={textX} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
           </>;
         })()}
         {/* Instruction hint */}
@@ -1019,9 +1022,12 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
         {(() => {
           const label = `${dpP.toFixed(0)} kPa, ${dpV.toFixed(4)} m³/kg`;
           const w = sz(8) * 0.6 * label.length + sz(8);
+          const flipLeft = dpx + sz(12) + w > PV_W - 2;
+          const rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
+          const textX = flipLeft ? rectX + sz(4) : dpx + sz(16);
           return <>
-            <rect x={dpx + sz(12)} y={dpy - sz(22)} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-            <text x={dpx + sz(16)} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
+            <rect x={rectX} y={dpy - sz(22)} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
+            <text x={textX} y={dpy - sz(10)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
           </>;
         })()}
         {/* Instruction hint */}
