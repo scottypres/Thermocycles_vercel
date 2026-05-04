@@ -300,7 +300,7 @@ export const RANKINE_TOUR_STEPS = [
   { target: "pv-areas", title: "Work Areas", description: "Toggle shaded areas on the P–v diagram to visualize the boundary work for each process." },
   { target: "lock-buttons", title: "Lock Properties", description: "Lock entropy (s), temperature (T), pressure (P), or specific volume (v) to constrain your drag point on the diagrams." },
   { target: "energy-balance", title: "Energy Balance", description: "Click any energy value — Q in, Q out, W turbine, or W pump — to jump directly to its equation in the reference.", sheet: "top" },
-  { target: "settings", title: "Settings", description: "Open the Settings dialog to adjust display size, theme (light/dark), units (T/P/h/s), and animation speed. Preferences persist across sessions.", sheet: "top" },
+  { target: "settings", title: "Settings", description: "Open the Settings dialog to adjust display size, theme (light/dark), units (T/P/h/s), and animation speed. Preferences persist across sessions." },
   { target: "share-solution", title: "Share & Copy Solution", description: "Share Setup copies a deep link to your current cycle parameters — open it on another device or share with a classmate to land on the same configuration. Copy Solution copies a plain-text dump of every state point and process result in your chosen units, ready to paste into a homework write-up.", sheet: "top" },
 ];
 
@@ -316,6 +316,6 @@ export const REF_TOUR_STEPS = [
   { target: "ref-energy-areas", title: "Energy Areas", description: "Toggle shaded areas on the P–h diagram to visualize energy transfer for each process." },
   { target: "ref-lock-buttons", title: "Lock Properties", description: "Lock entropy (s), temperature (T), pressure (P), or enthalpy (h) to constrain your drag point on the diagrams." },
   { target: "ref-energy-balance", title: "Energy Balance", description: "Click any energy value — Q evap, Q cond, or W compressor — to jump directly to its equation.", sheet: "top" },
-  { target: "ref-settings", title: "Settings", description: "Open the Settings dialog to adjust display size, theme (light/dark), units (T/P/h/s), and animation speed. Preferences persist across sessions.", sheet: "top" },
+  { target: "ref-settings", title: "Settings", description: "Open the Settings dialog to adjust display size, theme (light/dark), units (T/P/h/s), and animation speed. Preferences persist across sessions." },
   { target: "ref-share-solution", title: "Share & Copy Solution", description: "Share Setup copies a deep link to your current cycle parameters — open it on another device or share with a classmate to land on the same configuration. Copy Solution copies a plain-text dump of every state point and process result in your chosen units, ready to paste into a homework write-up.", sheet: "top" },
 ];
