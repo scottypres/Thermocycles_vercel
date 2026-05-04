@@ -99,7 +99,7 @@ export const lblS = (units) => pick("s", units).label;
 export function loadAnimSpeed() {
   try {
     const v = parseFloat(document.cookie.split("; ").find(c => c.startsWith("animSpeed="))?.split("=")[1]);
-    return isNaN(v) ? 1 : Math.max(0.25, Math.min(4, v));
+    return isNaN(v) ? 1 : Math.max(0.15, Math.min(1, v));
   } catch { return 1; }
 }
 export function saveAnimSpeed(v) {
@@ -136,9 +136,12 @@ export function SettingsModal({ open, onClose, K, FD, FM,
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <input type="range" min={min} max={max} step={step} value={value}
             onChange={e => onChange(Number(e.target.value))}
-            style={{ flex: 1, height: 4, appearance: "none", WebkitAppearance: "none",
-              background: `linear-gradient(to right, ${K.accent} 0%, ${K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`,
-              borderRadius: 0, outline: "none", cursor: "pointer" }} />
+            onInput={e => onChange(Number(e.target.value))}
+            className="settings-slider"
+            style={{ flex: 1, height: 22, appearance: "none", WebkitAppearance: "none",
+              background: "transparent", outline: "none", cursor: "pointer", touchAction: "none", padding: 0, margin: 0,
+              backgroundImage: `linear-gradient(to right, ${K.accent} 0%, ${K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`,
+              backgroundSize: "100% 6px", backgroundPosition: "0 50%", backgroundRepeat: "no-repeat" }} />
           <span style={{ fontFamily: FM, fontSize: 12, color: K.inkMed, minWidth: 60, textAlign: "right" }}>{fmt(value)}</span>
         </div>
       </div>
@@ -156,6 +159,22 @@ export function SettingsModal({ open, onClose, K, FD, FM,
   );
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 10px", overflowY: "auto" }}>
+      <style>{`
+        input[type="range"].settings-slider::-webkit-slider-runnable-track { height: 6px; background: transparent; border-radius: 0; }
+        input[type="range"].settings-slider::-moz-range-track { height: 6px; background: transparent; border-radius: 0; }
+        input[type="range"].settings-slider::-webkit-slider-thumb {
+          -webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%;
+          background:${K.accent}; border:2px solid ${K.card}; cursor:grab;
+          box-shadow:0 2px 6px rgba(0,0,0,0.25); margin-top: -8px;
+        }
+        input[type="range"].settings-slider:active::-webkit-slider-thumb { cursor: grabbing; }
+        input[type="range"].settings-slider::-moz-range-thumb {
+          width:22px; height:22px; border-radius:50%;
+          background:${K.accent}; border:2px solid ${K.card}; cursor:grab;
+          box-shadow:0 2px 6px rgba(0,0,0,0.25);
+        }
+        input[type="range"].settings-slider:focus { outline: none; }
+      `}</style>
       <div onClick={e => e.stopPropagation()} style={{ background: K.card, border: `1.5px solid ${K.border}`, padding: "22px 24px", maxWidth: 460, width: "100%", color: K.ink, fontFamily: FM }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
           <h3 style={{ margin: 0, fontFamily: FD, fontSize: 22, color: K.ink }}>Settings</h3>
@@ -178,8 +197,8 @@ export function SettingsModal({ open, onClose, K, FD, FM,
           <button onClick={() => onUnitsChange({ ...DEFAULT_UNITS })} style={{ background: "none", border: `1px solid ${K.border}`, padding: "5px 12px", color: K.inkMed, fontSize: 11, fontFamily: FM, cursor: "pointer", marginTop: 4 }}>Reset to SI</button>
         </Section>
         <Section title={`Animation speed — ${animSpeed.toFixed(2)}×`}>
-          <Slider value={animSpeed} min={0.25} max={4} step={0.05} onChange={onAnimSpeedChange} fmt={v => `${v.toFixed(2)}×`} />
-          <div style={{ marginTop: 6, fontSize: 10, color: K.inkLight, fontStyle: "italic" }}>Affects the cycle animation toggle on each diagram.</div>
+          <Slider value={animSpeed} min={0.15} max={1} step={0.05} onChange={onAnimSpeedChange} fmt={v => `${v.toFixed(2)}×`} />
+          <div style={{ marginTop: 6, fontSize: 10, color: K.inkLight, fontStyle: "italic" }}>1× ≈ 6 s loop. Lower values slow the cycle down for closer inspection.</div>
         </Section>
         <button onClick={onClose} style={{ width: "100%", padding: "10px", marginTop: 6, background: K.accent, border: "none", color: "#fff", fontSize: 13, fontWeight: 500, fontFamily: FD, cursor: "pointer" }}>Done</button>
       </div>
