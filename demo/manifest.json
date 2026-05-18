@@ -1,0 +1,67 @@
+{
+  "_comment": "Action timeline per beat. 'at' is seconds into that beat's audio. Tune during dry runs.",
+  "viewport": { "width": 1280, "height": 800 },
+  "beats": {
+    "01_intro": [
+      { "at": 0, "do": "goto", "url": "@DEMO_URL" },
+      { "at": 0.5, "do": "wait", "selector": "body" }
+    ],
+    "02_textscale": [
+      { "at": 0.5, "do": "moveTo", "selector": "input[type='range']", "fallback": "[role='dialog'] input" },
+      { "at": 2.0, "do": "dragSlider", "selector": "input[type='range']", "to": 1.4 },
+      { "at": 6.0, "do": "dragSlider", "selector": "input[type='range']", "to": 1.0 }
+    ],
+    "03_tour": [
+      { "at": 0.5, "do": "click", "selector": "text=Instructions" },
+      { "at": 4.0, "do": "click", "selector": "text=Next" },
+      { "at": 8.0, "do": "click", "selector": "text=Next" },
+      { "at": 12.0, "do": "click", "selector": "text=Skip" }
+    ],
+    "04_rankine_overview": [
+      { "at": 0.5, "do": "dismissDialog" },
+      { "at": 1.5, "do": "click", "selector": "text=Rankine Cycle" },
+      { "at": 4.0, "do": "moveTo", "selector": "[data-tour='schematic']", "fallback": "svg" },
+      { "at": 8.0, "do": "moveTo", "selector": "text=Thermal Efficiency", "fallback": "text=η" }
+    ],
+    "05_schematic_click": [
+      { "at": 1.0, "do": "click", "selector": "[data-component='condenser']", "fallback": "text=Condenser" },
+      { "at": 12.0, "do": "click", "selector": "text=Close" }
+    ],
+    "06_drag_phase": [
+      { "at": 2.0, "do": "clickInDiagram", "selector": "[data-tour='ts-diagram']", "x": 0.4, "y": 0.5 },
+      { "at": 6.0, "do": "dragInDiagram", "selector": "[data-tour='ts-diagram']", "from": [0.4, 0.5], "to": [0.6, 0.7] },
+      { "at": 14.0, "do": "dragInDiagram", "selector": "[data-tour='ts-diagram']", "from": [0.6, 0.7], "to": [0.8, 0.2] }
+    ],
+    "07_drag_pressures_locks": [
+      { "at": 1.0, "do": "dragLabel", "selector": "text=Boiler", "dy": -40 },
+      { "at": 8.0, "do": "click", "selector": "text=/Lock s/" },
+      { "at": 12.0, "do": "click", "selector": "text=/Lock T/" }
+    ],
+    "08_areas_clickable_values": [
+      { "at": 1.0, "do": "click", "selector": "[data-tour='eta-areas']", "fallback": "text=/η areas/" },
+      { "at": 8.0, "do": "click", "selector": "[data-tour='pv-areas']", "fallback": "text=/W areas/" },
+      { "at": 14.0, "do": "click", "selector": "text=Q_in", "fallback": "text=/Q in/" },
+      { "at": 18.0, "do": "click", "selector": "text=Close" }
+    ],
+    "09_solve": [
+      { "at": 1.0, "do": "click", "selector": "[data-tour='fx']", "fallback": "text=f(x)" },
+      { "at": 6.0, "do": "click", "selector": "text=η_th", "fallback": "text=Thermal Efficiency" },
+      { "at": 18.0, "do": "click", "selector": "text=Close" }
+    ],
+    "10_refrigeration": [
+      { "at": 1.0, "do": "click", "selector": "text=Home", "fallback": "text=Back" },
+      { "at": 3.0, "do": "click", "selector": "text=Refrigeration Cycle" },
+      { "at": 8.0, "do": "click", "selector": "text=R-134a" },
+      { "at": 14.0, "do": "click", "selector": "text=R-744" },
+      { "at": 18.0, "do": "click", "selector": "text=Refrigerants" }
+    ],
+    "11_darkmode": [
+      { "at": 0.5, "do": "scrollToBottom" },
+      { "at": 2.0, "do": "click", "selector": "text=/Dark Mode/" },
+      { "at": 6.0, "do": "click", "selector": "text=/Light Mode/" }
+    ],
+    "12_close": [
+      { "at": 0, "do": "scrollToTop" }
+    ]
+  }
+}

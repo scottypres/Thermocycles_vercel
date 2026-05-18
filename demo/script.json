@@ -1,0 +1,60 @@
+{
+  "voiceId": "SKteVxaO2G9VRPS3WgDN",
+  "model": "eleven_turbo_v2_5",
+  "voiceSettings": {
+    "stability": 0.5,
+    "similarity_boost": 0.75,
+    "style": 0.15,
+    "use_speaker_boost": true
+  },
+  "beats": [
+    {
+      "id": "01_intro",
+      "narration": "This is ThermoCycles Studio. It's an interactive playground for the two thermodynamic cycles every engineering student has to learn — the Rankine steam cycle, and vapor-compression refrigeration. Instead of grinding through textbook problems, you build intuition by changing inputs and watching the physics react in real time."
+    },
+    {
+      "id": "02_textscale",
+      "narration": "First time you land, you get a welcome popup with an accessibility option most sites bury — a display size slider from eighty to one hundred sixty percent. Drag it, and every label, every axis number, every bit of UI text rescales live. Your preference is saved in a cookie, so it persists between visits."
+    },
+    {
+      "id": "03_tour",
+      "narration": "Hit Instructions and a guided tour walks you through every interactive element on the page — the theory section, the schematic, the diagram drag handles, the equations modal, the area toggles, the axis locks, and the dark mode switch. Each step highlights the actual UI element with a glowing cutout. New users aren't left guessing."
+    },
+    {
+      "id": "04_rankine_overview",
+      "narration": "Let's enter the Rankine cycle. Here's the full system schematic — boiler in red, turbine in green, condenser in blue, pump in gold. On the right, the temperature-entropy diagram. Below, the metrics that actually matter: thermal efficiency, net work, and back-work ratio. Right now we're sitting around forty percent, which is in the ballpark of a real coal plant."
+    },
+    {
+      "id": "05_schematic_click",
+      "narration": "Click any component on the schematic and you get a detailed modal — the thermodynamic process it performs, the governing equations, and live calculated values from the current cycle. The condenser isn't an abstract box anymore; it's Q out equals h four minus h one, with the actual enthalpies plugged in. Each modal also has an engineering insight callout — like why the pump's back-work ratio is so much smaller than in a gas turbine."
+    },
+    {
+      "id": "06_drag_phase",
+      "narration": "Now the diagrams. Click anywhere on the T-s plot and you get a draggable state point with a live readout — temperature, entropy, phase. Drag it into the dome and look at the phase visualizer on the right — six hundred particles simulated in real time. In the subcooled region they settle to the bottom, blue, barely moving. Drag into the two-phase region and you see liquid below, vapor above, with an animated surface. Push into superheat and the whole chamber fills with fast-moving red particles. Quality and phase aren't textbook abstractions anymore — you can see them."
+    },
+    {
+      "id": "07_drag_pressures_locks",
+      "narration": "You can also drag the Boiler and Condenser labels directly on the T-s diagram to change operating pressures — the cycle reshapes, efficiency updates, the schematic numbers update, all simultaneously. And if you want to isolate one variable, the axis locks let you constrain the drag point. Lock entropy, and the point can only move vertically — useful for showing isentropic processes. Lock temperature, and it moves horizontally. The locked axis turns red so it's obvious what's frozen."
+    },
+    {
+      "id": "08_areas_clickable_values",
+      "narration": "The eta areas button shades the cycle regions on the T-s diagram — Q in in red, Q out in blue, net work in green — with the live values and efficiency shown right in the legend. The same trick works on the P-v diagram with the W areas button for boundary work. And every energy value on the page is clickable — tap Q in, W turbine, anything — and you jump straight to that equation in the reference, with the current numbers already substituted."
+    },
+    {
+      "id": "09_solve",
+      "narration": "But where this app really shines for studying — click f of x. You get a step-by-step solver for nine different quantities: turbine work, pump work, heat in and out, thermal efficiency, net work, exit quality, back-work ratio, and the state properties. Pick efficiency. The modal shows the formula, then walks through the substitution line by line — W net divided by Q in, with the actual enthalpies from the current cycle plugged in, and the final answer at the bottom. It's basically a worked solution that updates whenever you change the cycle. Hard to overstate how useful that is on a problem set."
+    },
+    {
+      "id": "10_refrigeration",
+      "narration": "Same engine, different cycle. Refrigeration uses COP — coefficient of performance — instead of efficiency. The interesting part is the working fluid. Here's R-134a, the classic. Switch to R-744 — that's CO2 — and the cycle reshapes around its supercritical behavior. The refrigerants panel shows global warming potential side by side, so thermodynamics gets an environmental dimension. Why R-134a is being phased out becomes obvious in two clicks."
+    },
+    {
+      "id": "11_darkmode",
+      "narration": "Last detail — dark mode toggle at the bottom. Every color in the UI, including the diagram strokes and gradients, swaps to a dark palette. Easier on the eyes during a late-night problem set, and your preference persists across sessions."
+    },
+    {
+      "id": "12_close",
+      "narration": "No installs. No accounts. No backend. Everything runs in your browser, calculates in your browser, and saves your preferences in your browser. It's the tool I wish I'd had when I was learning this material."
+    }
+  ]
+}
