@@ -13,7 +13,7 @@ export default function LandingPage({ onNavigate }) {
         <div style={{ fontSize: 12, color: K.inkLight, letterSpacing: 2, marginTop: 6 }}>Interactive Thermodynamic Cycle Analysis</div>
       </div>
 
-      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center", padding: "0 20px", maxWidth: 800 }}>
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center", padding: "0 20px", maxWidth: 1140 }}>
         {/* Rankine Cycle Card */}
         <button
           onClick={() => onNavigate("rankine")}
@@ -59,6 +59,31 @@ export default function LandingPage({ onNavigate }) {
           </div>
           <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
             {["Compressor", "Condenser", "Valve", "Evaporator"].map((c, i) => (
+              <span key={i} style={{ fontSize: 10, padding: "3px 8px", background: K.cardAlt, border: `1px solid ${K.border}`, color: K.inkLight }}>{c}</span>
+            ))}
+          </div>
+        </button>
+
+        {/* Brayton Cycle Card */}
+        <button
+          onClick={() => onNavigate("brayton")}
+          style={{
+            background: "#fff", border: `1.5px solid ${K.border}`, padding: "34px 38px", cursor: "pointer",
+            width: 340, textAlign: "left", transition: "all 0.2s",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = K.workIn; e.currentTarget.style.boxShadow = "0 4px 20px rgba(183,149,11,0.14)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = K.border; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.06)"; }}
+        >
+          <div style={{ fontSize: 11, color: K.inkLight, letterSpacing: 2, marginBottom: 8, textTransform: "uppercase" }}>Gas Turbines & Jet Engines</div>
+          <div style={{ fontSize: 24, fontFamily: FD, color: K.ink, marginBottom: 10, lineHeight: 1.2 }}>
+            Brayton <span style={{ color: K.workIn, fontStyle: "italic" }}>Cycle</span>
+          </div>
+          <div style={{ fontSize: 13, color: K.inkMed, lineHeight: 1.7 }}>
+            Gas-turbine analysis with interactive T-s and P-v diagrams. Explore pressure ratio, turbine inlet temperature, back work ratio, and a live specific-volume visualizer.
+          </div>
+          <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+            {["Compressor", "Combustor", "Turbine", "Exhaust"].map((c, i) => (
               <span key={i} style={{ fontSize: 10, padding: "3px 8px", background: K.cardAlt, border: `1px solid ${K.border}`, color: K.inkLight }}>{c}</span>
             ))}
           </div>

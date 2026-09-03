@@ -275,7 +275,7 @@ export function ParamSlider({ label, unit, kind, value, min, max, step, onChange
   const dispMax = conv ? conv.to(max) : max;
   const dispUnit = conv ? conv.label : unit;
   const dispDigits = (v) => {
-    if (!conv) return 0;
+    if (!conv) return step && step < 1 ? 1 : 0;
     const a = Math.abs(v);
     if (kind === "P") return units.P === "MPa" ? 3 : units.P === "bar" || units.P === "atm" ? 2 : 0;
     if (kind === "T") return 0;

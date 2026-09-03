@@ -1584,8 +1584,9 @@ export default function RefrigerationPage({ onBack }) {
     const t0 = performance.now();
     const tick = (now) => {
       if (cancelled) return;
-      const elapsed = (now - t0) % totalMs;
-      const segIdx = Math.floor(elapsed / segMs);
+      // rAF timestamps can precede the performance.now() captured above → keep elapsed in [0, totalMs)
+      const elapsed = ((now - t0) % totalMs + totalMs) % totalMs;
+      const segIdx = Math.min(3, Math.max(0, Math.floor(elapsed / segMs)));
       const frac = (elapsed - segIdx * segMs) / segMs;
       const a = cycle.states[segIdx];
       const b = cycle.states[(segIdx + 1) % 4];

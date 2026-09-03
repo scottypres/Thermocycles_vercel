@@ -1840,8 +1840,9 @@ function RankinePage({ onBack }) {
     const t0 = performance.now();
     const tick = (now) => {
       if (cancelled) return;
-      const elapsed = (now - t0) % totalMs;
-      const segIdx = Math.floor(elapsed / segMs);
+      // rAF timestamps can precede the performance.now() captured above → keep elapsed in [0, totalMs)
+      const elapsed = ((now - t0) % totalMs + totalMs) % totalMs;
+      const segIdx = Math.min(3, Math.max(0, Math.floor(elapsed / segMs)));
       const frac = (elapsed - segIdx * segMs) / segMs;
       let s, T;
       if (segIdx === 1 && cycle.boilerPath) {
@@ -2116,12 +2117,14 @@ function RankinePage({ onBack }) {
 /* ───────── Main App Router ───────── */
 import LandingPage from "./LandingPage.jsx";
 import RefrigerationPage from "./RefrigerationApp.jsx";
+import BraytonPage from "./BraytonApp.jsx";
 
 const viewFromURL = () => {
   if (typeof window === "undefined") return "landing";
   const v = new URLSearchParams(window.location.search).get("view");
   if (v === "rankine") return "rankine";
   if (v === "refrigeration") return "refrigeration";
+  if (v === "brayton") return "brayton";
   return "landing";
 };
 
@@ -2145,5 +2148,6 @@ export default function App() {
 
   if (page === "landing") return <LandingPage onNavigate={navigate} />;
   if (page === "refrigeration") return <RefrigerationPage onBack={() => navigate("landing")} />;
+  if (page === "brayton") return <BraytonPage onBack={() => navigate("landing")} />;
   return <RankinePage onBack={() => navigate("landing")} />;
 }

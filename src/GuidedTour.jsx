@@ -304,6 +304,22 @@ export const RANKINE_TOUR_STEPS = [
   { target: "share-solution", title: "Share & Copy Solution", description: "Share Setup copies a deep link to your current cycle parameters — open it on another device or share with a classmate to land on the same configuration. Copy Solution copies a plain-text dump of every state point and process result in your chosen units, ready to paste into a homework write-up.", sheet: "top" },
 ];
 
+/* ───────── Tour Steps: Brayton Cycle ───────── */
+export const BRAYTON_TOUR_STEPS = [
+  { target: null, type: "sizing", title: "Display Size", description: "" },
+  { target: "bry-theory", title: "Theory", description: "Open the Theory section to learn about the ideal Brayton (gas-turbine) cycle, the cold-air-standard assumptions, and its four processes." },
+  { target: "bry-schematic", title: "System Schematic", description: "Click any device — Compressor, Combustor, Turbine, or Heat Exchanger — to see its thermodynamic process, equations, and live calculated values." },
+  { target: "bry-visualizer", title: "Volume Visualizer", description: "Air stays a gas throughout the Brayton cycle, so instead of phases this box shows specific volume: its width shrinks as the air is compressed and grows as it expands, while particle speed and colour track temperature." },
+  { target: "bry-ts-diagram", title: "Drag Labels on T–s", description: "Drag the 'Combustor' label to change the pressure ratio, or the 'Heat Exchanger' label to change the inlet pressure P₁." },
+  { target: "bry-fx", title: "Equations Reference", description: "Open the equations modal to see all thermodynamic formulas used in the Brayton cycle analysis, including the isentropic relations." },
+  { target: "bry-eta-areas", title: "Efficiency Areas", description: "Toggle shaded areas on the T–s diagram to visualize thermal efficiency as the ratio of net work to heat input." },
+  { target: "bry-pv-areas", title: "Work Areas", description: "Toggle shaded areas on the P–v diagram to visualize compressor work, turbine work, and net work." },
+  { target: "bry-lock-buttons", title: "Lock Properties", description: "Lock entropy (s), temperature (T), pressure (P), or specific volume (v) to constrain your drag point on the diagrams." },
+  { target: "bry-energy-balance", title: "Energy Balance", description: "Click any energy value — Q in, Q out, W turbine, or W compressor — to jump directly to its equation in the reference.", sheet: "top" },
+  { target: "bry-settings", title: "Settings", description: "Open the Settings dialog to adjust display size, theme (light/dark), units (T/P/h/s), and animation speed. Preferences persist across sessions." },
+  { target: "bry-share-solution", title: "Share & Copy Solution", description: "Share Setup copies a deep link to your current cycle parameters — open it on another device or share with a classmate to land on the same configuration. Copy Solution copies a plain-text dump of every state point and process result in your chosen units, ready to paste into a homework write-up.", sheet: "top" },
+];
+
 /* ───────── Tour Steps: Refrigeration Cycle ───────── */
 export const REF_TOUR_STEPS = [
   { target: null, type: "sizing", title: "Display Size", description: "" },
