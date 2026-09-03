@@ -321,6 +321,23 @@ export const BRAYTON_TOUR_STEPS = [
   { target: "bry-share-solution", title: "Share & Copy Solution", description: "Share Setup copies a deep link to your current cycle parameters — open it on another device or share with a classmate to land on the same configuration. Copy Solution copies a plain-text dump of every state point and process result in your chosen units, ready to paste into a homework write-up.", sheet: "top" },
 ];
 
+/* ───────── Tour Steps: Otto Cycle ───────── */
+export const OTTO_TOUR_STEPS = [
+  { target: null, type: "sizing", title: "Display Size", description: "" },
+  { target: "otto-theory", title: "Theory", description: "Open the Theory section to learn about the ideal Otto (spark-ignition engine) cycle, the closed-system air-standard assumptions, and its four processes." },
+  { target: "otto-gas-selector", title: "Working Gas", description: "Switch the working gas — air, nitrogen, helium, argon, or CO₂. The specific-heat ratio k sets efficiency for a given compression ratio; the Gases button lists every property." },
+  { target: "otto-schematic", title: "Piston–Cylinder Schematic", description: "The piston follows the drag point's specific volume and the charge colour follows its temperature. Click any process badge — Compression, Combustion, Expansion, or Heat Rejection — for its equations and live values." },
+  { target: "otto-visualizer", title: "Volume Visualizer", description: "The charge stays a gas throughout the Otto cycle, so this box shows specific volume: it shrinks to the clearance volume at TDC and grows to full displacement at BDC, while particle speed and colour track temperature." },
+  { target: "otto-ts-diagram", title: "Drag Labels on T–s", description: "Drag the 'Combustion' label to change the compression ratio, or the 'Heat Rejection' label to change the intake pressure P₁." },
+  { target: "otto-fx", title: "Equations Reference", description: "Open the equations modal to see every formula used in the Otto cycle analysis, including the isentropic relations and mean effective pressure." },
+  { target: "otto-eta-areas", title: "Efficiency Areas", description: "Toggle shaded areas on the T–s diagram to visualize thermal efficiency as the ratio of net work to heat input." },
+  { target: "otto-pv-areas", title: "Work Areas", description: "Toggle shaded areas on the P–v diagram to visualize compression work, expansion work, and net work as boundary work ∫P dv." },
+  { target: "otto-lock-buttons", title: "Lock Properties", description: "Lock entropy (s), temperature (T), pressure (P), or specific volume (v) to constrain your drag point on the diagrams." },
+  { target: "otto-energy-balance", title: "Energy Balance", description: "Click any energy value — Q in, Q out, W expansion, or W compression — to jump directly to its equation in the reference.", sheet: "top" },
+  { target: "otto-settings", title: "Settings", description: "Open the Settings dialog to adjust display size, theme (light/dark), units (T/P/h/s), and animation speed. Preferences persist across sessions." },
+  { target: "otto-share-solution", title: "Share & Copy Solution", description: "Share Setup copies a deep link to your current cycle parameters — open it on another device or share with a classmate to land on the same configuration. Copy Solution copies a plain-text dump of every state point and process result in your chosen units, ready to paste into a homework write-up.", sheet: "top" },
+];
+
 /* ───────── Tour Steps: Refrigeration Cycle ───────── */
 export const REF_TOUR_STEPS = [
   { target: null, type: "sizing", title: "Display Size", description: "" },

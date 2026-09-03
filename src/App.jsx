@@ -2118,6 +2118,7 @@ function RankinePage({ onBack }) {
 import LandingPage from "./LandingPage.jsx";
 import RefrigerationPage from "./RefrigerationApp.jsx";
 import BraytonPage from "./BraytonApp.jsx";
+import OttoPage from "./OttoApp.jsx";
 
 const viewFromURL = () => {
   if (typeof window === "undefined") return "landing";
@@ -2125,6 +2126,7 @@ const viewFromURL = () => {
   if (v === "rankine") return "rankine";
   if (v === "refrigeration") return "refrigeration";
   if (v === "brayton") return "brayton";
+  if (v === "otto") return "otto";
   return "landing";
 };
 
@@ -2149,5 +2151,6 @@ export default function App() {
   if (page === "landing") return <LandingPage onNavigate={navigate} />;
   if (page === "refrigeration") return <RefrigerationPage onBack={() => navigate("landing")} />;
   if (page === "brayton") return <BraytonPage onBack={() => navigate("landing")} />;
+  if (page === "otto") return <OttoPage onBack={() => navigate("landing")} />;
   return <RankinePage onBack={() => navigate("landing")} />;
 }

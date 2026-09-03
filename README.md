@@ -1,6 +1,6 @@
 # ThermoCycles Studio
 
-Interactive thermodynamic cycle analysis (Rankine, vapor-compression refrigeration, and Brayton gas-turbine cycles).
+Interactive thermodynamic cycle analysis (Rankine, vapor-compression refrigeration, Brayton gas-turbine, and Otto spark-ignition engine cycles).
 Live: https://thermocycles-vercel.vercel.app/
 
 **Instructional video:** https://www.youtube.com/watch?v=2sEMSVImMmo
