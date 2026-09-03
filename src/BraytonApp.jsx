@@ -266,7 +266,9 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
   const cp = cycle.gas.cp;
   const combMidS = (st[1].s + st[2].s) / 2;
   const combMidT = (st[1].T + K2C) * Math.exp((combMidS - st[1].s) / cp) - K2C;
-  const combTextX = mapS(combMidS), combTextY = mapT(combMidT) - 9;
+  const combShort = Math.abs(mapS(st[2].s) - mapS(st[1].s)) < sz(64); // 2→3 shorter than the label: lift it above the state digits
+  const combTextX = mapS(combMidS), combTextY = mapT(combMidT) - (combShort ? 22 : 9);
+  const compLeft = mapS(st[0].s) - sz(58) >= TS_PLOT.x; // room for the Compressor label left of the 1→2 line?
   const hxMidS = st[0].s + 0.65 * (st[3].s - st[0].s); // biased toward state 4 so it clears the state-1 value box
   const hxMidT = (st[3].T + K2C) * Math.exp((hxMidS - st[3].s) / cp) - K2C;
   const hxTextX = mapS(hxMidS), hxTextY = mapT(hxMidT) + 13;
@@ -389,8 +391,8 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
         );
       })}
       {!showAreas && <>
-        <rect x={mapS(st[0].s) - sz(58)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2 - sz(8)} width={sz(52)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={mapS(st[0].s) - sz(8)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="end">Compressor</text>
+        <rect x={compLeft ? mapS(st[0].s) - sz(58) : mapS(st[0].s) + sz(6)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2 - sz(8)} width={sz(52)} height={sz(11)} rx={2} fill={K.card} />
+        <text x={compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor={compLeft ? "end" : "start"}>Compressor</text>
         <rect x={combTextX - sz(24)} y={combTextY - sz(8)} width={sz(48)} height={sz(11)} rx={2} fill={K.card} />
         <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Combustor</text>
         <rect x={mapS(st[2].s) + sz(6)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2 - sz(8)} width={sz(36)} height={sz(11)} rx={2} fill={K.card} />
@@ -482,7 +484,8 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
     return propsPV(cycle.gas, P, v); // only this diagram's window clamps the point
   }, [getSvgXY, lockP, lockV, dragPoint, vMax, pMax, cycle.gas]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const combTextX = (mapV(st[1].v) + mapV(st[2].v)) / 2, combTextY = mapP(cycle.p2) - 7;
+  const combShort = Math.abs(mapV(st[2].v) - mapV(st[1].v)) < sz(64);
+  const combTextX = (mapV(st[1].v) + mapV(st[2].v)) / 2, combTextY = mapP(cycle.p2) - (combShort ? 21 : 7);
   const hxTextX = (mapV(st[3].v) + mapV(st[0].v)) / 2, hxTextY = mapP(cycle.p1) + 13;
 
   const handleStart = useCallback((e) => {
