@@ -248,9 +248,11 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
   const combTextX = mapS(combMidS), combTextY = mapT(combMidT) - (combShort ? 22 : 9);
   const compLeft = mapS(st[0].s) - sz(62) >= TS_PLOT.x; // room for the Compression label left of the 1→2 line?
   const expLeft = mapS(st[2].s) + sz(52) > TS_W; // no room right of the 3→4 line (CO₂ at high r): put the Expansion label inside the loop
-  const rejMidS = st[0].s + 0.65 * (st[3].s - st[0].s); // biased toward state 4 so it clears the state-1 value box
+  const rejShort = Math.abs(mapS(st[3].s) - mapS(st[0].s)) < sz(80); // 4→1 shorter than the label (argon at r = 14): centre it and drop it below the state digits
+  const rejMidS = st[0].s + (rejShort ? 0.5 : 0.65) * (st[3].s - st[0].s); // otherwise biased toward state 4 so it clears the state-1 value box
   const rejMidT = (st[3].T + K2C) * Math.exp((rejMidS - st[3].s) / cv) - K2C;
-  const rejTextX = mapS(rejMidS), rejTextY = mapT(rejMidT) + 13;
+  const rejTextX = mapS(rejMidS), rejTextY = mapT(rejMidT) + (rejShort ? 24 : 13);
+  const hintClear = !(mapS(st[2].s) + sz(17) > TS_W - sz(62) && mapT(st[2].T) - sz(8) < TS_PLOT.y + sz(32)); // state 3 in the top-right corner (low r, hot intake) would sit on the "tap & drag" hint
 
   const handleStart = useCallback((e) => {
     if (e.touches && e.touches.length === 0) return;
@@ -393,7 +395,7 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
             <text x={rectX + sz(4)} y={rectY + sz(12)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
           </>;
         })()}
-        <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
+        {hintClear && <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>}
       </>}
       {showAreas && (() => {
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
@@ -465,8 +467,11 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
   }, [getSvgXY, lockP, lockV, dragPoint, vMax, pMax, cycle.gas]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The isochores are vertical lines; their labels sit on the line at mid-height and drag sideways
-  const combTextX = mapV(cycle.v2), combTextY = (mapP(cycle.p2) + mapP(cycle.p3)) / 2;
-  const rejTextX = mapV(cycle.v1), rejTextY = (mapP(cycle.p4) + mapP(cycle.p1)) / 2;
+  // When the isochore is shorter than the state-digit boxes beside it (helium/argon at r = 14 with the minimum T₃), the label
+  // moves off the line to the side away from the digits (digits 2/3 sit left of the 2→3 line, digits 4/1 right of the 4→1 line)
+  const combShort = Math.abs(mapP(cycle.p3) - mapP(cycle.p2)) < sz(40), rejShort = Math.abs(mapP(cycle.p1) - mapP(cycle.p4)) < sz(40);
+  const combTextX = mapV(cycle.v2) + (combShort ? sz(32) : 0), combTextY = (mapP(cycle.p2) + mapP(cycle.p3)) / 2;
+  const rejTextX = mapV(cycle.v1) - (rejShort ? sz(44) : 0), rejTextY = (mapP(cycle.p4) + mapP(cycle.p1)) / 2;
 
   const handleStart = useCallback((e) => {
     if (e.touches && e.touches.length === 0) return;
