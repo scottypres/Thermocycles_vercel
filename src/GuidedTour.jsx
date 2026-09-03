@@ -308,6 +308,7 @@ export const RANKINE_TOUR_STEPS = [
 export const BRAYTON_TOUR_STEPS = [
   { target: null, type: "sizing", title: "Display Size", description: "" },
   { target: "bry-theory", title: "Theory", description: "Open the Theory section to learn about the ideal Brayton (gas-turbine) cycle, the cold-air-standard assumptions, and its four processes." },
+  { target: "bry-gas-selector", title: "Working Gas", description: "Switch the working gas — air, nitrogen, helium, argon, or CO₂. The specific-heat ratio k sets efficiency for a given pressure ratio; the Gases button lists every property." },
   { target: "bry-schematic", title: "System Schematic", description: "Click any device — Compressor, Combustor, Turbine, or Heat Exchanger — to see its thermodynamic process, equations, and live calculated values." },
   { target: "bry-visualizer", title: "Volume Visualizer", description: "Air stays a gas throughout the Brayton cycle, so instead of phases this box shows specific volume: its width shrinks as the air is compressed and grows as it expands, while particle speed and colour track temperature." },
   { target: "bry-ts-diagram", title: "Drag Labels on T–s", description: "Drag the 'Combustor' label to change the pressure ratio, or the 'Heat Exchanger' label to change the inlet pressure P₁." },

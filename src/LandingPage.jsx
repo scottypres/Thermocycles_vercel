@@ -80,7 +80,7 @@ export default function LandingPage({ onNavigate }) {
             Brayton <span style={{ color: K.workIn, fontStyle: "italic" }}>Cycle</span>
           </div>
           <div style={{ fontSize: 13, color: K.inkMed, lineHeight: 1.7 }}>
-            Gas-turbine analysis with interactive T-s and P-v diagrams. Explore pressure ratio, turbine inlet temperature, back work ratio, and a live specific-volume visualizer.
+            Gas-turbine analysis with interactive T-s and P-v diagrams. Compare 5 working gases, explore pressure ratio and turbine inlet temperature, and watch a live specific-volume visualizer.
           </div>
           <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
             {["Compressor", "Combustor", "Turbine", "Exhaust"].map((c, i) => (

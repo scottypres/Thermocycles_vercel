@@ -3,43 +3,66 @@ import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop, SettingsModal
 import { GuidedTour, WelcomePopup, BRAYTON_TOUR_STEPS } from "./GuidedTour.jsx";
 let K = K_LIGHT;
 
-/* ───────── Cold-air-standard properties (ideal gas, constant cp) ─────────
-   h = cp·T(K); s referenced to air-table s° at 300 K, 100 kPa. */
-const CP = 1.005, R_AIR = 0.287, GAMMA = 1.4;
-const S_REF = 1.70203, T_REF_K = 300, P_REF = 100;
+/* ───────── Working gases (ideal gas, constant cp — "cold-air standard" for air) ─────────
+   h = cp·T(K); s referenced at 300 K, 100 kPa. Air uses the Table A-17 value so
+   numbers match the textbook; the others use absolute (third-law) entropies. */
+export const GASES = [
+  { id: "air", name: "Air", formula: "N₂ / O₂ mix", M: 28.97, cp: 1.005, R: 0.2870, k: 1.400, sRef: 1.70203,
+    uses: "Open-cycle gas turbines, jet engines, combined-cycle power plants.",
+    note: "The textbook default. Entropy reference matches air Table A-17 (s° = 1.702 kJ/kg·K at 300 K)." },
+  { id: "n2", name: "Nitrogen", formula: "N₂", M: 28.013, cp: 1.039, R: 0.2968, k: 1.400, sRef: 6.841,
+    uses: "Closed-cycle test loops and inert-atmosphere rigs.",
+    note: "Behaves almost identically to air — same k, slightly higher cp and R." },
+  { id: "he", name: "Helium", formula: "He", M: 4.003, cp: 5.1926, R: 2.0769, k: 1.667, sRef: 31.52,
+    uses: "High-temperature gas-cooled reactors, closed-cycle space power.",
+    note: "Monatomic: highest efficiency per pressure ratio, but T₂ climbs fastest and specific volume is ~7× air." },
+  { id: "ar", name: "Argon", formula: "Ar", M: 39.948, cp: 0.5203, R: 0.2081, k: 1.667, sRef: 3.876,
+    uses: "Closed-cycle laboratory rigs, inert working-fluid studies.",
+    note: "Same k as helium with one-tenth the specific volume and cp." },
+  { id: "co2", name: "Carbon Dioxide", formula: "CO₂", M: 44.01, cp: 0.846, R: 0.1889, k: 1.289, sRef: 4.860,
+    uses: "Closed Brayton studies. Supercritical CO₂ cycles are real-gas cycles and are NOT represented by this model.",
+    note: "Lowest k of the set: least efficiency per pressure ratio under the constant-cp assumption." },
+];
+const T_REF_K = 300, P_REF = 100;
 const K2C = 273.15;
-const sOf = (TK, P) => S_REF + CP * Math.log(TK / T_REF_K) - R_AIR * Math.log(P / P_REF);
-const pOf = (TK, s) => P_REF * Math.exp((S_REF + CP * Math.log(TK / T_REF_K) - s) / R_AIR);
-const vOf = (TK, P) => R_AIR * TK / P;
-const hOf = (TK) => CP * TK;
-function propsST(s, Tc) { const TK = Math.max(1, Tc + K2C); const P = pOf(TK, s); return { s, T: Tc, P, v: vOf(TK, P), h: hOf(TK) }; }
-function propsPV(P, v) { const TK = Math.max(1, P * v / R_AIR); return { s: sOf(TK, P), T: TK - K2C, P, v, h: hOf(TK) }; }
+const sOf = (g, TK, P) => g.sRef + g.cp * Math.log(TK / T_REF_K) - g.R * Math.log(P / P_REF);
+const pOf = (g, TK, s) => P_REF * Math.exp((g.sRef + g.cp * Math.log(TK / T_REF_K) - s) / g.R);
+const vOf = (g, TK, P) => g.R * TK / P;
+const hOf = (g, TK) => g.cp * TK;
+function propsST(g, s, Tc) { const TK = Math.max(1, Tc + K2C); const P = pOf(g, TK, s); return { s, T: Tc, P, v: vOf(g, TK, P), h: hOf(g, TK) }; }
+function propsPV(g, P, v) { const TK = Math.max(1, P * v / g.R); return { s: sOf(g, TK, P), T: TK - K2C, P, v, h: hOf(g, TK) }; }
 
 const RP_MIN = 2, RP_MAX = 30, P1_MIN = 50, P1_MAX = 200, T1_MIN = -20, T1_MAX = 60, T3_MAX = 1600;
 const clampRp = rp => Math.max(RP_MIN, Math.min(RP_MAX, Math.round(rp * 2) / 2));
 const clampP1 = p => Math.max(P1_MIN, Math.min(P1_MAX, Math.round(p / 5) * 5));
 
-function calculateBrayton(rp, p1, t1c, t3c) {
-  const x = (GAMMA - 1) / GAMMA;
+function calculateBrayton(gas, rp, p1, t1c, t3c) {
+  const x = (gas.k - 1) / gas.k;
   const T1 = t1c + K2C, P1 = p1;
   const P2 = rp * p1, T2 = T1 * Math.pow(rp, x);
   const T3 = t3c + K2C, P3 = P2;
   const T4 = T3 / Math.pow(rp, x), P4 = p1;
-  const mk = (label, TK, P, desc) => ({ label, T: TK - K2C, P, s: sOf(TK, P), h: hOf(TK), v: vOf(TK, P), desc });
+  const mk = (label, TK, P, desc) => ({ label, T: TK - K2C, P, s: sOf(gas, TK, P), h: hOf(gas, TK), v: vOf(gas, TK, P), desc });
   const states = [mk("1", T1, P1, "Compressor In"), mk("2", T2, P2, "Combustor In"), mk("3", T3, P3, "Turbine In"), mk("4", T4, P4, "Turbine Out")];
   const [s1, s2, s3, s4] = states.map(s => s.s);
   const [h1, h2, h3, h4] = states.map(s => s.h);
   const wComp = h2 - h1, wTurb = h3 - h4, qIn = h3 - h2, qOut = h4 - h1;
   const wNet = wTurb - wComp, eta = wNet / qIn, bwr = wComp / wTurb;
   const N = 24;
-  const combustorPath = Array.from({ length: N + 1 }, (_, i) => { const s = lerp(i / N, 0, 1, s2, s3); return { s, T: T2 * Math.exp((s - s2) / CP) - K2C }; });
-  const exhaustPath = Array.from({ length: N + 1 }, (_, i) => { const s = lerp(i / N, 0, 1, s4, s1); return { s, T: T4 * Math.exp((s - s4) / CP) - K2C }; });
-  const iso = (Pa, va, vb) => Array.from({ length: N + 1 }, (_, i) => { const v = lerp(i / N, 0, 1, va, vb); return { v, P: Pa * Math.pow(va / v, GAMMA) }; });
+  const combustorPath = Array.from({ length: N + 1 }, (_, i) => { const s = lerp(i / N, 0, 1, s2, s3); return { s, T: T2 * Math.exp((s - s2) / gas.cp) - K2C }; });
+  const exhaustPath = Array.from({ length: N + 1 }, (_, i) => { const s = lerp(i / N, 0, 1, s4, s1); return { s, T: T4 * Math.exp((s - s4) / gas.cp) - K2C }; });
+  const iso = (Pa, va, vb) => Array.from({ length: N + 1 }, (_, i) => { const v = lerp(i / N, 0, 1, va, vb); return { v, P: Pa * Math.pow(va / v, gas.k) }; });
   const compPvPath = iso(P1, states[0].v, states[1].v);
   const turbPvPath = iso(P3, states[2].v, states[3].v);
   return {
-    states, rp, p1, p2: P2, wComp, wTurb, qIn, qOut, wNet, eta, bwr,
-    tsMin: -100, tsMax: Math.ceil((t3c + 120) / 100) * 100, // T-s axis range (°C), also caps P-v drags
+    gas, states, rp, p1, p2: P2, wComp, wTurb, qIn, qOut, wNet, eta, bwr,
+    vMin: Math.min(...states.map(s => s.v)), vMax: Math.max(...states.map(s => s.v)),
+    // Axis ranges for both diagrams.
+    tsMin: -100, tsMax: Math.ceil((t3c + 120) / 100) * 100,
+    // s padding scales with the cycle's entropy spread (argon at r_p = 30 spans < 0.1 kJ/kg·K; helium spans > 4)
+    // so the cycle fills the plot and labels beside states 1–4 stay on the SVG for every gas
+    ...(() => { const sp = s3 - s1, pad = Math.max(0.04, 0.15 * sp), q = sp < 0.5 ? 100 : 10;
+      return { sAxisMin: Math.floor((s1 - pad) * q) / q, sAxisMax: Math.ceil((s3 + pad * 1.25) * q) / q }; })(),
     h1, h2, h3, h4, s1, s2, s3, s4, T1: t1c, T2: T2 - K2C, T3: t3c, T4: T4 - K2C,
     combustorPath, exhaustPath, compPvPath, turbPvPath,
   };
@@ -48,6 +71,11 @@ function calculateBrayton(rp, p1, t1c, t3c) {
 function niceStep(range, maxTicks) {
   const c = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000];
   return c.find(s => range / s <= maxTicks) || c[c.length - 1];
+}
+function logTicks(lo, hi) { // 1-2-5 sequence per decade, thinned so labels never crowd
+  const out = [];
+  for (let e = Math.floor(Math.log10(lo)); e <= Math.ceil(Math.log10(hi)); e++) for (const m of [1, 2, 5]) { const t = m * Math.pow(10, e); if (t >= lo && t <= hi) out.push(t); }
+  return out.length > 8 ? out.filter((_, i) => i % 2 === 0) : out;
 }
 function ticks(min, max, step) { const out = []; for (let t = Math.ceil(min / step) * step; t <= max + 1e-9; t += step) out.push(+t.toFixed(6)); return out; }
 const walkPath = (pts, frac, kx, ky) => {
@@ -72,17 +100,37 @@ const walkPath = (pts, frac, kx, ky) => {
    speed and colour track temperature. Replaces the phase visualizer (no phase
    change in a gas cycle). */
 const NUM_PARTICLES = 320;
-const VOL_EXP = 0.3; // ponytail: each side ∝ (v/vRef)^0.3 so a 10:1 volume swing reads as ~2:1 per side (4:1 area); raise toward 1/3 for true 3-D-ish scaling
-const BOX_MIN_FRAC = 0.4;
 const W_CANVAS = 680, H_CANVAS = 480;
+const BOX_PAD = 6; // px of clearance between the readout overlay and the smallest box
 
-function VolumeBoxVisualizer({ T, P, v, vRef, tLow, tHigh, fillHeight, textScale, units }) {
+/* Box side runs from "just larger than the readout" at the cycle's smallest
+   specific volume to the full frame at its largest, interpolated in log(v) so
+   the intermediate states spread out visibly. */
+function VolumeBoxVisualizer({ T, P, v, vMin, vMax, tLow, tHigh, fillHeight, textScale, units, smooth }) {
   const ts = textScale || 1;
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const canvasRef = useRef(null);
+  const frameRef = useRef(null);
+  const overlayRef = useRef(null);
   const particlesRef = useRef(null);
   const animRef = useRef(null);
-  const frac = Math.max(BOX_MIN_FRAC, Math.min(1, Math.pow(Math.max(1e-6, v) / Math.max(1e-6, vRef), VOL_EXP)));
+  const [fracMin, setFracMin] = useState(0.4);
+  useEffect(() => {
+    const measure = () => {
+      const f = frameRef.current?.getBoundingClientRect(), o = overlayRef.current?.getBoundingClientRect();
+      if (!f || !o || !f.width || !f.height) return;
+      const m = Math.min(0.95, Math.max((o.width + 2 * BOX_PAD) / f.width, (o.height + 2 * BOX_PAD) / f.height));
+      setFracMin(prev => Math.abs(prev - m) > 0.003 ? m : prev);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (frameRef.current) ro.observe(frameRef.current);
+    if (overlayRef.current) ro.observe(overlayRef.current);
+    return () => ro.disconnect();
+  }, [fillHeight, ts, u.T, u.P]);
+  const span = Math.log(Math.max(1e-9, vMax) / Math.max(1e-9, vMin));
+  const t = span > 1e-9 ? Math.max(0, Math.min(1, Math.log(Math.max(1e-9, v) / Math.max(1e-9, vMin)) / span)) : 1;
+  const frac = fracMin + (1 - fracMin) * t;
   const cw = Math.round(W_CANVAS * frac), ch = Math.round(H_CANVAS * frac);
   const TK = Math.max(1, T + K2C);
   const tNorm = Math.max(0, Math.min(1, (T - tLow) / Math.max(1, tHigh - tLow)));
@@ -142,13 +190,14 @@ function VolumeBoxVisualizer({ T, P, v, vRef, tLow, tHigh, fillHeight, textScale
     <div style={{ position: "relative", ...(fillHeight ? { flex: 1, display: "flex", flexDirection: "column", minHeight: 0 } : {}) }}>
       {/* Fixed-footprint frame: its only children are absolutely positioned, so the box
           can shrink or grow without ever changing the page layout. */}
-      <div style={fillHeight ? { flex: 1, minHeight: 0, position: "relative" } : { width: "100%", aspectRatio: `${W_CANVAS} / ${H_CANVAS}`, position: "relative" }}>
+      <div ref={frameRef} style={fillHeight ? { flex: 1, minHeight: 0, position: "relative" } : { width: "100%", aspectRatio: `${W_CANVAS} / ${H_CANVAS}`, position: "relative" }}>
+        {/* No CSS transition while animating: a transition restarted every frame never gets to move in some browsers */}
         <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", width: `${frac * 100}%`, height: `${frac * 100}%`,
-          border: `1.5px solid ${K.ink}`, background: K.cardAlt, boxSizing: "border-box", transition: "width 0.12s linear, height 0.12s linear" }}>
+          border: `1.5px solid ${K.ink}`, background: K.cardAlt, boxSizing: "border-box", transition: smooth ? "width 0.12s linear, height 0.12s linear" : "none" }}>
           <canvas ref={canvasRef} width={cw} height={ch} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
         </div>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ background: overlayBg, padding: fillHeight ? `${12 * ts}px ${26 * ts}px` : `${6 * ts}px ${14 * ts}px`, border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
+          <div ref={overlayRef} style={{ background: overlayBg, padding: fillHeight ? `${12 * ts}px ${26 * ts}px` : `${6 * ts}px ${14 * ts}px`, border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
             {rows.map((r, i) => (
               <div key={i} style={{ marginTop: i === 0 ? 0 : (fillHeight ? 8 : 4) * ts }}>
                 <div style={{ fontSize: (fillHeight ? 26 : 15) * ts, fontFamily: FD, color: r.c, lineHeight: 1.1 }}>{r.v}</div>
@@ -185,8 +234,7 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
   const lineDragRef = useRef(null);
   const [activeArea, setActiveArea] = useState("qIn");
 
-  const sMin = Math.floor((cycle.s1 - 0.2) * 10) / 10;
-  const sMax = Math.ceil((cycle.s3 + 0.3) * 10) / 10;
+  const sMin = cycle.sAxisMin, sMax = cycle.sAxisMax;
   const tMin = cycle.tsMin, tMax = cycle.tsMax;
   const mapS = s => TS_PLOT.x + ((s - sMin) / (sMax - sMin)) * TS_PLOT.w;
   const mapT = T => TS_PLOT.y + TS_PLOT.h - ((T - tMin) / (tMax - tMin)) * TS_PLOT.h;
@@ -211,15 +259,16 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
     if (!r) return null;
     const s = lockS ? dragPoint.s : unmapS(r.px);
     const T = lockT ? dragPoint.T : Math.max(tMin + 5, unmapT(r.py));
-    return propsST(s, T);
-  }, [getSvgXY, lockS, lockT, dragPoint, sMin, sMax, tMin, tMax]); // eslint-disable-line react-hooks/exhaustive-deps
+    return propsST(cycle.gas, s, T); // only this diagram's window clamps the point; the other diagram just keeps its value box on-screen
+  }, [getSvgXY, lockS, lockT, dragPoint, sMin, sMax, tMin, tMax, cycle.gas]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const st = cycle.states;
+  const cp = cycle.gas.cp;
   const combMidS = (st[1].s + st[2].s) / 2;
-  const combMidT = (st[1].T + K2C) * Math.exp((combMidS - st[1].s) / CP) - K2C;
+  const combMidT = (st[1].T + K2C) * Math.exp((combMidS - st[1].s) / cp) - K2C;
   const combTextX = mapS(combMidS), combTextY = mapT(combMidT) - 9;
   const hxMidS = st[0].s + 0.65 * (st[3].s - st[0].s); // biased toward state 4 so it clears the state-1 value box
-  const hxMidT = (st[3].T + K2C) * Math.exp((hxMidS - st[3].s) / CP) - K2C;
+  const hxMidT = (st[3].T + K2C) * Math.exp((hxMidS - st[3].s) / cp) - K2C;
   const hxTextX = mapS(hxMidS), hxTextY = mapT(hxMidT) + 13;
 
   const handleStart = useCallback((e) => {
@@ -250,12 +299,12 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
       if (!r) return;
       const TK = Math.max(150, unmapT(r.py) + K2C);
       if (lineDragRef.current === "combustor") {
-        const TKlower = (st[0].T + K2C) * Math.exp((combMidS - st[0].s) / CP);
-        const rp = clampRp(Math.pow(TK / TKlower, CP / R_AIR));
+        const TKlower = (st[0].T + K2C) * Math.exp((combMidS - st[0].s) / cp);
+        const rp = clampRp(Math.pow(TK / TKlower, cp / cycle.gas.R));
         if (onRpChange) onRpChange(rp);
         if (onLineDragMove) onLineDragMove("combustor");
       } else {
-        const p1 = clampP1(pOf(TK, hxMidS));
+        const p1 = clampP1(pOf(cycle.gas, TK, hxMidS));
         if (onP1Drag) onP1Drag(p1);
         if (onLineDragMove) onLineDragMove("hx");
       }
@@ -266,7 +315,7 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
     e.preventDefault();
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgXY, getSvgPoint, onDrag, onRpChange, onP1Drag, onLineDragMove, st, combMidS, hxMidS]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getSvgXY, getSvgPoint, onDrag, onRpChange, onP1Drag, onLineDragMove, st, combMidS, hxMidS, cp, cycle.gas]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleEnd = useCallback(() => {
     draggingRef.current = false;
@@ -290,9 +339,9 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
       {tGrid.map((t, i) => <line key={`tg${i}`} x1={TS_PLOT.x} y1={mapT(t)} x2={TS_PLOT.x + TS_PLOT.w} y2={mapT(t)} stroke={K.gridMajor} strokeWidth={0.5} />)}
       <line x1={TS_PLOT.x} y1={axisY} x2={TS_PLOT.x + TS_PLOT.w} y2={axisY} stroke={K.ink} strokeWidth={1.2} />
       <line x1={TS_PLOT.x} y1={TS_PLOT.y} x2={TS_PLOT.x} y2={axisY} stroke={K.ink} strokeWidth={1.2} />
-      {sGrid.map((s, i) => <text key={`sl${i}`} x={mapS(s)} y={axisY + 10} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>{s.toFixed(1)}</text>)}
+      {sGrid.filter(s => mapS(s) < TS_W - sz(9)).map((s, i) => <text key={`sl${i}`} x={mapS(s)} y={axisY + 10} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>{+s.toFixed(2)}</text>)}
       {tGrid.map((t, i) => <text key={`tl${i}`} x={TS_PLOT.x - 4} y={mapT(t) + 2.5} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="end" fontFamily={FM}>{t}</text>)}
-      <text x={TS_W / 2} y={TS_H - 1} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
+      <text x={TS_W / 2} y={TS_H - 4} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
       <text x={10} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${TS_H / 2 - 8})`}>T (°C)</text>
       {showAreas && (() => {
         const qInD = [`M${mapS(st[1].s).toFixed(1)},${axisY.toFixed(1)}`, `L${mapS(st[1].s).toFixed(1)},${mapT(st[1].T).toFixed(1)}`, combD.replace(/^M/, "L"), `L${mapS(st[2].s).toFixed(1)},${axisY.toFixed(1)}`, "Z"].join(" ");
@@ -354,12 +403,12 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
           const label = `${fmtT(dragPoint.T, u, 0)}, ${fmtS(dragPoint.s, u, 2)}`;
           const w = sz(8) * 0.6 * label.length + sz(8);
           const flipLeft = dpx + sz(12) + w > TS_W - 2;
-          const rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
-          const textX = flipLeft ? rectX + sz(4) : dpx + sz(16);
-          const rectY = dpy - sz(22) < 1 ? dpy + sz(6) : dpy - sz(22); // flip below when near the top edge
+          let rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
+          let rectY = dpy - sz(22) < 1 ? dpy + sz(6) : dpy - sz(22); // flip below when near the top edge
+          rectX = Math.max(1, Math.min(TS_W - w - 1, rectX)); rectY = Math.max(1, Math.min(TS_H - sz(18) - 1, rectY)); // never leave the SVG
           return <>
             <rect x={rectX} y={rectY} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-            <text x={textX} y={rectY + sz(12)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
+            <text x={rectX + sz(4)} y={rectY + sz(12)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
           </>;
         })()}
         <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>
@@ -403,12 +452,14 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
   const [activeArea, setActiveArea] = useState("wTurb");
 
   const st = cycle.states;
-  const vMax = Math.ceil(st[3].v * 1.15 * 2) / 2;
-  const pMax = Math.ceil(cycle.p2 * 1.2 / 100) * 100;
-  const mapV = v => PV_PLOT.x + (v / vMax) * PV_PLOT.w;
-  const mapP = P => PV_PLOT.y + PV_PLOT.h - (P / pMax) * PV_PLOT.h;
-  const unmapV = px => ((px - PV_PLOT.x) / PV_PLOT.w) * vMax;
-  const unmapP = py => ((PV_PLOT.y + PV_PLOT.h - py) / PV_PLOT.h) * pMax;
+  // Log–log axes (as on the Rankine page): isentropes become straight lines and the cycle stays legible at r_p = 30
+  const lvLo = Math.log10(cycle.vMin / 1.7), lvHi = Math.log10(cycle.vMax * 1.7);
+  const lpLo = Math.log10(cycle.p1 / 1.7), lpHi = Math.log10(cycle.p2 * 1.7);
+  const mapV = v => PV_PLOT.x + ((Math.log10(Math.max(1e-6, v)) - lvLo) / (lvHi - lvLo)) * PV_PLOT.w;
+  const mapP = P => PV_PLOT.y + PV_PLOT.h - ((Math.log10(Math.max(1e-6, P)) - lpLo) / (lpHi - lpLo)) * PV_PLOT.h;
+  const unmapV = px => Math.pow(10, lvLo + ((px - PV_PLOT.x) / PV_PLOT.w) * (lvHi - lvLo));
+  const unmapP = py => Math.pow(10, lpLo + ((PV_PLOT.y + PV_PLOT.h - py) / PV_PLOT.h) * (lpHi - lpLo));
+  const vMax = Math.pow(10, lvHi), pMax = Math.pow(10, lpHi);
 
   const getSvgXY = useCallback((e) => {
     const svg = svgRef.current;
@@ -426,16 +477,10 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
   const getSvgPoint = useCallback((e) => {
     const r = getSvgXY(e);
     if (!r) return null;
-    let v = lockV ? dragPoint.v : Math.max(0.02, unmapV(r.px));
-    let P = lockP ? dragPoint.P : Math.max(10, unmapP(r.py));
-    // Keep the point inside the T-s axis range: slide along the boundary isotherm
-    const TK = P * v / R_AIR, TKmax = cycle.tsMax + K2C, TKmin = cycle.tsMin + 5 + K2C;
-    if (TK > TKmax || TK < TKmin) {
-      const Tc = Math.max(TKmin, Math.min(TKmax, TK));
-      if (lockV) P = R_AIR * Tc / v; else v = R_AIR * Tc / P;
-    }
-    return propsPV(P, v);
-  }, [getSvgXY, lockP, lockV, dragPoint, vMax, pMax, cycle.tsMax, cycle.tsMin]); // eslint-disable-line react-hooks/exhaustive-deps
+    const v = lockV ? dragPoint.v : unmapV(r.px);
+    const P = lockP ? dragPoint.P : unmapP(r.py);
+    return propsPV(cycle.gas, P, v); // only this diagram's window clamps the point
+  }, [getSvgXY, lockP, lockV, dragPoint, vMax, pMax, cycle.gas]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const combTextX = (mapV(st[1].v) + mapV(st[2].v)) / 2, combTextY = mapP(cycle.p2) - 7;
   const hxTextX = (mapV(st[3].v) + mapV(st[0].v)) / 2, hxTextY = mapP(cycle.p1) + 13;
@@ -492,8 +537,8 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
   const compD = toD(cycle.compPvPath), turbD = toD(cycle.turbPvPath);
   const cycleFillD = [compD, `L${mapV(st[2].v).toFixed(1)},${mapP(st[2].P).toFixed(1)}`, turbD.replace(/^M/, "L"), `L${mapV(st[0].v).toFixed(1)},${mapP(st[0].P).toFixed(1)}`, "Z"].join(" ");
   const dpx = mapV(dragPoint.v), dpy = mapP(dragPoint.P);
-  const vGrid = ticks(0, vMax, niceStep(vMax, 8));
-  const pGrid = ticks(0, pMax, niceStep(pMax, 8));
+  const vGrid = logTicks(Math.pow(10, lvLo), vMax);
+  const pGrid = logTicks(Math.pow(10, lpLo), pMax);
   const axisY = PV_PLOT.y + PV_PLOT.h;
 
   return (
@@ -504,10 +549,10 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
       {pGrid.map((p, i) => <line key={`pg${i}`} x1={PV_PLOT.x} y1={mapP(p)} x2={PV_PLOT.x + PV_PLOT.w} y2={mapP(p)} stroke={K.gridMajor} strokeWidth={0.5} />)}
       <line x1={PV_PLOT.x} y1={axisY} x2={PV_PLOT.x + PV_PLOT.w} y2={axisY} stroke={K.ink} strokeWidth={1.2} />
       <line x1={PV_PLOT.x} y1={PV_PLOT.y} x2={PV_PLOT.x} y2={axisY} stroke={K.ink} strokeWidth={1.2} />
-      {vGrid.map((v, i) => <text key={`vl${i}`} x={mapV(v)} y={axisY + 10} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>{+v.toFixed(2)}</text>)}
+      {vGrid.filter(v => mapV(v) < PV_W - sz(9)).map((v, i) => <text key={`vl${i}`} x={mapV(v)} y={axisY + 10} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM}>{+v.toPrecision(2)}</text>)}
       {pGrid.map((p, i) => <text key={`pl${i}`} x={PV_PLOT.x - 4} y={mapP(p) + 2.5} fill={K.inkMed} fontSize={sz(6.5)} textAnchor="end" fontFamily={FM}>{p >= 1000 ? `${+(p / 1000).toFixed(2)}k` : p}</text>)}
-      <text x={PV_W / 2} y={PV_H - 5} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">v (m³/kg)</text>
-      <text x={10} y={PV_H / 2 - 8} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${PV_H / 2 - 8})`}>P (kPa)</text>
+      <text x={PV_W / 2} y={PV_H - 5} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic">v (m³/kg) — log scale</text>
+      <text x={10} y={PV_H / 2 - 8} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${PV_H / 2 - 8})`}>P (kPa) — log</text>
       {showPvAreas && (() => {
         const x0 = PV_PLOT.x.toFixed(1);
         // Steady-flow work = −∫v dP: region between the isentrope and the P axis
@@ -577,12 +622,12 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
           const label = `${fmtP(dragPoint.P, u)}, ${dragPoint.v.toFixed(3)} m³/kg`;
           const w = sz(8) * 0.6 * label.length + sz(8);
           const flipLeft = dpx + sz(12) + w > PV_W - 2;
-          const rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
-          const textX = flipLeft ? rectX + sz(4) : dpx + sz(16);
-          const rectY = dpy - sz(22) < 1 ? dpy + sz(6) : dpy - sz(22); // flip below when near the top edge
+          let rectX = flipLeft ? dpx - sz(12) - w : dpx + sz(12);
+          let rectY = dpy - sz(22) < 1 ? dpy + sz(6) : dpy - sz(22); // flip below when near the top edge
+          rectX = Math.max(1, Math.min(PV_W - w - 1, rectX)); rectY = Math.max(1, Math.min(PV_H - sz(18) - 1, rectY)); // never leave the SVG
           return <>
             <rect x={rectX} y={rectY} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-            <text x={textX} y={rectY + sz(12)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
+            <text x={rectX + sz(4)} y={rectY + sz(12)} fill={K.ink} fontSize={sz(8)} fontFamily={FM}>{label}</text>
           </>;
         })()}
         <text x={PV_W - 8} y={PV_PLOT.y + 10} fill={K.inkLight} fontSize={sz(7)} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockV ? "v locked" : "tap & drag"}</text>
@@ -867,7 +912,7 @@ function BryInfoModal({ open, onClose }) {
           <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? 14 : 11, cursor: "pointer", padding: isWide ? "5px 16px" : "3px 12px", fontFamily: FM }}>Close</button>
         </div>
         <p style={{ fontSize: isWide ? 16 : 11, lineHeight: 1.9, color: K.inkMed, marginBottom: isWide ? 20 : 16 }}>
-          The Brayton cycle is the ideal cycle for gas-turbine engines — jet engines, power-plant gas turbines, and the topping cycle of combined-cycle plants. The working fluid (air) stays a gas throughout, so there is no phase change; instead, specific volume swings by an order of magnitude as the air is compressed, heated, and expanded. This tool uses the cold-air-standard assumptions: ideal gas, constant c_p = 1.005 kJ/kg·K, k = 1.4.
+          The Brayton cycle is the ideal cycle for gas-turbine engines — jet engines, power-plant gas turbines, and the topping cycle of combined-cycle plants. The working fluid stays a gas throughout, so there is no phase change; instead, specific volume swings by an order of magnitude as the gas is compressed, heated, and expanded. This tool uses ideal-gas, constant-specific-heat assumptions (the "cold-air standard" when the gas is air). Pick the working gas in the header: the specific-heat ratio k sets the efficiency for a given pressure ratio, and R sets the specific volume.
         </p>
         <div style={isWide ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 } : {}}>
           <div style={{ borderLeft: `3px solid ${K.workIn}`, paddingLeft: 12, marginBottom: isWide ? 0 : 16 }}>
@@ -911,6 +956,51 @@ function BryInfoModal({ open, onClose }) {
   );
 }
 
+/* ───────── Working Gas Reference Modal ───────── */
+function BryGasInfoModal({ open, onClose, currentGas }) {
+  if (!open) return null;
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
+      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: 560, width: "100%", padding: "24px 18px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: `2px solid ${K.ink}`, paddingBottom: 10 }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontFamily: FD, color: K.ink }}>Working Gas Reference</h2>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: 11, cursor: "pointer", padding: "3px 12px", fontFamily: FM }}>Close</button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {GASES.map(g => {
+            const isCurrent = g.id === currentGas.id;
+            const eta8 = (1 - Math.pow(8, -(g.k - 1) / g.k)) * 100;
+            return (
+              <div key={g.id} style={{ padding: "12px", border: `1.5px solid ${isCurrent ? K.workIn : K.border}`, background: isCurrent ? `${K.workIn}12` : K.cardAlt }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                  <span style={{ fontFamily: FD, fontSize: 14, color: isCurrent ? K.workIn : K.ink }}>{g.name}</span>
+                  <span style={{ fontSize: 9, color: K.inkLight, fontFamily: FM }}>{g.formula}</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, fontSize: 9, marginBottom: 6 }}>
+                  <div><span style={{ color: K.inkLight }}>c_p:</span> {g.cp} kJ/kg·K</div>
+                  <div><span style={{ color: K.inkLight }}>R:</span> {g.R} kJ/kg·K</div>
+                  <div><span style={{ color: K.inkLight }}>k:</span> <span style={{ fontWeight: 600 }}>{g.k}</span></div>
+                  <div><span style={{ color: K.inkLight }}>M:</span> {g.M} kg/kmol</div>
+                  <div style={{ gridColumn: "1 / -1" }}><span style={{ color: K.inkLight }}>η at r_p = 8:</span> <span style={{ color: K.accent, fontWeight: 600 }}>{eta8.toFixed(1)}%</span></div>
+                </div>
+                <div style={{ fontSize: 9, color: K.inkMed, lineHeight: 1.6, marginBottom: 4 }}>{g.uses}</div>
+                <div style={{ fontSize: 8, color: K.inkLight, fontStyle: "italic", lineHeight: 1.5 }}>{g.note}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ marginTop: 12, padding: "10px", background: K.cardAlt, border: `1px solid ${K.border}`, fontSize: 9, lineHeight: 1.8 }}>
+          <div style={{ fontFamily: FD, fontSize: 11, marginBottom: 4, color: K.ink }}>Why the gas matters</div>
+          <div><strong>k = c_p / c_v</strong> sets η = 1 − r_p^(−(k−1)/k): monatomic gases (k = 1.667) beat diatomic (k = 1.4) at every pressure ratio, but their T₂ rises faster, which raises the minimum turbine inlet temperature.</div>
+          <div><strong>R = R_u / M</strong> sets specific volume v = R·T/P: light gases occupy far more volume per kilogram, which drives compressor and duct sizing.</div>
+          <div style={{ color: K.inkLight, marginTop: 4, fontStyle: "italic" }}>All properties are constant-specific-heat values near 300 K. Real gases at high T₃ have larger c_p and lower k; supercritical CO₂ is a real-gas cycle outside this model.</div>
+        </div>
+        <button onClick={onClose} style={{ width: "100%", padding: "10px", marginTop: 12, background: K.accent, border: "none", color: "#fff", fontWeight: 500, fontSize: 12, fontFamily: FD, cursor: "pointer" }}>Close</button>
+      </div>
+    </div>
+  );
+}
+
 /* ───────── Equations Solver Modal ───────── */
 const BRY_EQ_TOPICS = [
   { id: "wt", label: "W_turbine", title: "Turbine Work Output", color: () => K.workOut },
@@ -935,8 +1025,9 @@ function BryEquationsModal({ open, onClose, cycle, initialTopic, units }) {
   const lT = lblT(u), lP = lblP(u), lH = lblH(u), lS = lblS(u);
   const sel = BRY_EQ_TOPICS.find(t => t.id === topic);
   const selColor = sel.color();
-  const x = ((GAMMA - 1) / GAMMA).toFixed(4);
-  const rpx = Math.pow(cycle.rp, (GAMMA - 1) / GAMMA);
+  const g = cycle.gas;
+  const x = ((g.k - 1) / g.k).toFixed(4);
+  const rpx = Math.pow(cycle.rp, (g.k - 1) / g.k);
   const TK = (c) => (c + K2C).toFixed(1);
   const stepStyle = { background: K.cardAlt, border: `1px solid ${K.border}`, padding: isWide ? "18px 22px" : "10px 12px", marginBottom: isWide ? 12 : 8, fontSize: isWide ? 16 : 10.5, lineHeight: 2, fontFamily: FM };
   const numStyle = { color: K.accent, fontWeight: 700 };
@@ -961,8 +1052,8 @@ function BryEquationsModal({ open, onClose, cycle, initialTopic, units }) {
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>STEP 2 — Enthalpies</div>
-          <div>h₃ = c_p·T₃ = 1.005 × {TK(cycle.T3)} = <span style={numStyle}>{cH(cycle.h3)}</span> {lH}</div>
-          <div>h₄ = c_p·T₄ = 1.005 × {TK(cycle.T4)} = <span style={numStyle}>{cH(cycle.h4)}</span> {lH}</div>
+          <div>h₃ = c_p·T₃ = {g.cp} × {TK(cycle.T3)} = <span style={numStyle}>{cH(cycle.h3)}</span> {lH}</div>
+          <div>h₄ = c_p·T₄ = {g.cp} × {TK(cycle.T4)} = <span style={numStyle}>{cH(cycle.h4)}</span> {lH}</div>
         </div>
         <div style={resultStyle}>
           <div style={resultLabelStyle}>RESULT</div>
@@ -1026,7 +1117,7 @@ function BryEquationsModal({ open, onClose, cycle, initialTopic, units }) {
         <div style={stepStyle}>
           <div style={labelStyle}>FORMULA</div>
           <div>η_th = W_net / Q_in = (W_t + W_c) / Q_in</div>
-          <div style={noteStyle}>For the ideal cold-air Brayton cycle this reduces to η_th = 1 − 1 / r_p^((k−1)/k): efficiency depends only on the pressure ratio, not on T₃.</div>
+          <div style={noteStyle}>For the ideal constant-c_p Brayton cycle this reduces to η_th = 1 − 1 / r_p^((k−1)/k): efficiency depends only on the pressure ratio and the gas's k = {g.k} ({g.name}), not on T₃.</div>
         </div>
         <div style={stepStyle}>
           <div style={labelStyle}>METHOD 1 — From energy terms</div>
@@ -1194,6 +1285,8 @@ export default function BraytonPage({ onBack }) {
 
   const initParams = (() => { try { return new URLSearchParams(window.location.search); } catch { return new URLSearchParams(); } })();
   const initNum = (key, def) => { const v = parseFloat(initParams.get(key)); return isNaN(v) ? def : v; };
+  const [gasIdx, setGasIdx] = useState(() => Math.max(0, GASES.findIndex(g => g.id === initParams.get("gas"))));
+  const [showGasInfo, setShowGasInfo] = useState(false);
   const [rp, setRp] = useState(() => clampRp(initNum("rp", 8)));
   const [p1, setP1] = useState(() => clampP1(initNum("p1", 100)));
   const [t1, setT1] = useState(() => Math.max(T1_MIN, Math.min(T1_MAX, initNum("t1", 25))));
@@ -1221,10 +1314,11 @@ export default function BraytonPage({ onBack }) {
   const [lockP, setLockP] = useState(false);
   const [lockV, setLockV] = useState(false);
 
-  const t2c = (t1 + K2C) * Math.pow(rp, (GAMMA - 1) / GAMMA) - K2C;
+  const gas = GASES[gasIdx];
+  const t2c = (t1 + K2C) * Math.pow(rp, (gas.k - 1) / gas.k) - K2C;
   const minT3 = Math.ceil((t2c + 100) / 10) * 10;
   const adjustedT3 = Math.max(t3, minT3);
-  const cycle = useMemo(() => calculateBrayton(rp, p1, t1, adjustedT3), [rp, p1, t1, adjustedT3]);
+  const cycle = useMemo(() => calculateBrayton(gas, rp, p1, t1, adjustedT3), [gas, rp, p1, t1, adjustedT3]);
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
 
   const [dragPoint, setDragPoint] = useState(() => ({ ...cycle.states[0] }));
@@ -1249,7 +1343,7 @@ export default function BraytonPage({ onBack }) {
       if (segIdx === 1) pt = walkPath(cycle.combustorPath, frac, "s", "T");
       else if (segIdx === 3) pt = walkPath(cycle.exhaustPath, frac, "s", "T");
       else { const a = cycle.states[segIdx], b = cycle.states[(segIdx + 1) % 4]; pt = { s: a.s + (b.s - a.s) * frac, T: a.T + (b.T - a.T) * frac }; }
-      setDragPoint(propsST(pt.s, pt.T));
+      setDragPoint(propsST(cycle.gas, pt.s, pt.T));
       setAnimProgress(elapsed / totalMs);
       rafId = requestAnimationFrame(tick);
     };
@@ -1261,7 +1355,6 @@ export default function BraytonPage({ onBack }) {
   const gap = desktop ? 25 : 12;
   const card = { margin: `${gap}px ${gap}px 0`, padding: desktop ? "24px" : "14px", background: K.card, border: `1px solid ${K.border}` };
   const sec = { margin: "0 0 14px 0", fontSize: sz(desktop ? 22.50 : 12), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
-  const vRef = Math.max(...cycle.states.map(s => s.v));
 
   return (
     <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
@@ -1276,24 +1369,38 @@ export default function BraytonPage({ onBack }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "8px 16px" : "5px 10px", color: K.inkMed, fontSize: sz(desktop ? 15 : 10), cursor: "pointer", fontFamily: FM }}>← Back</button>}
-          <div>
-            <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
-            <h1 style={{ margin: 0, fontSize: sz(desktop ? 35 : 20), fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
-              Brayton <span style={{ color: K.workIn, fontStyle: "italic" }}>Cycle</span>
-            </h1>
-            <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Ideal Gas-Turbine Cycle Analysis</div>
+      <div style={{ padding: desktop ? "20px 24px 16px" : "16px 16px 12px", borderBottom: `2px solid ${K.ink}`, background: K.card }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: desktop ? 14 : 10, flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {onBack && <button onClick={onBack} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "8px 16px" : "5px 10px", color: K.inkMed, fontSize: sz(desktop ? 15 : 10), cursor: "pointer", fontFamily: FM }}>← Back</button>}
+            <div>
+              <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 3, marginBottom: 1, textTransform: "uppercase" }}>Thermodynamics</div>
+              <h1 style={{ margin: 0, fontSize: sz(desktop ? 35 : 20), fontFamily: FD, color: K.ink, lineHeight: 1.1 }}>
+                Brayton <span style={{ color: K.workIn, fontStyle: "italic" }}>Cycle</span>
+              </h1>
+              <div style={{ fontSize: sz(desktop ? 13.75 : 8), color: K.inkLight, fontFamily: FM, letterSpacing: 2, marginTop: 2 }}>Ideal Gas-Turbine Cycle Analysis</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <button data-tour="bry-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
+            <button data-tour="bry-gases" onClick={() => setShowGasInfo(true)} style={{ background: K.workIn, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Gases</button>
+            <button data-tour="bry-settings" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
+            <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          <button data-tour="bry-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
-          <button data-tour="bry-settings" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
-          <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
+        {/* Working-gas selector */}
+        <div data-tour="bry-gas-selector" style={{ display: "flex", flexWrap: "wrap", gap: desktop ? 8 : 5 }}>
+          {GASES.map((g, i) => (
+            <button key={g.id} onClick={() => setGasIdx(i)} style={{
+              padding: desktop ? "6px 14px" : "4px 10px", fontSize: sz(desktop ? 13 : 9), fontFamily: FM,
+              background: i === gasIdx ? K.workIn : K.cardAlt, color: i === gasIdx ? "#fff" : K.inkMed,
+              border: `1px solid ${i === gasIdx ? K.workIn : K.border}`, cursor: "pointer", borderRadius: 3, fontWeight: i === gasIdx ? 700 : 400, transition: "all 0.15s",
+            }}>{g.name} <span style={{ opacity: 0.75 }}>k={g.k}</span></button>
+          ))}
         </div>
       </div>
       <BryInfoModal open={showInfo} onClose={() => setShowInfo(false)} />
+      <BryGasInfoModal open={showGasInfo} onClose={() => setShowGasInfo(false)} currentGas={gas} />
       <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} K={K} FD={FD} FM={FM}
         textScale={textScale} onTextScaleChange={handleScaleChange}
         darkMode={darkMode} onDarkModeToggle={toggleDarkMode}
@@ -1320,12 +1427,12 @@ export default function BraytonPage({ onBack }) {
       {/* Row: Schematic + Volume Visualizer */}
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <h3 style={sec}>System Schematic</h3>
+          <h3 style={sec}>System Schematic <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— {gas.name}</span></h3>
           <div data-tour="bry-schematic"><BrySchematicDiagram cycle={cycle} textScale={textScale} units={units} animating={animating} animProgress={animProgress} /></div>
         </div>
         <div data-tour="bry-visualizer" style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Volume Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
-          <VolumeBoxVisualizer T={dragPoint.T} P={dragPoint.P} v={dragPoint.v} vRef={vRef} tLow={cycle.T1} tHigh={cycle.T3} fillHeight={desktop} textScale={textScale} units={units} />
+          <VolumeBoxVisualizer T={dragPoint.T} P={dragPoint.P} v={dragPoint.v} vMin={cycle.vMin} vMax={cycle.vMax} tLow={cycle.T1} tHigh={cycle.T3} fillHeight={desktop} textScale={textScale} units={units} smooth={!animating} />
         </div>
       </div>
 
@@ -1460,7 +1567,7 @@ export default function BraytonPage({ onBack }) {
 
       <div data-tour="bry-share-solution" style={{ textAlign: "center", padding: desktop ? "20px 12px 12px" : "14px 12px 8px", display: "flex", justifyContent: "center", gap: desktop ? 12 : 8, flexWrap: "wrap" }}>
         <button onClick={() => {
-          const url = `${window.location.origin}${window.location.pathname}?view=brayton&rp=${rp}&p1=${p1}&t1=${t1}&t3=${adjustedT3}`;
+          const url = `${window.location.origin}${window.location.pathname}?view=brayton&gas=${gas.id}&rp=${rp}&p1=${p1}&t1=${t1}&t3=${adjustedT3}`;
           navigator.clipboard.writeText(url).then(() => { setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); });
         }} style={{
           background: shareCopied ? K.workOut : "none", border: `1px solid ${shareCopied ? K.workOut : K.border}`, padding: desktop ? "8px 20px" : "6px 14px",
@@ -1475,7 +1582,8 @@ export default function BraytonPage({ onBack }) {
           const st = cycle.states;
           const line = (i, name) => `State ${st[i].label} (${name}): T = ${T_(st[i].T)} ${lT}, P = ${P_(st[i].P)} ${lP}, h = ${H_(st[i].h)} ${lH}, s = ${S_(st[i].s)} ${lS}, v = ${st[i].v.toFixed(4)} m3/kg`;
           const text = [
-            `BRAYTON CYCLE (cold-air standard, k = 1.4, c_p = 1.005 kJ/kg·K) — Solution`,
+            `BRAYTON CYCLE (ideal gas, constant c_p) — Solution`,
+            `Working gas: ${gas.name} (${gas.formula}), c_p = ${gas.cp} kJ/kg·K, R = ${gas.R} kJ/kg·K, k = ${gas.k}`,
             `Inputs: r_p = ${rp}, P_1 = ${P_(p1)} ${lP}, T_1 = ${T_(t1)} ${lT}, T_3 = ${T_(adjustedT3)} ${lT}`,
             ``,
             line(0, "compressor inlet"), line(1, "compressor exit, isentropic"), line(2, "turbine inlet"), line(3, "turbine exit, isentropic"),
@@ -1496,7 +1604,7 @@ export default function BraytonPage({ onBack }) {
         }}>{eqsCopied ? "✓ Copied" : "📋 Copy Solution"}</button>
       </div>
       <div style={{ textAlign: "center", padding: desktop ? "8px 12px 8px" : "6px 12px 6px", fontSize: sz(desktop ? 15 : 9), color: K.inkLight, fontFamily: FM, fontStyle: "italic", letterSpacing: 1 }}>
-        Ideal Brayton Cycle · Cold-Air-Standard Assumptions
+        Ideal Brayton Cycle · {gas.name} ({gas.formula}) · Ideal Gas, Constant c_p
       </div>
       <div style={{ textAlign: "center", padding: desktop ? "8px 12px 36px" : "6px 12px 28px", borderTop: `1px solid ${K.border}`, marginTop: desktop ? 8 : 4, marginLeft: desktop ? 40 : 16, marginRight: desktop ? 40 : 16 }}>
         <div style={{ fontSize: sz(desktop ? 14 : 9), color: K.inkMed, fontFamily: FM, marginBottom: 4 }}>Built by <span style={{ fontWeight: 600, color: K.ink }}>Scott Presbrey</span></div>
