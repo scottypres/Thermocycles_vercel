@@ -72,8 +72,8 @@ const walkPath = (pts, frac, kx, ky) => {
    speed and colour track temperature. Replaces the phase visualizer (no phase
    change in a gas cycle). */
 const NUM_PARTICLES = 320;
-const VOL_EXP = 0.4; // ponytail: width ∝ (v/vRef)^0.4 so a 10:1 volume swing reads as ~2.5:1 on screen; raise toward 1 for true scaling
-const BOX_MIN_FRAC = 0.3;
+const VOL_EXP = 0.3; // ponytail: each side ∝ (v/vRef)^0.3 so a 10:1 volume swing reads as ~2:1 per side (4:1 area); raise toward 1/3 for true 3-D-ish scaling
+const BOX_MIN_FRAC = 0.4;
 const W_CANVAS = 680, H_CANVAS = 480;
 
 function VolumeBoxVisualizer({ T, P, v, vRef, tLow, tHigh, fillHeight, textScale, units }) {
@@ -83,14 +83,16 @@ function VolumeBoxVisualizer({ T, P, v, vRef, tLow, tHigh, fillHeight, textScale
   const particlesRef = useRef(null);
   const animRef = useRef(null);
   const frac = Math.max(BOX_MIN_FRAC, Math.min(1, Math.pow(Math.max(1e-6, v) / Math.max(1e-6, vRef), VOL_EXP)));
-  const cw = Math.round(W_CANVAS * frac);
+  const cw = Math.round(W_CANVAS * frac), ch = Math.round(H_CANVAS * frac);
   const TK = Math.max(1, T + K2C);
   const tNorm = Math.max(0, Math.min(1, (T - tLow) / Math.max(1, tHigh - tLow)));
   const speedF = 0.4 + 7 * Math.pow(Math.min(1, TK / 1600), 0.75);
 
+  // Positions are stored normalised (u, w ∈ [0,1]) so the fixed mass of particles
+  // compresses with the box instead of piling up against a moving wall.
   if (!particlesRef.current) {
     particlesRef.current = Array.from({ length: NUM_PARTICLES }, (_, i) => ({
-      u: Math.random(), y: Math.random() * H_CANVAS,
+      u: Math.random(), w: Math.random(),
       vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4,
       r: 4.5 + Math.random() * 2.5, id: i,
     }));
@@ -99,13 +101,13 @@ function VolumeBoxVisualizer({ T, P, v, vRef, tLow, tHigh, fillHeight, textScale
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.width = cw;
+    canvas.width = cw; canvas.height = ch;
     const ctx = canvas.getContext("2d");
     const cr = Math.round(60 + tNorm * 170), cg = Math.round(120 - tNorm * 30), cb = Math.round(200 - tNorm * 160);
     const glowR = Math.round(90 + tNorm * 150), glowB = Math.round(220 - tNorm * 180);
     const maxV = speedF * 4;
     function draw() {
-      ctx.clearRect(0, 0, cw, H_CANVAS);
+      ctx.clearRect(0, 0, cw, ch);
       const particles = particlesRef.current;
       for (const p of particles) {
         p.vx += (Math.random() - 0.5) * speedF;
@@ -113,23 +115,22 @@ function VolumeBoxVisualizer({ T, P, v, vRef, tLow, tHigh, fillHeight, textScale
         p.vx *= 0.96; p.vy *= 0.96;
         const sp = Math.hypot(p.vx, p.vy);
         if (sp > maxV) { p.vx = (p.vx / sp) * maxV; p.vy = (p.vy / sp) * maxV; }
-        let x = p.u * cw + p.vx;
-        p.y += p.vy;
+        let x = p.u * cw + p.vx, y = p.w * ch + p.vy;
         if (x < p.r) { x = p.r; p.vx = Math.abs(p.vx); }
         if (x > cw - p.r) { x = cw - p.r; p.vx = -Math.abs(p.vx); }
-        if (p.y < p.r) { p.y = p.r; p.vy = Math.abs(p.vy); }
-        if (p.y > H_CANVAS - p.r) { p.y = H_CANVAS - p.r; p.vy = -Math.abs(p.vy); }
-        p.u = x / cw;
-        ctx.beginPath(); ctx.arc(x, p.y, p.r * (0.7 + tNorm * 0.2), 0, Math.PI * 2);
+        if (y < p.r) { y = p.r; p.vy = Math.abs(p.vy); }
+        if (y > ch - p.r) { y = ch - p.r; p.vy = -Math.abs(p.vy); }
+        p.u = x / cw; p.w = y / ch;
+        ctx.beginPath(); ctx.arc(x, y, p.r * (0.7 + tNorm * 0.2), 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${cr},${cg},${cb},0.72)`; ctx.fill();
-        ctx.beginPath(); ctx.arc(x, p.y, p.r + 2, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(x, y, p.r + 2, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${glowR},80,${glowB},0.1)`; ctx.fill();
       }
       animRef.current = requestAnimationFrame(draw);
     }
     draw();
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [cw, tNorm, speedF]);
+  }, [cw, ch, tNorm, speedF]);
 
   const overlayBg = K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)";
   const rows = [
@@ -138,20 +139,23 @@ function VolumeBoxVisualizer({ T, P, v, vRef, tLow, tHigh, fillHeight, textScale
     { l: "PRESSURE (P)", v: fmtP(P, u), c: K.heatOut },
   ];
   return (
-    <div style={{ position: "relative", ...(fillHeight ? { flex: 1, display: "flex", flexDirection: "column" } : {}) }}>
-      <div style={fillHeight ? { flex: 1, display: "flex", flexDirection: "column", minHeight: 0 } : { aspectRatio: `${W_CANVAS} / ${H_CANVAS}`, display: "flex" }}>
-        <canvas ref={canvasRef} width={cw} height={H_CANVAS}
-          style={{ display: "block", margin: "0 auto", width: `${frac * 100}%`, border: `1.5px solid ${K.ink}`, background: K.cardAlt, transition: "width 0.12s linear",
-            ...(fillHeight ? { flex: 1, height: 0 } : { height: "100%" }) }} />
-      </div>
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: fillHeight ? 0 : 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-        <div style={{ background: overlayBg, padding: fillHeight ? `${12 * ts}px ${26 * ts}px` : `${6 * ts}px ${14 * ts}px`, border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
-          {rows.map((r, i) => (
-            <div key={i} style={{ marginTop: i === 0 ? 0 : (fillHeight ? 8 : 4) * ts }}>
-              <div style={{ fontSize: (fillHeight ? 26 : 15) * ts, fontFamily: FD, color: r.c, lineHeight: 1.1 }}>{r.v}</div>
-              <div style={{ fontSize: (fillHeight ? 10 : 7) * ts, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: 1 }}>{r.l}</div>
-            </div>
-          ))}
+    <div style={{ position: "relative", ...(fillHeight ? { flex: 1, display: "flex", flexDirection: "column", minHeight: 0 } : {}) }}>
+      {/* Fixed-footprint frame: its only children are absolutely positioned, so the box
+          can shrink or grow without ever changing the page layout. */}
+      <div style={fillHeight ? { flex: 1, minHeight: 0, position: "relative" } : { width: "100%", aspectRatio: `${W_CANVAS} / ${H_CANVAS}`, position: "relative" }}>
+        <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", width: `${frac * 100}%`, height: `${frac * 100}%`,
+          border: `1.5px solid ${K.ink}`, background: K.cardAlt, boxSizing: "border-box", transition: "width 0.12s linear, height 0.12s linear" }}>
+          <canvas ref={canvasRef} width={cw} height={ch} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
+        </div>
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+          <div style={{ background: overlayBg, padding: fillHeight ? `${12 * ts}px ${26 * ts}px` : `${6 * ts}px ${14 * ts}px`, border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
+            {rows.map((r, i) => (
+              <div key={i} style={{ marginTop: i === 0 ? 0 : (fillHeight ? 8 : 4) * ts }}>
+                <div style={{ fontSize: (fillHeight ? 26 : 15) * ts, fontFamily: FD, color: r.c, lineHeight: 1.1 }}>{r.v}</div>
+                <div style={{ fontSize: (fillHeight ? 10 : 7) * ts, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: 1 }}>{r.l}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 6, flexWrap: "wrap" }}>
@@ -1408,7 +1412,7 @@ export default function BraytonPage({ onBack }) {
       </div>
 
       {/* Energy Balance */}
-      <div data-tour="bry-energy-balance" style={{ ...card, marginBottom: 0 }}>
+      <div data-tour="bry-energy-balance" style={card}>
         <h3 style={sec}>Energy Balance</h3>
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? 16 : 8 }}>
           <div>

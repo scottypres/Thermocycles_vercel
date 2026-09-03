@@ -1818,7 +1818,7 @@ export default function RefrigerationPage({ onBack }) {
       </div>
 
       {/* Energy Balance */}
-      <div data-tour="ref-energy-balance" style={{ ...card, marginBottom: 0 }}>
+      <div data-tour="ref-energy-balance" style={card}>
         <h3 style={sec}>Energy Balance</h3>
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? 16 : 8 }}>
           {/* Heat Transfer group */}
