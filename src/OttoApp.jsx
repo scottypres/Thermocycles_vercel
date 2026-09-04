@@ -19,6 +19,10 @@ const vFromST = (g, TK, s) => (g.R * T_REF_K / P_REF) * Math.exp((s - g.sRef - c
 function propsST(g, s, Tc) { const TK = Math.max(1, Tc + K2C); const P = pOf(g, TK, s); return { s, T: Tc, P, v: vOf(g, TK, P), u: uOf(g, TK) }; }
 function propsPV(g, P, v) { const TK = Math.max(1, P * v / g.R); return { s: sOf(g, TK, P), T: TK - K2C, P, v, u: uOf(g, TK) }; }
 
+// Animation pacing per segment (1 = one crank half-turn): compression, burn pause at TDC, expansion, exhaust + intake strokes
+const SEG_W = [1, 0.6, 1, 2];
+const SEG_END = SEG_W.map((_, i) => SEG_W.slice(0, i + 1).reduce((a, b) => a + b, 0));
+const SEG_TOTAL = SEG_END[3];
 const R_MIN = 4, R_MAX = 14, P1_MIN = 50, P1_MAX = 200, T1_MIN = -20, T1_MAX = 60, T3_MAX = 2200;
 const clampR = r => Math.max(R_MIN, Math.min(R_MAX, Math.round(r * 2) / 2));
 const clampP1 = p => Math.max(P1_MIN, Math.min(P1_MAX, Math.round(p / 5) * 5));
@@ -674,22 +678,26 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeProcess, setActiveProcess] = useState(null);
   const vFrac = Math.max(1 / cycle.r, Math.min(1, dragPoint.v / cycle.v1));
-  const yTop = CYL.head + CYL.stroke * vFrac;
+  const rel41 = clamp01((dragPoint.T - cycle.T1) / Math.max(1, cycle.T4 - cycle.T1));
+  const onIso = vFrac > 0.97 && rel41 > 0.02;
+  // Four-stroke engine: the 4→1 leg carries the exhaust stroke (BDC→TDC, first half) and the intake stroke
+  // (TDC→BDC, second half), so the crank makes its second full turn there while the state sits on the v₁ isochore.
+  const phase41 = onIso ? 1 - rel41 : 0;
+  const xs = onIso ? Math.abs(1 - 2 * phase41) : Math.max(0, Math.min(1, (dragPoint.v - cycle.v2) / Math.max(1e-9, cycle.v1 - cycle.v2))); // piston: 0 at TDC, 1 at BDC
+  const yTop = onIso ? CYL.head + CYL.stroke * (1 / cycle.r + (1 - 1 / cycle.r) * xs) : CYL.head + CYL.stroke * vFrac;
   const tNorm = clamp01((dragPoint.T - cycle.T1) / Math.max(1, cycle.T3 - cycle.T1));
   const pNorm = clamp01((dragPoint.P - cycle.p1) / Math.max(1e-9, cycle.p3 - cycle.p1));
   const nearTDC = dragPoint.v < cycle.v2 * 1.15;
   const flame = nearTDC ? Math.max(0, (tNorm - 0.25) / 0.75) : 0;
   const rel23 = nearTDC ? clamp01((dragPoint.T - cycle.T2) / Math.max(1, cycle.T3 - cycle.T2)) : 0;
   const spark = rel23 > 0.01 ? Math.max(0, 1 - rel23 / 0.5) : 0; // flash as the burn begins, gone by the time T has climbed halfway to T₃
-  const rel41 = clamp01((dragPoint.T - cycle.T1) / Math.max(1, cycle.T4 - cycle.T1));
-  // On the v₁ isochore above state 1 the ideal heat rejection stands in for the exhaust and intake strokes:
-  // blowdown first (exhaust valve open, charge leaves), then fresh charge (intake valve open). Never both at once.
-  const onIso = vFrac > 0.97 && rel41 > 0.02;
+  // Exhaust valve open while the piston rises (blowdown + exhaust stroke), intake valve open while it descends. Never both.
   const exOpen = onIso && rel41 > 0.5, inOpen = onIso && rel41 <= 0.5;
   const aliveTarget = !onIso ? N_MOL : Math.round(N_MOL * (exOpen ? rel41 : 1 - rel41));
-  // Crank angle from piston position; the compression stroke sweeps the other half-turn so the crank rotates during Animate
-  const xs = Math.max(0, Math.min(1, (dragPoint.v - cycle.v2) / Math.max(1e-9, cycle.v1 - cycle.v2)));
-  const theta = animSeg === 0 ? 2 * Math.PI - Math.acos(1 - 2 * xs) : Math.acos(1 - 2 * xs);
+  // Crank angle: rising strokes (compression, exhaust) sweep π→2π, falling strokes (expansion, intake) sweep 0→π,
+  // so one cycle turns the crank twice and the angle is continuous at TDC and BDC.
+  const rising = animSeg === 0 || (onIso && phase41 < 0.5);
+  const theta = rising ? 2 * Math.PI - Math.acos(1 - 2 * xs) : Math.acos(1 - 2 * xs);
   const crank = { cx: 180, cy: 296, r: 30 };
   const pin = { x: crank.cx + crank.r * Math.sin(theta), y: crank.cy - crank.r * Math.cos(theta) };
 
@@ -840,6 +848,7 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
         <rect x={282} y={14} width={82} height={22} rx={4} fill={animating ? K.accent : K.card} stroke={animating ? K.accent : K.border} strokeWidth={1.2} />
         <text x={323} y={28.5} fill={animating ? "#fff" : K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>{animating ? "⏸ Pause" : "▶ Animate"}</text>
       </g>}
+      {onIso && <text x={CYL.x + CYL.w + 6} y={262} fill={K.inkLight} fontSize={sz(6.5)} textAnchor="start" fontFamily={FM} fontStyle="italic">{phase41 < 0.5 ? "exhaust stroke ↑" : "intake stroke ↓"}</text>}
       {/* Live state readout */}
       <text x={180} y={340} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
     </svg>
@@ -1343,21 +1352,21 @@ export default function OttoPage({ onBack }) {
 
   const [dragPoint, setDragPoint] = useState(() => ({ ...cycle.states[0] }));
   const handleDrag = useCallback((pt) => setDragPoint({ s: pt.s, T: pt.T, P: pt.P, v: pt.v, u: pt.u }), []);
-  const animSeg = animating ? Math.min(3, Math.floor(animProgress * 4)) : -1;
+  const animSeg = animating ? Math.max(0, SEG_END.findIndex(e => animProgress * SEG_TOTAL < e + 1e-9)) : -1;
 
-  // Animate: dragPoint walks 1→2→3→4→1 along the drawn lines (~6 s loop at 1×)
+  // Animate: dragPoint walks 1→2→3→4→1 along the drawn lines (~6 s loop at 1×), paced so the crank turns at a steady rate
   useEffect(() => {
     if (!animating) return;
-    const segMs = 1500 / Math.max(0.05, animSpeed);
-    const totalMs = segMs * 4;
+    const unitMs = 1300 / Math.max(0.05, animSpeed);
+    const totalMs = unitMs * SEG_TOTAL;
     let cancelled = false, rafId = 0;
     const t0 = performance.now();
     const tick = (now) => {
       if (cancelled) return;
       // rAF timestamps can precede the performance.now() captured above → keep elapsed in [0, totalMs)
       const elapsed = ((now - t0) % totalMs + totalMs) % totalMs;
-      const segIdx = Math.min(3, Math.max(0, Math.floor(elapsed / segMs)));
-      const frac = (elapsed - segIdx * segMs) / segMs;
+      const segIdx = Math.max(0, SEG_END.findIndex(e => elapsed < e * unitMs + 1e-9));
+      const frac = Math.min(1, (elapsed - (SEG_END[segIdx] - SEG_W[segIdx]) * unitMs) / (SEG_W[segIdx] * unitMs));
       let pt;
       if (segIdx === 1) pt = walkPath(cycle.combPath, frac, "s", "T");
       else if (segIdx === 3) pt = walkPath(cycle.rejPath, frac, "s", "T");
