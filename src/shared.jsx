@@ -96,14 +96,14 @@ export const lblH = (units) => pick("h", units).label;
 export const lblS = (units) => pick("s", units).label;
 
 /* ───────── Animation speed cookie helpers ───────── */
-export function loadAnimSpeed() {
+export function loadAnimSpeed(key = "animSpeed", fallback = 0.5) { // pages that want their own speed pass their own cookie key
   try {
-    const v = parseFloat(document.cookie.split("; ").find(c => c.startsWith("animSpeed="))?.split("=")[1]);
-    return isNaN(v) ? 0.5 : Math.max(0.15, Math.min(1, v));
-  } catch { return 0.5; }
+    const v = parseFloat(document.cookie.split("; ").find(c => c.startsWith(key + "="))?.split("=")[1]);
+    return isNaN(v) ? fallback : Math.max(0.15, Math.min(1, v));
+  } catch { return fallback; }
 }
-export function saveAnimSpeed(v) {
-  try { document.cookie = `animSpeed=${v};path=/;max-age=31536000`; } catch {}
+export function saveAnimSpeed(v, key = "animSpeed") {
+  try { document.cookie = `${key}=${v};path=/;max-age=31536000`; } catch {}
 }
 
 /* ───────── Settings modal helpers (defined outside so they aren't
