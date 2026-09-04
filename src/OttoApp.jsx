@@ -775,10 +775,16 @@ function OttoProcessModal({ process, cycle, onClose, units }) {
   );
 }
 
-/* ───────── Schematic: piston–cylinder ─────────
-   The piston position tracks the drag point's specific volume (v₂ at TDC, v₁ at BDC); the
-   charge colour tracks temperature; a flame appears in the clearance volume during 2→3. */
+/* ───────── Schematic: piston–cylinder (kinetic view) ─────────
+   The piston position tracks the drag point's specific volume (v₂ at TDC, v₁ at BDC). The
+   charge is drawn as molecules whose speed and colour track temperature; a spark and flame
+   appear in the clearance volume during 2→3, and on the 4→1 isochore the exhaust valve opens
+   and hot molecules leave while fresh (cool) charge enters through the intake. */
 const CYL = { x: 130, w: 100, head: 40, stroke: 160 }; // piston top runs from y = head + stroke/r (TDC) to head + stroke (BDC)
+const PORT = { intake: 152, exhaust: 208, halfW: 8 };
+const N_MOL = 56, EXIT_POOL = 14;
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+const gasRGB = (t) => `rgb(${Math.round(60 + t * 170)},${Math.round(120 - t * 30)},${Math.round(200 - t * 160)})`;
 function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, animSeg }) {
   const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
@@ -786,16 +792,60 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
   const [activeProcess, setActiveProcess] = useState(null);
   const vFrac = Math.max(1 / cycle.r, Math.min(1, dragPoint.v / cycle.v1));
   const yTop = CYL.head + CYL.stroke * vFrac;
-  const tNorm = Math.max(0, Math.min(1, (dragPoint.T - cycle.T1) / Math.max(1, cycle.T3 - cycle.T1)));
-  const gasFill = `rgb(${Math.round(60 + tNorm * 170)},${Math.round(120 - tNorm * 30)},${Math.round(200 - tNorm * 160)})`;
+  const tNorm = clamp01((dragPoint.T - cycle.T1) / Math.max(1, cycle.T3 - cycle.T1));
+  const pNorm = clamp01((dragPoint.P - cycle.p1) / Math.max(1e-9, cycle.p3 - cycle.p1));
   const nearTDC = dragPoint.v < cycle.v2 * 1.15;
   const flame = nearTDC ? Math.max(0, (tNorm - 0.25) / 0.75) : 0;
-  // Crank angle from piston position; the compression stroke sweeps the other half-turn so the crank rotates during Animate
-  const x = Math.max(0, Math.min(1, (dragPoint.v - cycle.v2) / Math.max(1e-9, cycle.v1 - cycle.v2)));
-  const base = Math.acos(1 - 2 * x);
-  const theta = animSeg === 0 ? 2 * Math.PI - base : base;
-  const crank = { cx: 180, cy: 292, r: 22 };
-  const pin = { x: crank.cx + crank.r * Math.sin(theta), y: crank.cy - crank.r * Math.cos(theta) };
+  const rel23 = nearTDC ? clamp01((dragPoint.T - cycle.T2) / Math.max(1, cycle.T3 - cycle.T2)) : 0;
+  const spark = rel23 > 0.01 ? Math.max(0, 1 - rel23 / 0.5) : 0; // flash as the burn begins, gone by the time T has climbed halfway to T₃
+  const rel41 = clamp01((dragPoint.T - cycle.T1) / Math.max(1, cycle.T4 - cycle.T1));
+  const exhaust = vFrac > 0.97 && rel41 > 0.02 ? 0.3 + 0.7 * rel41 : 0; // on the v₁ isochore above state 1: blowdown + charge swap
+  const valvesOpen = exhaust > 0;
+  const dir = animating ? (animSeg === 0 ? -1 : animSeg === 2 ? 1 : 0) : 0; // piston travel: -1 up (compression), +1 down (expansion)
+
+  // Molecule simulation lives outside React state; the loop writes circle attributes directly.
+  const live = useRef(null); live.current = { yTop, tNorm, exhaust };
+  const molG = useRef(null), exitG = useRef(null);
+  const sim = useRef(null);
+  if (!sim.current) {
+    sim.current = { mols: Array.from({ length: N_MOL }, () => { const a = Math.random() * Math.PI * 2; return { x: CYL.x + 4 + Math.random() * (CYL.w - 8), y: CYL.head + 6 + Math.random() * (yTop - CYL.head - 12), vx: Math.cos(a), vy: Math.sin(a), t: tNorm, entering: false }; }), exits: [], acc: 0, prevY: null };
+  }
+  useEffect(() => {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf, last = performance.now();
+    const step = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      const { yTop, tNorm, exhaust } = live.current; const S = sim.current;
+      const pistonV = S.prevY == null ? 0 : (yTop - S.prevY) / dt; S.prevY = yTop; // px/s; the gas must keep up with a fast-moving piston
+      const sc = Math.max((0.5 + 2.4 * tNorm) * 60 * dt, Math.abs(pistonV) * dt * 1.6);
+      const lo = CYL.head + 3, hi = yTop - 3, x0 = CYL.x + 4, x1 = CYL.x + CYL.w - 4;
+      S.acc += exhaust * 14 * dt;
+      while (S.acc >= 1 && S.exits.length < EXIT_POOL) { // the molecule nearest the exhaust port leaves; a fresh one enters through the intake
+        S.acc -= 1;
+        let bi = -1, bd = 1e9;
+        S.mols.forEach((m, i) => { if (m.entering) return; const d = Math.hypot(m.x - PORT.exhaust, m.y - CYL.head); if (d < bd) { bd = d; bi = i; } });
+        if (bi < 0) break;
+        S.exits.push({ x: PORT.exhaust + (Math.random() - 0.5) * 8, y: CYL.head - 2, vy: -(1.6 + Math.random()), life: 1 });
+        Object.assign(S.mols[bi], { x: PORT.intake + (Math.random() - 0.5) * 8, y: 6, vx: (Math.random() - 0.5) * 0.3, vy: 1, t: 0, entering: true });
+      }
+      for (const m of S.mols) {
+        m.t += (tNorm - m.t) * Math.min(1, 3 * dt);
+        if (m.entering) { m.y += 2.2 * 60 * dt; if (m.y > lo + 4) { m.entering = false; const a = Math.random() * Math.PI; m.vx = Math.cos(a); m.vy = Math.sin(a); } continue; }
+        if (Math.random() < 0.05) { const a = Math.random() * Math.PI * 2; m.vx = Math.cos(a); m.vy = Math.sin(a); }
+        m.x += m.vx * sc; m.y += m.vy * sc;
+        if (m.x < x0) { m.x = x0; m.vx = Math.abs(m.vx); } else if (m.x > x1) { m.x = x1; m.vx = -Math.abs(m.vx); }
+        if (m.y < lo) { m.y = lo; m.vy = Math.abs(m.vy); } else if (m.y > hi) { m.y = hi; m.vy = -Math.abs(m.vy); }
+      }
+      for (const e of S.exits) { e.y += e.vy * 60 * dt; e.life -= 1.4 * dt; }
+      S.exits = S.exits.filter(e => e.life > 0 && e.y > -6);
+      if (molG.current) { const cs = molG.current.children; S.mols.forEach((m, i) => { const c = cs[i]; if (!c) return; c.setAttribute("cx", m.x.toFixed(1)); c.setAttribute("cy", m.y.toFixed(1)); c.setAttribute("fill", gasRGB(m.t)); }); }
+      if (exitG.current) { const cs = exitG.current.children; for (let i = 0; i < EXIT_POOL; i++) { const c = cs[i], e = S.exits[i]; if (!c) continue; if (e) { c.setAttribute("cx", e.x.toFixed(1)); c.setAttribute("cy", e.y.toFixed(1)); c.setAttribute("opacity", e.life.toFixed(2)); } else c.setAttribute("opacity", "0"); } }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   const badges = [
     { id: "compression", seg: 0, x: 22, y: 64, c: K.workIn, l1: "1 → 2", l2: "Compression" },
     { id: "rejection", seg: 3, x: 22, y: 206, c: K.heatOut, l1: "4 → 1", l2: "Heat Rejection" },
@@ -803,6 +853,18 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
     { id: "expansion", seg: 2, x: 282, y: 206, c: K.workOut, l1: "3 → 4", l2: "Expansion" },
   ];
   const mk = [{ id: "oO", c: K.heatIn }, { id: "oB", c: K.heatOut }, { id: "oG", c: K.workOut }, { id: "oY", c: K.workIn }];
+  const valve = (x, open) => { const yd = CYL.head + 1 + (open ? 9 : 0); return (<g>
+    <line x1={x - PORT.halfW} y1={CYL.head - 16} x2={x - PORT.halfW} y2={6} stroke={K.ink} strokeWidth={1.2} />
+    <line x1={x + PORT.halfW} y1={CYL.head - 16} x2={x + PORT.halfW} y2={6} stroke={K.ink} strokeWidth={1.2} />
+    <line x1={x} y1={CYL.head - 16} x2={x} y2={yd} stroke={K.inkMed} strokeWidth={1.5} />
+    <line x1={x - 9} y1={yd} x2={x + 9} y2={yd} stroke={K.ink} strokeWidth={2.5} />
+  </g>); };
+  const bar = (x, v, c, lab) => (<g>
+    <rect x={x} y={CYL.head} width={14} height={CYL.stroke} fill={K.cardAlt} stroke={K.border} />
+    <rect x={x} y={CYL.head + CYL.stroke * (1 - v)} width={14} height={CYL.stroke * v} fill={c} opacity={0.85} />
+    <text x={x + 7} y={CYL.head + CYL.stroke + 14} fill={K.inkMed} fontSize={sz(9)} textAnchor="middle" fontFamily={FD} fontStyle="italic">{lab}</text>
+  </g>);
+  const rodEnd = Math.min(268, yTop + 62);
   return (<>
     <svg viewBox="-8 -2 381 330" style={{ width: "100%" }}>
       <defs>
@@ -816,43 +878,43 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       {Array.from({ length: 21 }, (_, i) => Array.from({ length: 17 }, (_, j) => (
         <circle key={`${i}-${j}`} cx={i * 20 - 10} cy={j * 20} r={0.6} fill={K.gridMajor} />
       )))}
-      {/* Trapped charge */}
-      <rect x={CYL.x + 1} y={CYL.head} width={CYL.w - 2} height={Math.max(0, yTop - CYL.head)} fill={gasFill} opacity={0.22 + tNorm * 0.2} />
+      {/* Trapped charge: tint, flame, molecules */}
+      <rect x={CYL.x + 1} y={CYL.head} width={CYL.w - 2} height={Math.max(0, yTop - CYL.head)} fill={gasRGB(tNorm)} opacity={0.08 + tNorm * 0.1} />
       {flame > 0 && <ellipse cx={180} cy={CYL.head + (yTop - CYL.head) / 2} rx={46} ry={Math.max(6, (yTop - CYL.head) * 0.8)} fill="url(#oFlame)" opacity={flame} />}
-      {/* Cylinder walls + head */}
+      <g ref={molG}>{sim.current.mols.map((m, i) => <circle key={i} cx={m.x.toFixed(1)} cy={m.y.toFixed(1)} r={2.6} fill={gasRGB(m.t)} />)}</g>
+      <g ref={exitG}>{Array.from({ length: EXIT_POOL }, (_, i) => <circle key={i} cx={PORT.exhaust} cy={CYL.head} r={2.6} fill={K.inkLight} opacity={0} />)}</g>
+      {/* Cylinder walls + head + ports */}
       <line x1={CYL.x} y1={CYL.head} x2={CYL.x} y2={252} stroke={K.ink} strokeWidth={3} />
       <line x1={CYL.x + CYL.w} y1={CYL.head} x2={CYL.x + CYL.w} y2={252} stroke={K.ink} strokeWidth={3} />
       <rect x={CYL.x - 8} y={CYL.head - 16} width={CYL.w + 16} height={16} fill={K.cardAlt} stroke={K.ink} strokeWidth={1.5} />
-      {/* Valves */}
-      <g>
-        <line x1={152} y1={CYL.head - 16} x2={152} y2={CYL.head - 30} stroke={K.inkMed} strokeWidth={1.5} />
-        <line x1={144} y1={CYL.head + 1} x2={160} y2={CYL.head + 1} stroke={K.inkMed} strokeWidth={2.5} />
-        <text x={152} y={CYL.head - 33} fill={K.inkLight} fontSize={sz(5.5)} textAnchor="middle" fontFamily={FM} fontStyle="italic">intake</text>
-        <line x1={208} y1={CYL.head - 16} x2={208} y2={CYL.head - 30} stroke={K.inkMed} strokeWidth={1.5} />
-        <line x1={200} y1={CYL.head + 1} x2={216} y2={CYL.head + 1} stroke={K.inkMed} strokeWidth={2.5} />
-        <text x={208} y={CYL.head - 33} fill={K.inkLight} fontSize={sz(5.5)} textAnchor="middle" fontFamily={FM} fontStyle="italic">exhaust</text>
-      </g>
+      <rect x={PORT.intake - PORT.halfW} y={CYL.head - 16} width={PORT.halfW * 2} height={16} fill={K.card} />
+      <rect x={PORT.exhaust - PORT.halfW} y={CYL.head - 16} width={PORT.halfW * 2} height={16} fill={K.card} />
+      {valve(PORT.intake, valvesOpen)}{valve(PORT.exhaust, valvesOpen)}
+      <text x={PORT.intake - PORT.halfW - 4} y={16} fill={valvesOpen ? K.heatOut : K.inkLight} fontSize={sz(5.5)} textAnchor="end" fontFamily={FM} fontStyle="italic">intake</text>
+      <text x={PORT.exhaust + PORT.halfW + 4} y={16} fill={valvesOpen ? K.inkMed : K.inkLight} fontSize={sz(5.5)} textAnchor="start" fontFamily={FM} fontStyle="italic">exhaust</text>
       {/* Spark plug */}
       <rect x={176} y={CYL.head - 30} width={8} height={14} fill={K.cardAlt} stroke={K.ink} strokeWidth={1} />
       <line x1={180} y1={CYL.head - 30} x2={180} y2={CYL.head - 38} stroke={K.ink} strokeWidth={1.2} />
       <polyline points={`180,${CYL.head} 177,${CYL.head + 4} 183,${CYL.head + 6}`} fill="none" stroke={K.ink} strokeWidth={1} />
-      {flame > 0 && [[-6, 8], [6, 8], [0, 11]].map(([dx, dy], i) => <line key={i} x1={180} y1={CYL.head + 5} x2={180 + dx} y2={CYL.head + 5 + dy} stroke="#ffd23f" strokeWidth={1.2} opacity={flame} />)}
-      {/* Piston, pin, rod, crank */}
-      <line x1={180} y1={yTop + 12} x2={pin.x} y2={pin.y} stroke={K.inkMed} strokeWidth={4} strokeLinecap="round" />
+      {spark > 0 && <g opacity={spark}>
+        {[[-0.8, 0.6], [0.8, 0.6], [0, 1], [-0.45, 0.9], [0.45, 0.9]].map(([dx, dy], i) => <line key={i} x1={180} y1={CYL.head + 5} x2={180 + dx * 14 * spark} y2={CYL.head + 5 + dy * 14 * spark} stroke="#ffd23f" strokeWidth={1.4} />)}
+        <circle cx={180} cy={CYL.head + 5} r={3 + 3 * spark} fill="#ffd23f" opacity={0.8} />
+      </g>}
+      {/* Piston + rod stub */}
       <rect x={CYL.x + 1} y={yTop} width={CYL.w - 2} height={24} fill={K.cardAlt} stroke={K.ink} strokeWidth={1.5} />
       <line x1={CYL.x + 1} y1={yTop + 5} x2={CYL.x + CYL.w - 1} y2={yTop + 5} stroke={K.inkLight} strokeWidth={1} />
       <line x1={CYL.x + 1} y1={yTop + 9} x2={CYL.x + CYL.w - 1} y2={yTop + 9} stroke={K.inkLight} strokeWidth={1} />
-      <circle cx={180} cy={yTop + 12} r={3.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
-      <circle cx={crank.cx} cy={crank.cy} r={crank.r} fill="none" stroke={K.inkLight} strokeWidth={1} strokeDasharray="3 3" />
-      <line x1={crank.cx} y1={crank.cy} x2={pin.x} y2={pin.y} stroke={K.ink} strokeWidth={3} strokeLinecap="round" />
-      <circle cx={crank.cx} cy={crank.cy} r={5} fill={K.card} stroke={K.ink} strokeWidth={1.5} />
-      <circle cx={pin.x} cy={pin.y} r={3.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
-      {/* TDC / BDC ticks */}
-      <line x1={CYL.x + CYL.w + 4} y1={CYL.head + CYL.stroke / cycle.r} x2={CYL.x + CYL.w + 12} y2={CYL.head + CYL.stroke / cycle.r} stroke={K.inkLight} strokeWidth={1} />
-      <text x={CYL.x + CYL.w + 14} y={CYL.head + CYL.stroke / cycle.r + 2.5} fill={K.inkLight} fontSize={sz(6)} fontFamily={FM} fontStyle="italic">TDC</text>
-      <line x1={CYL.x + CYL.w + 4} y1={CYL.head + CYL.stroke} x2={CYL.x + CYL.w + 12} y2={CYL.head + CYL.stroke} stroke={K.inkLight} strokeWidth={1} />
-      <text x={CYL.x + CYL.w + 14} y={CYL.head + CYL.stroke + 2.5} fill={K.inkLight} fontSize={sz(6)} fontFamily={FM} fontStyle="italic">BDC</text>
-      <text x={CYL.x - 6} y={CYL.head + 8 + CYL.stroke / 2} fill={K.inkLight} fontSize={sz(6)} fontFamily={FM} fontStyle="italic" textAnchor="middle" transform={`rotate(-90,${CYL.x - 6},${CYL.head + 8 + CYL.stroke / 2})`}>r = {cycle.r.toFixed(1)}</text>
+      <line x1={180} y1={yTop + 24} x2={180} y2={rodEnd} stroke={K.inkMed} strokeWidth={4} strokeLinecap="round" />
+      {dir !== 0 && <g stroke={dir < 0 ? K.workIn : K.workOut} strokeWidth={1.5} fill="none">
+        <line x1={196} y1={yTop + 38 - dir * 8} x2={196} y2={yTop + 38 + dir * 8} />
+        <polyline points={`192,${yTop + 38 + dir * 4} 196,${yTop + 38 + dir * 9} 200,${yTop + 38 + dir * 4}`} />
+      </g>}
+      {/* TDC / BDC ticks (left) and P / T bars (right) */}
+      <line x1={CYL.x - 12} y1={CYL.head + CYL.stroke / cycle.r} x2={CYL.x - 4} y2={CYL.head + CYL.stroke / cycle.r} stroke={K.inkLight} strokeWidth={1} />
+      <text x={CYL.x - 14} y={CYL.head + CYL.stroke / cycle.r + 2.5} fill={K.inkLight} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontStyle="italic">TDC</text>
+      <line x1={CYL.x - 12} y1={CYL.head + CYL.stroke} x2={CYL.x - 4} y2={CYL.head + CYL.stroke} stroke={K.inkLight} strokeWidth={1} />
+      <text x={CYL.x - 14} y={CYL.head + CYL.stroke + 2.5} fill={K.inkLight} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontStyle="italic">BDC</text>
+      {bar(244, pNorm, K.heatIn, "P")}{bar(262, tNorm, K.workIn, "T")}
       {/* Process badges (clickable) */}
       {badges.map(b => {
         const on = animating && animSeg === b.seg;
@@ -869,12 +931,11 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <text x={108} y={12} fill={K.heatIn} fontSize={sz(8)} textAnchor="end" fontFamily={FM} fontWeight="700">Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
       <line x1={128} y1={238} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
       <text x={104} y={266} fill={K.heatOut} fontSize={sz(8)} textAnchor="end" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
-      <line x1={crank.cx + crank.r + 6} y1={crank.cy} x2={crank.cx + crank.r + 24} y2={crank.cy} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
-      <text x={crank.cx + crank.r + 28} y={crank.cy - 3} fill={K.workOut} fontSize={sz(7.5)} textAnchor="start" fontFamily={FM} fontWeight="700">W_net</text>
-      <text x={crank.cx + crank.r + 28} y={crank.cy + 8} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
-      <text x={crank.cx - crank.r - 6} y={crank.cy + 3} fill={K.inkLight} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontStyle="italic">crank</text>
+      <line x1={180} y1={276} x2={180} y2={296} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
+      <text x={188} y={284} fill={K.workOut} fontSize={sz(7.5)} textAnchor="start" fontFamily={FM} fontWeight="700">W_net</text>
+      <text x={188} y={295} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
       {/* Live state readout */}
-      <text x={180} y={322} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
+      <text x={180} y={322} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
     </svg>
     <OttoProcessModal process={activeProcess} cycle={cycle} onClose={() => setActiveProcess(null)} units={u} />
   </>);
