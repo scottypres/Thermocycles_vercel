@@ -496,6 +496,251 @@ const TX_HINTS = {
   "Schematic.moleculeRadius": "molecule dot radius (px)"
 };
 const TX_RANGES = {"Schematic.crankRadius": [10, 60, 1], "Schematic.moleculeRadius": [1, 6, 0.1]};
+const TX_CAT = {
+  "OttoTsDiagram.1": "Diagram · axis tick labels",
+  "OttoTsDiagram.2": "Diagram · axis tick labels",
+  "OttoTsDiagram.3": "Diagram · axis titles",
+  "OttoTsDiagram.4": "Diagram · axis titles",
+  "OttoTsDiagram.5": "Diagram · drag value box",
+  "OttoTsDiagram.6": "Diagram · state numbers",
+  "OttoTsDiagram.7": "Diagram · process labels",
+  "OttoTsDiagram.8": "Diagram · process labels",
+  "OttoTsDiagram.9": "Diagram · process labels",
+  "OttoTsDiagram.10": "Diagram · process labels",
+  "OttoTsDiagram.11": "Diagram · hints & notes",
+  "OttoTsDiagram.12": "Diagram · hints & notes",
+  "OttoTsDiagram.13": "Diagram · area legend",
+  "OttoTsDiagram.14": "Diagram · area legend",
+  "OttoTsDiagram.15": "Diagram · area legend",
+  "OttoTsDiagram.16": "Diagram · area legend",
+  "OttoPvDiagram.1": "Diagram · axis tick labels",
+  "OttoPvDiagram.2": "Diagram · axis tick labels",
+  "OttoPvDiagram.3": "Diagram · axis titles",
+  "OttoPvDiagram.4": "Diagram · axis titles",
+  "OttoPvDiagram.5": "Diagram · drag value box",
+  "OttoPvDiagram.6": "Diagram · state numbers",
+  "OttoPvDiagram.7": "Diagram · process labels",
+  "OttoPvDiagram.8": "Diagram · process labels",
+  "OttoPvDiagram.9": "Diagram · process labels",
+  "OttoPvDiagram.10": "Diagram · process labels",
+  "OttoPvDiagram.11": "Diagram · hints & notes",
+  "OttoPvDiagram.12": "Diagram · hints & notes",
+  "OttoPvDiagram.13": "Diagram · area legend",
+  "OttoPvDiagram.14": "Diagram · area legend",
+  "OttoPvDiagram.15": "Diagram · area legend",
+  "OttoPvDiagram.16": "Diagram · area legend",
+  "OttoProcessModal.1.desktop": "Modals · titles",
+  "OttoProcessModal.1.mobile": "Modals · titles",
+  "OttoProcessModal.2.desktop": "Modals · buttons",
+  "OttoProcessModal.2.mobile": "Modals · buttons",
+  "OttoProcessModal.3.desktop": "Modals · buttons",
+  "OttoProcessModal.3.mobile": "Modals · buttons",
+  "OttoProcessModal.4.desktop": "Modals · buttons",
+  "OttoProcessModal.4.mobile": "Modals · buttons",
+  "OttoProcessModal.5.desktop": "Modals · live values",
+  "OttoProcessModal.5.mobile": "Modals · live values",
+  "OttoProcessModal.6.desktop": "Modals · live values",
+  "OttoProcessModal.6.mobile": "Modals · live values",
+  "OttoProcessModal.7.desktop": "Modals · body text",
+  "OttoProcessModal.7.mobile": "Modals · body text",
+  "OttoProcessModal.8.desktop": "Modals · titles",
+  "OttoProcessModal.8.mobile": "Modals · titles",
+  "OttoProcessModal.9.desktop": "Modals · body text",
+  "OttoProcessModal.9.mobile": "Modals · body text",
+  "OttoProcessModal.10.desktop": "Modals · titles",
+  "OttoProcessModal.10.mobile": "Modals · titles",
+  "OttoProcessModal.11.desktop": "Modals · body text",
+  "OttoProcessModal.11.mobile": "Modals · body text",
+  "OttoProcessModal.12.desktop": "Modals · body text",
+  "OttoProcessModal.12.mobile": "Modals · body text",
+  "OttoProcessModal.13.desktop": "Modals · body text",
+  "OttoProcessModal.13.mobile": "Modals · body text",
+  "OttoProcessModal.14.desktop": "Modals · titles",
+  "OttoProcessModal.14.mobile": "Modals · titles",
+  "OttoProcessModal.15.desktop": "Modals · body text",
+  "OttoProcessModal.15.mobile": "Modals · body text",
+  "OttoProcessModal.16.desktop": "Modals · buttons",
+  "OttoProcessModal.16.mobile": "Modals · buttons",
+  "OttoSchematicDiagram.1": "Schematic · labels",
+  "OttoSchematicDiagram.2": "Schematic · labels",
+  "OttoSchematicDiagram.3": "Schematic · labels",
+  "OttoSchematicDiagram.4": "Schematic · energy labels",
+  "OttoSchematicDiagram.5": "Schematic · energy labels",
+  "OttoSchematicDiagram.6": "Schematic · labels",
+  "OttoSchematicDiagram.7": "Schematic · labels",
+  "OttoSchematicDiagram.8": "Schematic · labels",
+  "OttoSchematicDiagram.9": "Schematic · badges",
+  "OttoSchematicDiagram.10": "Schematic · badges",
+  "OttoSchematicDiagram.11": "Schematic · energy labels",
+  "OttoSchematicDiagram.12": "Schematic · energy labels",
+  "OttoSchematicDiagram.13": "Schematic · labels",
+  "OttoSchematicDiagram.14": "Schematic · readout",
+  "OttoEtaCurve.1": "Diagram · axis tick labels",
+  "OttoEtaCurve.2": "Diagram · axis tick labels",
+  "OttoEtaCurve.3": "Diagram · axis titles",
+  "OttoEtaCurve.4": "Diagram · axis titles",
+  "OttoEtaCurve.5": "Diagram · hints & notes",
+  "OttoEtaCurve.6": "Diagram · process labels",
+  "OttoEtaCurve.7": "Diagram · process labels",
+  "OttoEtaCurve.8": "Diagram · hints & notes",
+  "OttoInfoModal.1.desktop": "Modals · titles",
+  "OttoInfoModal.1.mobile": "Modals · titles",
+  "OttoInfoModal.2.desktop": "Modals · buttons",
+  "OttoInfoModal.2.mobile": "Modals · buttons",
+  "OttoInfoModal.3.desktop": "Modals · body text",
+  "OttoInfoModal.3.mobile": "Modals · body text",
+  "OttoInfoModal.4.desktop": "Modals · titles",
+  "OttoInfoModal.4.mobile": "Modals · titles",
+  "OttoInfoModal.5.desktop": "Modals · body text",
+  "OttoInfoModal.5.mobile": "Modals · body text",
+  "OttoInfoModal.6.desktop": "Modals · body text",
+  "OttoInfoModal.6.mobile": "Modals · body text",
+  "OttoInfoModal.7.desktop": "Modals · titles",
+  "OttoInfoModal.7.mobile": "Modals · titles",
+  "OttoInfoModal.8.desktop": "Modals · titles",
+  "OttoInfoModal.8.mobile": "Modals · titles",
+  "OttoInfoModal.9.desktop": "Modals · body text",
+  "OttoInfoModal.9.mobile": "Modals · body text",
+  "OttoInfoModal.10.desktop": "Modals · buttons",
+  "OttoInfoModal.10.mobile": "Modals · buttons",
+  "OttoGasInfoModal.1": "Modals · titles",
+  "OttoGasInfoModal.2": "Modals · buttons",
+  "OttoGasInfoModal.3": "Modals · titles",
+  "OttoGasInfoModal.4": "Modals · body text",
+  "OttoGasInfoModal.5": "Modals · body text",
+  "OttoGasInfoModal.6": "Modals · body text",
+  "OttoGasInfoModal.7": "Modals · body text",
+  "OttoGasInfoModal.8": "Modals · body text",
+  "OttoGasInfoModal.9": "Modals · titles",
+  "OttoGasInfoModal.10": "Modals · buttons",
+  "OttoEquationsModal.1.desktop": "Modals · body text",
+  "OttoEquationsModal.1.mobile": "Modals · body text",
+  "OttoEquationsModal.2.desktop": "Modals · body text",
+  "OttoEquationsModal.2.mobile": "Modals · body text",
+  "OttoEquationsModal.3.desktop": "Modals · body text",
+  "OttoEquationsModal.3.mobile": "Modals · body text",
+  "OttoEquationsModal.4.desktop": "Modals · live values",
+  "OttoEquationsModal.4.mobile": "Modals · live values",
+  "OttoEquationsModal.5.desktop": "Modals · live values",
+  "OttoEquationsModal.5.mobile": "Modals · live values",
+  "OttoEquationsModal.6.desktop": "Modals · titles",
+  "OttoEquationsModal.6.mobile": "Modals · titles",
+  "OttoEquationsModal.7.desktop": "Modals · buttons",
+  "OttoEquationsModal.7.mobile": "Modals · buttons",
+  "OttoEquationsModal.8.desktop": "Modals · buttons",
+  "OttoEquationsModal.8.mobile": "Modals · buttons",
+  "OttoEquationsModal.9.desktop": "Modals · buttons",
+  "OttoEquationsModal.9.mobile": "Modals · buttons",
+  "OttoStateTable.1.desktop": "State table",
+  "OttoStateTable.1.mobile": "State table",
+  "OttoStateTable.2.desktop": "State table",
+  "OttoStateTable.2.mobile": "State table",
+  "OttoStateTable.3.desktop": "State table",
+  "OttoStateTable.3.mobile": "State table",
+  "OttoStateTable.4.desktop": "State table",
+  "OttoStateTable.4.mobile": "State table",
+  "OttoStateTable.5.desktop": "State table",
+  "OttoStateTable.5.mobile": "State table",
+  "OttoStateTable.6.desktop": "State table",
+  "OttoStateTable.6.mobile": "State table",
+  "OttoPage.1.desktop": "Panel · headers",
+  "OttoPage.1.mobile": "Panel · headers",
+  "OttoPage.2.desktop": "Page · header",
+  "OttoPage.2.mobile": "Page · header",
+  "OttoPage.3.desktop": "Page · header",
+  "OttoPage.3.mobile": "Page · header",
+  "OttoPage.4.desktop": "Page · header",
+  "OttoPage.4.mobile": "Page · header",
+  "OttoPage.5.desktop": "Page · header",
+  "OttoPage.5.mobile": "Page · header",
+  "OttoPage.6.desktop": "Page · header buttons",
+  "OttoPage.6.mobile": "Page · header buttons",
+  "OttoPage.7.desktop": "Page · header buttons",
+  "OttoPage.7.mobile": "Page · header buttons",
+  "OttoPage.8.desktop": "Page · header buttons",
+  "OttoPage.8.mobile": "Page · header buttons",
+  "OttoPage.9.desktop": "Page · header buttons",
+  "OttoPage.9.mobile": "Page · header buttons",
+  "OttoPage.10.desktop": "Page · header buttons",
+  "OttoPage.10.mobile": "Page · header buttons",
+  "OttoPage.11.desktop": "Page · metrics strip",
+  "OttoPage.11.mobile": "Page · metrics strip",
+  "OttoPage.12.desktop": "Page · metrics strip",
+  "OttoPage.12.mobile": "Page · metrics strip",
+  "OttoPage.13.desktop": "Page · metrics strip",
+  "OttoPage.13.mobile": "Page · metrics strip",
+  "OttoPage.14.desktop": "Panel · header subtitles",
+  "OttoPage.14.mobile": "Panel · header subtitles",
+  "OttoPage.15.desktop": "Panel · buttons",
+  "OttoPage.15.mobile": "Panel · buttons",
+  "OttoPage.16.desktop": "Panel · header subtitles",
+  "OttoPage.16.mobile": "Panel · header subtitles",
+  "OttoPage.17.desktop": "Panel · header subtitles",
+  "OttoPage.17.mobile": "Panel · header subtitles",
+  "OttoPage.18.desktop": "Panel · buttons",
+  "OttoPage.18.mobile": "Panel · buttons",
+  "OttoPage.19.desktop": "Panel · buttons",
+  "OttoPage.19.mobile": "Panel · buttons",
+  "OttoPage.20.desktop": "Panel · buttons",
+  "OttoPage.20.mobile": "Panel · buttons",
+  "OttoPage.21.desktop": "Panel · lock buttons",
+  "OttoPage.21.mobile": "Panel · lock buttons",
+  "OttoPage.22.desktop": "Panel · lock buttons",
+  "OttoPage.22.mobile": "Panel · lock buttons",
+  "OttoPage.23.desktop": "Panel · header subtitles",
+  "OttoPage.23.mobile": "Panel · header subtitles",
+  "OttoPage.24.desktop": "Panel · buttons",
+  "OttoPage.24.mobile": "Panel · buttons",
+  "OttoPage.25.desktop": "Panel · buttons",
+  "OttoPage.25.mobile": "Panel · buttons",
+  "OttoPage.26.desktop": "Panel · lock buttons",
+  "OttoPage.26.mobile": "Panel · lock buttons",
+  "OttoPage.27.desktop": "Panel · lock buttons",
+  "OttoPage.27.mobile": "Panel · lock buttons",
+  "OttoPage.28.desktop": "Parameters · derived summary",
+  "OttoPage.28.mobile": "Parameters · derived summary",
+  "OttoPage.29.desktop": "Panel · header subtitles",
+  "OttoPage.29.mobile": "Panel · header subtitles",
+  "OttoPage.30.desktop": "Energy balance · labels",
+  "OttoPage.30.mobile": "Energy balance · labels",
+  "OttoPage.31.desktop": "Energy balance · labels",
+  "OttoPage.31.mobile": "Energy balance · labels",
+  "OttoPage.32.desktop": "Energy balance · values",
+  "OttoPage.32.mobile": "Energy balance · values",
+  "OttoPage.33.desktop": "Energy balance · units",
+  "OttoPage.33.mobile": "Energy balance · units",
+  "OttoPage.34.desktop": "Energy balance · labels",
+  "OttoPage.34.mobile": "Energy balance · labels",
+  "OttoPage.35.desktop": "Energy balance · labels",
+  "OttoPage.35.mobile": "Energy balance · labels",
+  "OttoPage.36.desktop": "Energy balance · values",
+  "OttoPage.36.mobile": "Energy balance · values",
+  "OttoPage.37.desktop": "Energy balance · units",
+  "OttoPage.37.mobile": "Energy balance · units",
+  "OttoPage.38.desktop": "Energy balance · labels",
+  "OttoPage.38.mobile": "Energy balance · labels",
+  "OttoPage.39.desktop": "Energy balance · values",
+  "OttoPage.39.mobile": "Energy balance · values",
+  "OttoPage.40.desktop": "Energy balance · labels",
+  "OttoPage.40.mobile": "Energy balance · labels",
+  "OttoPage.41.desktop": "Energy balance · values",
+  "OttoPage.41.mobile": "Energy balance · values",
+  "OttoPage.42.desktop": "Panel · buttons",
+  "OttoPage.42.mobile": "Panel · buttons",
+  "OttoPage.43.desktop": "Panel · buttons",
+  "OttoPage.43.mobile": "Panel · buttons",
+  "OttoPage.44.desktop": "Footer",
+  "OttoPage.44.mobile": "Footer",
+  "OttoPage.45.desktop": "Footer",
+  "OttoPage.45.mobile": "Footer",
+  "OttoPage.46.desktop": "Footer",
+  "OttoPage.46.mobile": "Footer",
+  "OttoPage.47.desktop": "Footer",
+  "OttoPage.47.mobile": "Footer",
+  "Schematic.crankRadius": "Schematic · geometry",
+  "Schematic.moleculeRadius": "Schematic · geometry"
+};
+const TX_CAT_ORDER = ["Diagram · axis tick labels", "Diagram · axis titles", "Diagram · drag value box", "Diagram · state numbers", "Diagram · process labels", "Diagram · hints & notes", "Diagram · area legend", "Modals · titles", "Modals · buttons", "Modals · live values", "Modals · body text", "Schematic · labels", "Schematic · energy labels", "Schematic · badges", "Schematic · readout", "State table", "Panel · headers", "Page · header", "Page · header buttons", "Page · metrics strip", "Panel · header subtitles", "Panel · buttons", "Panel · lock buttons", "Parameters · derived summary", "Energy balance · labels", "Energy balance · values", "Energy balance · units", "Footer", "Schematic · geometry"];
 const TX = { ...TX_DEFAULTS };
 
 /* ───────── Ideal-gas helpers (constant c_p / c_v — "cold-air standard" for air) ─────────
@@ -1414,49 +1659,84 @@ function OttoEtaCurve({ cycle, onRChange, textScale }) {
   );
 }
 
-function OttoTextTuner({ open, tx, onChange, onClose }) {
+function OttoTextTuner({ open, tune, onChange, onClose }) {
+  const desktop = useIsDesktop();
   const [copied, setCopied] = useState("");
+  const [openCats, setOpenCats] = useState({});
+  const [pageScroll, setPageScroll] = useState(0);
+  // On a phone the panel takes the bottom half; pad the page so everything can still scroll into view above it
+  useEffect(() => {
+    if (!open || desktop) return;
+    const prev = document.body.style.paddingBottom; document.body.style.paddingBottom = "52vh";
+    const onScroll = () => { const max = document.documentElement.scrollHeight - window.innerHeight; setPageScroll(max > 0 ? Math.round(100 * window.scrollY / max) : 0); };
+    window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
+    return () => { document.body.style.paddingBottom = prev; window.removeEventListener("scroll", onScroll); };
+  }, [open, desktop]);
   if (!open) return null;
+  const { tx, cs } = tune;
   const keys = Object.keys(TX_DEFAULTS);
-  const groups = [];
-  for (const k of keys) { const g = k.split(".")[0]; if (!groups.includes(g)) groups.push(g); }
-  const changed = keys.filter(k => tx[k] !== TX_DEFAULTS[k]);
-  const dump = () => "{\n" + keys.map(k => `  "${k}": ${tx[k]}${tx[k] !== TX_DEFAULTS[k] ? "  // was " + TX_DEFAULTS[k] : ""}`).join(",\n") + "\n}";
-  const copy = async () => { const text = dump(); try { await navigator.clipboard.writeText(text); setCopied("copied " + keys.length + " values (" + changed.length + " changed)"); } catch { setCopied("clipboard blocked — select the text below"); } };
-  const set = (k, v) => { const next = { ...tx, [k]: v }; onChange(next); try { localStorage.setItem("ottoTextTune", JSON.stringify(next)); } catch {} };
-  const reset = () => { onChange({ ...TX_DEFAULTS }); try { localStorage.removeItem("ottoTextTune"); } catch {} setCopied(""); };
-  const row = { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 110px 44px", alignItems: "center", gap: 8, padding: "3px 0" };
+  const eff = (k) => Math.round(tx[k] * (cs[TX_CAT[k]] ?? 1) * 100) / 100;
+  const changed = keys.filter(k => eff(k) !== TX_DEFAULTS[k]);
+  const dump = () => "{\n" + keys.map(k => `  "${k}": ${eff(k)}${eff(k) !== TX_DEFAULTS[k] ? "  // was " + TX_DEFAULTS[k] : ""}`).join(",\n") + "\n}";
+  const persist = (next) => { onChange(next); try { localStorage.setItem("ottoTextTune", JSON.stringify(next)); } catch {} };
+  const setKey = (k, v) => persist({ ...tune, tx: { ...tx, [k]: v } });
+  const setCat = (c, f) => persist({ ...tune, cs: { ...cs, [c]: f } });
+  const reset = () => { persist({ tx: { ...TX_DEFAULTS }, cs: {} }); setCopied(""); };
+  const copy = async () => { const text = dump(); try { await navigator.clipboard.writeText(text); setCopied(`copied ${keys.length} values (${changed.length} changed)`); } catch { setCopied("clipboard blocked — select the text below"); } };
+  const scrollPage = (pct) => { const max = document.documentElement.scrollHeight - window.innerHeight; window.scrollTo({ top: max * pct / 100 }); setPageScroll(pct); };
+  const row = { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 100px 46px", alignItems: "center", gap: 8, padding: "3px 0" };
+  const btn = { background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontFamily: FM, fontSize: 11, padding: "4px 10px", cursor: "pointer" };
+  const shell = desktop
+    ? { position: "fixed", top: 0, right: 0, bottom: 0, width: "min(440px, 100vw)", borderLeft: `2px solid ${K.ink}`, boxShadow: "-8px 0 24px rgba(0,0,0,0.15)" }
+    : { position: "fixed", left: 0, right: 0, bottom: 0, height: "50vh", borderTop: `2px solid ${K.ink}`, boxShadow: "0 -8px 24px rgba(0,0,0,0.15)" };
   return (
-    <div data-anim-keep="1" style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(420px, 100vw)", zIndex: 5000, background: K.card, borderLeft: `2px solid ${K.ink}`, boxShadow: "-8px 0 24px rgba(0,0,0,0.15)", display: "flex", flexDirection: "column", fontFamily: FM, color: K.ink }}>
-      <div style={{ padding: "10px 14px", borderBottom: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div><div style={{ fontFamily: FD, fontSize: 16 }}>Text tuner</div><div style={{ fontSize: 10, color: K.inkLight }}>{keys.length} sizes · {changed.length} changed · values are in px before the display-size scale</div></div>
-        <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontFamily: FM, fontSize: 11, padding: "3px 10px", cursor: "pointer" }}>Close</button>
+    <div data-anim-keep="1" style={{ ...shell, zIndex: 5000, background: K.card, display: "flex", flexDirection: "column", fontFamily: FM, color: K.ink }}>
+      <div style={{ padding: "8px 12px", borderBottom: `1px solid ${K.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+        <div style={{ minWidth: 0 }}><div style={{ fontFamily: FD, fontSize: 15 }}>Text tuner</div><div style={{ fontSize: 9.5, color: K.inkLight }}>{keys.length} sizes · {changed.length} changed · category slider scales every member; expand ▸ for individual sizes</div></div>
+        <button onClick={onClose} style={btn}>Close</button>
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: "6px 14px" }}>
-        {groups.map(g => (
-          <div key={g} style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 10, letterSpacing: 1.2, textTransform: "uppercase", color: K.inkLight, borderBottom: `1px solid ${K.border}`, padding: "6px 0 3px", marginBottom: 2 }}>{g}</div>
-            {keys.filter(k => k.startsWith(g + ".")).map(k => {
-              const [lo, hi, step] = TX_RANGES[k] || [3, 48, 0.5];
-              const on = tx[k] !== TX_DEFAULTS[k];
-              return (
-                <div key={k} style={row}>
-                  <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 10, color: on ? K.accent : K.inkMed }} title={k}>{k.slice(g.length + 1)}{TX_HINTS[k] ? <span style={{ color: K.inkLight }}> · {TX_HINTS[k]}</span> : null}</div>
-                  <input type="range" min={lo} max={hi} step={step} value={tx[k]} onChange={e => set(k, parseFloat(e.target.value))} style={{ width: "100%", accentColor: K.accent }} />
-                  <div style={{ fontSize: 11, textAlign: "right", fontVariantNumeric: "tabular-nums", color: on ? K.accent : K.ink }}>{tx[k]}</div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+      {!desktop && (
+        <div style={{ padding: "6px 12px", borderBottom: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "auto 1fr auto", alignItems: "center", gap: 8, fontSize: 10, color: K.inkLight }}>
+          <span>page scroll</span>
+          <input type="range" min={0} max={100} step={1} value={pageScroll} onChange={e => scrollPage(+e.target.value)} style={{ width: "100%", accentColor: K.ink }} />
+          <span style={{ fontVariantNumeric: "tabular-nums" }}>{pageScroll}%</span>
+        </div>
+      )}
+      <div style={{ flex: 1, overflowY: "auto", padding: "4px 12px" }}>
+        {TX_CAT_ORDER.map(c => {
+          const members = keys.filter(k => TX_CAT[k] === c);
+          const f = cs[c] ?? 1, isOpen = !!openCats[c], catOn = f !== 1, memberOn = members.some(k => tx[k] !== TX_DEFAULTS[k]);
+          return (
+            <div key={c} style={{ borderBottom: `1px solid ${K.border}`, padding: "4px 0" }}>
+              <div style={{ ...row, gridTemplateColumns: "minmax(0, 1fr) 100px 46px" }}>
+                <button onClick={() => setOpenCats(o => ({ ...o, [c]: !isOpen }))} style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", fontFamily: FM, fontSize: 11, color: catOn || memberOn ? K.accent : K.ink, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {isOpen ? "▾" : "▸"} {c} <span style={{ color: K.inkLight, fontWeight: 400 }}>({members.length})</span>
+                </button>
+                <input type="range" min={50} max={200} step={1} value={Math.round(f * 100)} onChange={e => setCat(c, +e.target.value / 100)} style={{ width: "100%", accentColor: K.accent }} />
+                <div style={{ fontSize: 11, textAlign: "right", fontVariantNumeric: "tabular-nums", color: catOn ? K.accent : K.ink }}>{Math.round(f * 100)}%</div>
+              </div>
+              {isOpen && members.map(k => {
+                const [lo, hi, step] = TX_RANGES[k] || [3, 48, 0.5];
+                const on = tx[k] !== TX_DEFAULTS[k];
+                return (
+                  <div key={k} style={{ ...row, paddingLeft: 14 }}>
+                    <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 10, color: on ? K.accent : K.inkMed }} title={k}>{k}{TX_HINTS[k] ? <span style={{ color: K.inkLight }}> · {TX_HINTS[k]}</span> : null}</div>
+                    <input type="range" min={lo} max={hi} step={step} value={tx[k]} onChange={e => setKey(k, parseFloat(e.target.value))} style={{ width: "100%", accentColor: K.accent }} />
+                    <div style={{ fontSize: 11, textAlign: "right", fontVariantNumeric: "tabular-nums", color: on || catOn ? K.accent : K.ink }} title="effective size after the category scale">{eff(k)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
-      <div style={{ padding: "10px 14px", borderTop: `1px solid ${K.border}` }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button onClick={copy} style={{ background: K.ink, color: K.bg, border: "none", fontFamily: FM, fontSize: 12, padding: "7px 16px", cursor: "pointer" }}>Copy</button>
-          <button onClick={reset} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontFamily: FM, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>Reset all</button>
+      <div style={{ padding: "8px 12px", borderTop: `1px solid ${K.border}` }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <button onClick={copy} style={{ ...btn, background: K.ink, color: K.bg, border: "none", fontSize: 12, padding: "6px 16px" }}>Copy</button>
+          <button onClick={reset} style={btn}>Reset all</button>
           <span style={{ fontSize: 10, color: K.inkLight }}>{copied}</span>
         </div>
-        {copied.startsWith("clipboard") && <textarea readOnly value={dump()} onFocus={e => e.target.select()} style={{ width: "100%", height: 120, marginTop: 8, fontFamily: FM, fontSize: 10 }} />}
+        {copied.startsWith("clipboard") && <textarea readOnly value={dump()} onFocus={e => e.target.select()} style={{ width: "100%", height: 100, marginTop: 8, fontFamily: FM, fontSize: 10 }} />}
       </div>
     </div>
   );
@@ -1875,8 +2155,10 @@ export default function OttoPage({ onBack }) {
   const [forcedTour, setForcedTour] = useState(false);
   const [showWelcome] = useState(false);
   const [showTuner, setShowTuner] = useState(false);
-  const [tx, setTx] = useState(() => { try { return { ...TX_DEFAULTS, ...JSON.parse(localStorage.getItem("ottoTextTune") || "{}") }; } catch { return { ...TX_DEFAULTS }; } });
-  Object.assign(TX, tx);
+  const [tune, setTune] = useState(() => { // { tx: individual sizes, cs: category scale factors }
+    try { const j = JSON.parse(localStorage.getItem("ottoTextTune") || "{}"); return { tx: { ...TX_DEFAULTS, ...(j.tx || {}) }, cs: { ...(j.cs || {}) } }; } catch { return { tx: { ...TX_DEFAULTS }, cs: {} }; }
+  });
+  for (const k of Object.keys(TX_DEFAULTS)) { const f = tune.cs[TX_CAT[k]] ?? 1; TX[k] = Math.round(tune.tx[k] * f * 100) / 100; }
   const [showAreas, setShowAreas] = useState(false);
   const [showPvAreas, setShowPvAreas] = useState(false);
   const [lineDragInfo, setLineDragInfo] = useState(null);
@@ -2187,7 +2469,7 @@ export default function OttoPage({ onBack }) {
         <span onClick={() => { const a = "scottypres", d = "gmail", t = "com"; window.location.href = "mailto:" + a + "@" + d + "." + t; }} style={{ fontSize: sz(desktop ? TX["OttoPage.46.desktop"] : TX["OttoPage.46.mobile"]), color: K.accent, fontFamily: FM, textDecoration: "underline", cursor: "pointer" }}>{"scottypres" + "@" + "gmail.com"}</span>
         <button data-anim-keep="1" onClick={() => setShowTuner(t => !t)} style={{ marginLeft: 14, background: "none", border: `1px dashed ${K.border}`, color: K.inkLight, fontSize: sz(desktop ? TX["OttoPage.47.desktop"] : TX["OttoPage.47.mobile"]), fontFamily: FM, cursor: "pointer", padding: "2px 8px" }}>text tuner (dev)</button>
       </div>
-      <OttoTextTuner open={showTuner} tx={tx} onChange={setTx} onClose={() => setShowTuner(false)} />
+      <OttoTextTuner open={showTuner} tune={tune} onChange={setTune} onClose={() => setShowTuner(false)} />
     </div>
   );
 }
