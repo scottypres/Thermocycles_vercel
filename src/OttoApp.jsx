@@ -72,20 +72,34 @@ const TX_DEFAULTS = {
   "OttoProcessModal.15.mobile": 10,
   "OttoProcessModal.16.desktop": 16,
   "OttoProcessModal.16.mobile": 12,
-  "OttoSchematicDiagram.1": 9,
-  "OttoSchematicDiagram.2": 5.5,
-  "OttoSchematicDiagram.3": 5.5,
-  "OttoSchematicDiagram.4": 7.5,
-  "OttoSchematicDiagram.5": 7,
-  "OttoSchematicDiagram.6": 6,
-  "OttoSchematicDiagram.7": 6,
-  "OttoSchematicDiagram.8": 6,
-  "OttoSchematicDiagram.9": 9,
-  "OttoSchematicDiagram.10": 8,
-  "OttoSchematicDiagram.11": 8,
-  "OttoSchematicDiagram.12": 8,
-  "OttoSchematicDiagram.13": 6.5,
-  "OttoSchematicDiagram.14": 7,
+  "OttoSchematicDiagram.1.desktop": 9,
+  "OttoSchematicDiagram.1.mobile": 11.7,
+  "OttoSchematicDiagram.2.desktop": 5.5,
+  "OttoSchematicDiagram.2.mobile": 7.15,
+  "OttoSchematicDiagram.3.desktop": 5.5,
+  "OttoSchematicDiagram.3.mobile": 7.15,
+  "OttoSchematicDiagram.4.desktop": 7.5,
+  "OttoSchematicDiagram.4.mobile": 8.18,
+  "OttoSchematicDiagram.5.desktop": 7,
+  "OttoSchematicDiagram.5.mobile": 7.63,
+  "OttoSchematicDiagram.6.desktop": 6,
+  "OttoSchematicDiagram.6.mobile": 7.8,
+  "OttoSchematicDiagram.7.desktop": 6,
+  "OttoSchematicDiagram.7.mobile": 7.8,
+  "OttoSchematicDiagram.8.desktop": 6,
+  "OttoSchematicDiagram.8.mobile": 7.8,
+  "OttoSchematicDiagram.9.desktop": 9,
+  "OttoSchematicDiagram.9.mobile": 11.25,
+  "OttoSchematicDiagram.10.desktop": 8,
+  "OttoSchematicDiagram.10.mobile": 10,
+  "OttoSchematicDiagram.11.desktop": 8,
+  "OttoSchematicDiagram.11.mobile": 8.72,
+  "OttoSchematicDiagram.12.desktop": 8,
+  "OttoSchematicDiagram.12.mobile": 8.72,
+  "OttoSchematicDiagram.13.desktop": 6.5,
+  "OttoSchematicDiagram.13.mobile": 8.45,
+  "OttoSchematicDiagram.14.desktop": 7,
+  "OttoSchematicDiagram.14.mobile": 10.15,
   "OttoEtaCurve.1": 7,
   "OttoEtaCurve.2": 7,
   "OttoEtaCurve.3": 8,
@@ -316,20 +330,34 @@ const TX_HINTS = {
   "OttoProcessModal.15.mobile": "\u2026",
   "OttoProcessModal.16.desktop": "Close",
   "OttoProcessModal.16.mobile": "Close",
-  "OttoSchematicDiagram.1": "\u2026",
-  "OttoSchematicDiagram.2": "intake",
-  "OttoSchematicDiagram.3": "exhaust",
-  "OttoSchematicDiagram.4": "W_net",
-  "OttoSchematicDiagram.5": "\u2026 \u2026",
-  "OttoSchematicDiagram.6": "crank",
-  "OttoSchematicDiagram.7": "TDC",
-  "OttoSchematicDiagram.8": "BDC",
-  "OttoSchematicDiagram.9": "\u2026",
-  "OttoSchematicDiagram.10": "\u2026",
-  "OttoSchematicDiagram.11": "Q_in = \u2026 \u2026",
-  "OttoSchematicDiagram.12": "Q_out = \u2212\u2026 \u2026",
-  "OttoSchematicDiagram.13": "{phase41",
-  "OttoSchematicDiagram.14": "",
+  "OttoSchematicDiagram.1.desktop": "\u2026",
+  "OttoSchematicDiagram.1.mobile": "\u2026",
+  "OttoSchematicDiagram.2.desktop": "intake",
+  "OttoSchematicDiagram.2.mobile": "intake",
+  "OttoSchematicDiagram.3.desktop": "exhaust",
+  "OttoSchematicDiagram.3.mobile": "exhaust",
+  "OttoSchematicDiagram.4.desktop": "W_net",
+  "OttoSchematicDiagram.4.mobile": "W_net",
+  "OttoSchematicDiagram.5.desktop": "\u2026 \u2026",
+  "OttoSchematicDiagram.5.mobile": "\u2026 \u2026",
+  "OttoSchematicDiagram.6.desktop": "crank",
+  "OttoSchematicDiagram.6.mobile": "crank",
+  "OttoSchematicDiagram.7.desktop": "TDC",
+  "OttoSchematicDiagram.7.mobile": "TDC",
+  "OttoSchematicDiagram.8.desktop": "BDC",
+  "OttoSchematicDiagram.8.mobile": "BDC",
+  "OttoSchematicDiagram.9.desktop": "\u2026",
+  "OttoSchematicDiagram.9.mobile": "\u2026",
+  "OttoSchematicDiagram.10.desktop": "\u2026",
+  "OttoSchematicDiagram.10.mobile": "\u2026",
+  "OttoSchematicDiagram.11.desktop": "Q_in = \u2026 \u2026",
+  "OttoSchematicDiagram.11.mobile": "Q_in = \u2026 \u2026",
+  "OttoSchematicDiagram.12.desktop": "Q_out = \u2212\u2026 \u2026",
+  "OttoSchematicDiagram.12.mobile": "Q_out = \u2212\u2026 \u2026",
+  "OttoSchematicDiagram.13.desktop": "{phase41",
+  "OttoSchematicDiagram.13.mobile": "{phase41",
+  "OttoSchematicDiagram.14.desktop": "",
+  "OttoSchematicDiagram.14.mobile": "",
   "OttoEtaCurve.1": "\u2026%",
   "OttoEtaCurve.2": "\u2026",
   "OttoEtaCurve.3": "compression ratio r = v\u2081/v\u2082",
@@ -561,20 +589,34 @@ const TX_CAT = {
   "OttoProcessModal.15.mobile": "Modals · body text",
   "OttoProcessModal.16.desktop": "Modals · buttons",
   "OttoProcessModal.16.mobile": "Modals · buttons",
-  "OttoSchematicDiagram.1": "Schematic · labels",
-  "OttoSchematicDiagram.2": "Schematic · labels",
-  "OttoSchematicDiagram.3": "Schematic · labels",
-  "OttoSchematicDiagram.4": "Schematic · energy labels",
-  "OttoSchematicDiagram.5": "Schematic · energy labels",
-  "OttoSchematicDiagram.6": "Schematic · labels",
-  "OttoSchematicDiagram.7": "Schematic · labels",
-  "OttoSchematicDiagram.8": "Schematic · labels",
-  "OttoSchematicDiagram.9": "Schematic · badges",
-  "OttoSchematicDiagram.10": "Schematic · badges",
-  "OttoSchematicDiagram.11": "Schematic · energy labels",
-  "OttoSchematicDiagram.12": "Schematic · energy labels",
-  "OttoSchematicDiagram.13": "Schematic · labels",
-  "OttoSchematicDiagram.14": "Schematic · readout",
+  "OttoSchematicDiagram.1.desktop": "Schematic · labels",
+  "OttoSchematicDiagram.1.mobile": "Schematic · labels",
+  "OttoSchematicDiagram.2.desktop": "Schematic · labels",
+  "OttoSchematicDiagram.2.mobile": "Schematic · labels",
+  "OttoSchematicDiagram.3.desktop": "Schematic · labels",
+  "OttoSchematicDiagram.3.mobile": "Schematic · labels",
+  "OttoSchematicDiagram.4.desktop": "Schematic · energy labels",
+  "OttoSchematicDiagram.4.mobile": "Schematic · energy labels",
+  "OttoSchematicDiagram.5.desktop": "Schematic · energy labels",
+  "OttoSchematicDiagram.5.mobile": "Schematic · energy labels",
+  "OttoSchematicDiagram.6.desktop": "Schematic · labels",
+  "OttoSchematicDiagram.6.mobile": "Schematic · labels",
+  "OttoSchematicDiagram.7.desktop": "Schematic · labels",
+  "OttoSchematicDiagram.7.mobile": "Schematic · labels",
+  "OttoSchematicDiagram.8.desktop": "Schematic · labels",
+  "OttoSchematicDiagram.8.mobile": "Schematic · labels",
+  "OttoSchematicDiagram.9.desktop": "Schematic · badges",
+  "OttoSchematicDiagram.9.mobile": "Schematic · badges",
+  "OttoSchematicDiagram.10.desktop": "Schematic · badges",
+  "OttoSchematicDiagram.10.mobile": "Schematic · badges",
+  "OttoSchematicDiagram.11.desktop": "Schematic · energy labels",
+  "OttoSchematicDiagram.11.mobile": "Schematic · energy labels",
+  "OttoSchematicDiagram.12.desktop": "Schematic · energy labels",
+  "OttoSchematicDiagram.12.mobile": "Schematic · energy labels",
+  "OttoSchematicDiagram.13.desktop": "Schematic · labels",
+  "OttoSchematicDiagram.13.mobile": "Schematic · labels",
+  "OttoSchematicDiagram.14.desktop": "Schematic · readout",
+  "OttoSchematicDiagram.14.mobile": "Schematic · readout",
   "OttoEtaCurve.1": "Diagram · axis tick labels",
   "OttoEtaCurve.2": "Diagram · axis tick labels",
   "OttoEtaCurve.3": "Diagram · axis titles",
@@ -1413,6 +1455,8 @@ const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const gasRGB = (t) => `rgb(${Math.round(60 + t * 170)},${Math.round(120 - t * 30)},${Math.round(200 - t * 160)})`;
 function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, animSeg }) {
   const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
+  const desktop = useIsDesktop();
+  const T = (k) => TX[k + (desktop ? ".desktop" : ".mobile")]; // schematic sizes are tuned separately for phones
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeProcess, setActiveProcess] = useState(null);
@@ -1508,7 +1552,7 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
   const bar = (x, v, c, lab) => (<g>
     <rect x={x} y={CYL.head} width={14} height={CYL.stroke} fill={K.cardAlt} stroke={K.border} />
     <rect x={x} y={CYL.head + CYL.stroke * (1 - v)} width={14} height={CYL.stroke * v} fill={c} opacity={0.85} />
-    <text x={x + 7} y={CYL.head + CYL.stroke + 14} fill={K.inkMed} fontSize={sz(TX["OttoSchematicDiagram.1"])} textAnchor="middle" fontFamily={FD} fontStyle="italic">{lab}</text>
+    <text x={x + 7} y={CYL.head + CYL.stroke + 14} fill={K.inkMed} fontSize={sz(T("OttoSchematicDiagram.1"))} textAnchor="middle" fontFamily={FD} fontStyle="italic">{lab}</text>
   </g>);
   return (<>
     <svg viewBox="-8 -2 381 348" style={{ width: "100%" }}>
@@ -1535,8 +1579,8 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <rect x={PORT.intake - PORT.halfW} y={CYL.head - 16} width={PORT.halfW * 2} height={16} fill={K.card} />
       <rect x={PORT.exhaust - PORT.halfW} y={CYL.head - 16} width={PORT.halfW * 2} height={16} fill={K.card} />
       {valve(PORT.intake, inOpen)}{valve(PORT.exhaust, exOpen)}
-      <text x={PORT.intake - PORT.halfW - 4} y={16} fill={inOpen ? K.heatOut : K.inkLight} fontSize={sz(TX["OttoSchematicDiagram.2"])} textAnchor="end" fontFamily={FM} fontStyle="italic">intake</text>
-      <text x={PORT.exhaust + PORT.halfW + 4} y={16} fill={exOpen ? K.inkMed : K.inkLight} fontSize={sz(TX["OttoSchematicDiagram.3"])} textAnchor="start" fontFamily={FM} fontStyle="italic">exhaust</text>
+      <text x={PORT.intake - PORT.halfW - 4} y={16} fill={inOpen ? K.heatOut : K.inkLight} fontSize={sz(T("OttoSchematicDiagram.2"))} textAnchor="end" fontFamily={FM} fontStyle="italic">intake</text>
+      <text x={PORT.exhaust + PORT.halfW + 4} y={16} fill={exOpen ? K.inkMed : K.inkLight} fontSize={sz(T("OttoSchematicDiagram.3"))} textAnchor="start" fontFamily={FM} fontStyle="italic">exhaust</text>
       {/* Spark plug */}
       <rect x={176} y={CYL.head - 30} width={8} height={14} fill={K.cardAlt} stroke={K.ink} strokeWidth={1} />
       <line x1={180} y1={CYL.head - 30} x2={180} y2={CYL.head - 38} stroke={K.ink} strokeWidth={1.2} />
@@ -1556,15 +1600,15 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <circle cx={pin.x} cy={pin.y} r={4.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
       {/* Hub carries the W_net label; the value sits outside the crank circle */}
       <rect x={crank.cx - 20} y={crank.cy - 7.5} width={40} height={15} rx={7.5} fill={K.card} stroke={K.workOut} strokeWidth={1.2} />
-      <text x={crank.cx} y={crank.cy + 3} fill={K.workOut} fontSize={sz(TX["OttoSchematicDiagram.4"])} textAnchor="middle" fontFamily={FM} fontWeight="700">W_net</text>
+      <text x={crank.cx} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.4"))} textAnchor="middle" fontFamily={FM} fontWeight="700">W_net</text>
       <line x1={crank.cx + crank.r + 4} y1={crank.cy} x2={crank.cx + crank.r + 22} y2={crank.cy} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
-      <text x={crank.cx + crank.r + 26} y={crank.cy + 3} fill={K.workOut} fontSize={sz(TX["OttoSchematicDiagram.5"])} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
-      <text x={crank.cx - crank.r - 6} y={crank.cy + 3} fill={K.inkLight} fontSize={sz(TX["OttoSchematicDiagram.6"])} textAnchor="end" fontFamily={FM} fontStyle="italic">crank</text>
+      <text x={crank.cx + crank.r + 26} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.5"))} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
+      <text x={crank.cx - crank.r - 6} y={crank.cy + 3} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.6"))} textAnchor="end" fontFamily={FM} fontStyle="italic">crank</text>
       {/* TDC / BDC ticks (left) and P / T bars (right) */}
       <line x1={CYL.x - 12} y1={CYL.head + CYL.stroke / cycle.r} x2={CYL.x - 4} y2={CYL.head + CYL.stroke / cycle.r} stroke={K.inkLight} strokeWidth={1} />
-      <text x={CYL.x - 14} y={CYL.head + CYL.stroke / cycle.r + 2.5} fill={K.inkLight} fontSize={sz(TX["OttoSchematicDiagram.7"])} textAnchor="end" fontFamily={FM} fontStyle="italic">TDC</text>
+      <text x={CYL.x - 14} y={CYL.head + CYL.stroke / cycle.r + 2.5} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.7"))} textAnchor="end" fontFamily={FM} fontStyle="italic">TDC</text>
       <line x1={CYL.x - 12} y1={CYL.head + CYL.stroke} x2={CYL.x - 4} y2={CYL.head + CYL.stroke} stroke={K.inkLight} strokeWidth={1} />
-      <text x={CYL.x - 14} y={CYL.head + CYL.stroke + 2.5} fill={K.inkLight} fontSize={sz(TX["OttoSchematicDiagram.8"])} textAnchor="end" fontFamily={FM} fontStyle="italic">BDC</text>
+      <text x={CYL.x - 14} y={CYL.head + CYL.stroke + 2.5} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.8"))} textAnchor="end" fontFamily={FM} fontStyle="italic">BDC</text>
       {bar(244, pNorm, K.heatIn, "P")}{bar(262, tNorm, K.workIn, "T")}
       {/* Process badges (clickable) */}
       {badges.map(b => {
@@ -1572,19 +1616,19 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
         return (
           <g key={b.id} style={{ cursor: "pointer" }} onClick={() => setActiveProcess(b.id)}>
             <rect x={b.x} y={b.y} width={82} height={36} rx={2} fill={on ? `${b.c}22` : K.card} stroke={b.c} strokeWidth={on ? 2.4 : 1.5} />
-            <text x={b.x + 41} y={b.y + 14} fill={b.c} fontSize={sz(TX["OttoSchematicDiagram.9"])} textAnchor="middle" fontFamily={FD}>{b.l1}</text>
-            <text x={b.x + 41} y={b.y + 28} fill={b.c} fontSize={sz(TX["OttoSchematicDiagram.10"])} textAnchor="middle" fontFamily={FM} fontWeight="500">{b.l2}</text>
+            <text x={b.x + 41} y={b.y + 14} fill={b.c} fontSize={sz(T("OttoSchematicDiagram.9"))} textAnchor="middle" fontFamily={FD}>{b.l1}</text>
+            <text x={b.x + 41} y={b.y + 28} fill={b.c} fontSize={sz(T("OttoSchematicDiagram.10"))} textAnchor="middle" fontFamily={FM} fontWeight="500">{b.l2}</text>
           </g>
         );
       })}
       {/* Energy */}
       <line x1={112} y1={14} x2={128} y2={26} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#oO)" />
-      <text x={108} y={12} fill={K.heatIn} fontSize={sz(TX["OttoSchematicDiagram.11"])} textAnchor="end" fontFamily={FM} fontWeight="700">Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
+      <text x={108} y={12} fill={K.heatIn} fontSize={sz(T("OttoSchematicDiagram.11"))} textAnchor="end" fontFamily={FM} fontWeight="700">Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
       <line x1={128} y1={238} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
-      <text x={104} y={266} fill={K.heatOut} fontSize={sz(TX["OttoSchematicDiagram.12"])} textAnchor="end" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
-      {onIso && <text x={CYL.x + CYL.w + 6} y={262} fill={K.inkLight} fontSize={sz(TX["OttoSchematicDiagram.13"])} textAnchor="start" fontFamily={FM} fontStyle="italic">{phase41 < 0.5 ? "exhaust stroke ↑" : "intake stroke ↓"}</text>}
+      <text x={104} y={266} fill={K.heatOut} fontSize={sz(T("OttoSchematicDiagram.12"))} textAnchor="end" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
+      {onIso && <text x={CYL.x + CYL.w + 6} y={262} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.13"))} textAnchor="start" fontFamily={FM} fontStyle="italic">{phase41 < 0.5 ? "exhaust stroke ↑" : "intake stroke ↓"}</text>}
       {/* Live state readout */}
-      <text x={180} y={340} fill={K.inkMed} fontSize={sz(TX["OttoSchematicDiagram.14"])} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
+      <text x={180} y={340} fill={K.inkMed} fontSize={sz(T("OttoSchematicDiagram.14"))} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
     </svg>
     <OttoProcessModal process={activeProcess} cycle={cycle} onClose={() => setActiveProcess(null)} units={u} />
   </>);
