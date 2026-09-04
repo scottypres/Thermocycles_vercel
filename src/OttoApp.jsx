@@ -921,7 +921,7 @@ const TX_CAT = {
   "Schematic.moleculeRadius": "Schematic · geometry"
 };
 const TX_CAT_ORDER = ["Diagram · axis tick labels", "Diagram · axis titles", "Diagram · drag value box", "Diagram · state numbers", "Diagram · process labels", "Diagram · hints & notes", "Diagram · area legend", "Modals · titles", "Modals · buttons", "Modals · live values", "Modals · body text", "Schematic · labels", "Schematic · energy labels", "Schematic · badges", "Schematic · readout", "State table", "Panel · headers", "Page · header", "Page · header buttons", "Page · metrics strip", "Panel · header subtitles", "Panel · buttons", "Panel · lock buttons", "Parameters · derived summary", "Parameters · sliders", "Energy balance · labels", "Energy balance · values", "Energy balance · units", "Footer", "Schematic · geometry"];
-const TX_POS_DEFAULTS = { qin: [0, 0], qout: [0, 6], wnet: [0, 0] }; // energy-label offsets in the schematic viewBox
+const TX_POS_DEFAULTS = { qin: [-11, 13], qout: [8, 10], wnet: [2, 0] }; // label offsets (viewBox px) from the text tuner; the arrows keep their cylinder/crank ends fixed // energy-label offsets in the schematic viewBox
 const TX = { ...TX_DEFAULTS };
 
 /* ───────── Ideal-gas helpers (constant c_p / c_v — "cold-air standard" for air) ─────────
@@ -1782,7 +1782,7 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <text x={crank.cx} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.4"))} textAnchor="middle" fontFamily={FM} fontWeight="700"><title>{TIP.wnet}</title>W_net</text>
       <g transform={tr("wnet")} {...dragProps("wnet")}>
         {outline(crank.cx + crank.r + 2, crank.cy - 10, 96, 20)}
-        <line x1={crank.cx + crank.r + 4} y1={crank.cy} x2={crank.cx + crank.r + 22} y2={crank.cy} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
+        <line x1={crank.cx + crank.r + 4 - P.wnet[0]} y1={crank.cy - P.wnet[1]} x2={crank.cx + crank.r + 22} y2={crank.cy} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
         <text x={crank.cx + crank.r + 26} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.5"))} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
       </g>
       <text x={crank.cx - crank.r - 6} y={crank.cy + 3} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.6"))} textAnchor="end" fontFamily={FM} fontStyle="italic">crank</text>
@@ -1811,12 +1811,12 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       {/* Energy */}
       <g transform={tr("qin")} {...dragProps("qin")}>
         {outline(14, 0, 118, 30)}
-        <line x1={112} y1={14} x2={128} y2={26} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#oO)" />
+        <line x1={112} y1={14} x2={128 - P.qin[0]} y2={26 - P.qin[1]} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#oO)" />
         <text x={108} y={12} fill={K.heatIn} fontSize={sz(T("OttoSchematicDiagram.11"))} textAnchor="end" fontFamily={FM} fontWeight="700"><title>{TIP.qin}</title>Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
       </g>
       <g transform={tr("qout")} {...dragProps("qout")}>
         {outline(4, 232, 128, 40)}
-        <line x1={128} y1={238} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
+        <line x1={128 - P.qout[0]} y1={244 - P.qout[1]} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
         <text x={104} y={266} fill={K.heatOut} fontSize={sz(T("OttoSchematicDiagram.12"))} textAnchor="end" fontFamily={FM} fontWeight="700"><title>{TIP.qout}</title>Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
       </g>
       {/* Live state readout, with the stroke caption beneath it */}
