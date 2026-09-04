@@ -921,7 +921,7 @@ const TX_CAT = {
   "Schematic.moleculeRadius": "Schematic · geometry"
 };
 const TX_CAT_ORDER = ["Diagram · axis tick labels", "Diagram · axis titles", "Diagram · drag value box", "Diagram · state numbers", "Diagram · process labels", "Diagram · hints & notes", "Diagram · area legend", "Modals · titles", "Modals · buttons", "Modals · live values", "Modals · body text", "Schematic · labels", "Schematic · energy labels", "Schematic · badges", "Schematic · readout", "State table", "Panel · headers", "Page · header", "Page · header buttons", "Page · metrics strip", "Panel · header subtitles", "Panel · buttons", "Panel · lock buttons", "Parameters · derived summary", "Parameters · sliders", "Energy balance · labels", "Energy balance · values", "Energy balance · units", "Footer", "Schematic · geometry"];
-const TX_POS_DEFAULTS = { qin: [-11, 13], qout: [8, 10], wnet: [2, 0] }; // label offsets (viewBox px) from the text tuner; the arrows keep their cylinder/crank ends fixed // energy-label offsets in the schematic viewBox
+const TX_POS_DEFAULTS = { qin: [-11, 13], qout: [11, 13], wnet: [2, 0] }; // label offsets (viewBox px) from the text tuner; the arrows keep their cylinder/crank ends fixed // energy-label offsets in the schematic viewBox
 const TX = { ...TX_DEFAULTS };
 
 /* ───────── Ideal-gas helpers (constant c_p / c_v — "cold-air standard" for air) ─────────
@@ -1811,13 +1811,13 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       {/* Energy */}
       <g transform={tr("qin")} {...dragProps("qin")}>
         {outline(14, 0, 118, 30)}
-        <line x1={112} y1={14} x2={128 - P.qin[0]} y2={26 - P.qin[1]} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#oO)" />
+        <line x1={112} y1={14} x2={CYL.x - P.qin[0]} y2={CYL.head - P.qin[1]} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#oO)" />
         <text x={108} y={12} fill={K.heatIn} fontSize={sz(T("OttoSchematicDiagram.11"))} textAnchor="end" fontFamily={FM} fontWeight="700"><title>{TIP.qin}</title>Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
       </g>
       <g transform={tr("qout")} {...dragProps("qout")}>
-        {outline(4, 232, 128, 40)}
-        <line x1={128 - P.qout[0]} y1={244 - P.qout[1]} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
-        <text x={104} y={266} fill={K.heatOut} fontSize={sz(T("OttoSchematicDiagram.12"))} textAnchor="end" fontFamily={FM} fontWeight="700"><title>{TIP.qout}</title>Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
+        {outline(228, 0, 128, 30)}
+        <line x1={CYL.x + CYL.w - P.qout[0]} y1={CYL.head - P.qout[1]} x2={248} y2={14} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
+        <text x={252} y={12} fill={K.heatOut} fontSize={sz(T("OttoSchematicDiagram.12"))} textAnchor="start" fontFamily={FM} fontWeight="700"><title>{TIP.qout}</title>Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
       </g>
       {/* Live state readout, with the stroke caption beneath it */}
       <text x={180} y={340} fill={K.inkMed} fontSize={sz(T("OttoSchematicDiagram.14"))} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
