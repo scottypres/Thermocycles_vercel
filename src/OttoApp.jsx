@@ -1660,7 +1660,7 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
   const rising = animSeg === 0 || (onIso && phase41 < 0.5);
   const theta = rising ? 2 * Math.PI - Math.acos(1 - 2 * xs) : Math.acos(1 - 2 * xs);
   const crank = { cx: 180, cy: 296, r: TX["Schematic.crankRadius"] };
-  const tdcY = CYL.head + CYL.stroke / cycle.r, tdcLabY = Math.min(tdcY + 2.5, 56); // label clears the Compression badge (top at y = 64)
+  const tdcY = CYL.head + CYL.stroke / cycle.r, tdcLabY = Math.min(tdcY + 2.5, 65); // on the tick down to r ≈ 7; below that it clears the Compression badge (top at y = 72)
   const pin = { x: crank.cx + crank.r * Math.sin(theta), y: crank.cy - crank.r * Math.cos(theta) };
 
   // Molecule simulation lives outside React state; the loop writes circle attributes directly.
@@ -1716,10 +1716,10 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
   }, []);
 
   const badges = [
-    { id: "compression", seg: 0, x: 22, y: 64, c: K.workIn, l1: "1 → 2", l2: "Compression" },
-    { id: "rejection", seg: 3, x: 22, y: 206, c: K.heatOut, l1: "4 → 1", l2: "Heat Rejection" },
-    { id: "combustion", seg: 1, x: 282, y: 64, c: K.heatIn, l1: "2 → 3", l2: "Combustion" },
-    { id: "expansion", seg: 2, x: 282, y: 206, c: K.workOut, l1: "3 → 4", l2: "Expansion" },
+    { id: "compression", seg: 0, x: 22, y: 72, c: K.workIn, l1: "1 → 2", l2: "Compression" },
+    { id: "rejection", seg: 3, x: 22, y: 214, c: K.heatOut, l1: "4 → 1", l2: "Heat Rejection" },
+    { id: "combustion", seg: 1, x: 282, y: 72, c: K.heatIn, l1: "2 → 3", l2: "Combustion" },
+    { id: "expansion", seg: 2, x: 282, y: 214, c: K.workOut, l1: "3 → 4", l2: "Expansion" },
   ];
   const mk = [{ id: "oO", c: K.heatIn }, { id: "oB", c: K.heatOut }, { id: "oG", c: K.workOut }, { id: "oY", c: K.workIn }];
   const valve = (x, open, tip) => { const yd = CYL.head + 1 + (open ? 9 : 0); return (<g><title>{tip}</title>
