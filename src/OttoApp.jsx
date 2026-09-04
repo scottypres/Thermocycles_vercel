@@ -8,38 +8,70 @@ let K = K_LIGHT;
    Every text size on this page reads from TX so the tuner popup can adjust it live.
    TX_DEFAULTS are the shipped values; the "text tuner (dev)" button by the footer opens the sliders. */
 const TX_DEFAULTS = {
-  "OttoTsDiagram.1": 6.5,
-  "OttoTsDiagram.2": 6.5,
-  "OttoTsDiagram.3": 7,
-  "OttoTsDiagram.4": 7,
-  "OttoTsDiagram.5": 9,
-  "OttoTsDiagram.6": 12,
-  "OttoTsDiagram.7": 7,
-  "OttoTsDiagram.8": 7,
-  "OttoTsDiagram.9": 7,
-  "OttoTsDiagram.10": 7,
-  "OttoTsDiagram.11": 8,
-  "OttoTsDiagram.12": 7,
-  "OttoTsDiagram.13": 8,
-  "OttoTsDiagram.14": 8,
-  "OttoTsDiagram.15": 8,
-  "OttoTsDiagram.16": 8,
-  "OttoPvDiagram.1": 6.5,
-  "OttoPvDiagram.2": 6.5,
-  "OttoPvDiagram.3": 7,
-  "OttoPvDiagram.4": 7,
-  "OttoPvDiagram.5": 9,
-  "OttoPvDiagram.6": 12,
-  "OttoPvDiagram.7": 7,
-  "OttoPvDiagram.8": 7,
-  "OttoPvDiagram.9": 7,
-  "OttoPvDiagram.10": 7,
-  "OttoPvDiagram.11": 8,
-  "OttoPvDiagram.12": 7,
-  "OttoPvDiagram.13": 8,
-  "OttoPvDiagram.14": 8,
-  "OttoPvDiagram.15": 8,
-  "OttoPvDiagram.16": 8,
+  "OttoTsDiagram.1.desktop": 6.5,
+  "OttoTsDiagram.1.mobile": 7.8,
+  "OttoTsDiagram.2.desktop": 6.5,
+  "OttoTsDiagram.2.mobile": 7.8,
+  "OttoTsDiagram.3.desktop": 7,
+  "OttoTsDiagram.3.mobile": 9.73,
+  "OttoTsDiagram.4.desktop": 7,
+  "OttoTsDiagram.4.mobile": 9.73,
+  "OttoTsDiagram.5.desktop": 9,
+  "OttoTsDiagram.5.mobile": 9.18,
+  "OttoTsDiagram.6.desktop": 12,
+  "OttoTsDiagram.6.mobile": 13.32,
+  "OttoTsDiagram.7.desktop": 7,
+  "OttoTsDiagram.7.mobile": 8.75,
+  "OttoTsDiagram.8.desktop": 7,
+  "OttoTsDiagram.8.mobile": 8.75,
+  "OttoTsDiagram.9.desktop": 7,
+  "OttoTsDiagram.9.mobile": 8.75,
+  "OttoTsDiagram.10.desktop": 7,
+  "OttoTsDiagram.10.mobile": 8.75,
+  "OttoTsDiagram.11.desktop": 8,
+  "OttoTsDiagram.11.mobile": 8,
+  "OttoTsDiagram.12.desktop": 7,
+  "OttoTsDiagram.12.mobile": 7,
+  "OttoTsDiagram.13.desktop": 8,
+  "OttoTsDiagram.13.mobile": 8,
+  "OttoTsDiagram.14.desktop": 8,
+  "OttoTsDiagram.14.mobile": 8,
+  "OttoTsDiagram.15.desktop": 8,
+  "OttoTsDiagram.15.mobile": 8,
+  "OttoTsDiagram.16.desktop": 8,
+  "OttoTsDiagram.16.mobile": 8,
+  "OttoPvDiagram.1.desktop": 6.5,
+  "OttoPvDiagram.1.mobile": 7.8,
+  "OttoPvDiagram.2.desktop": 6.5,
+  "OttoPvDiagram.2.mobile": 7.8,
+  "OttoPvDiagram.3.desktop": 7,
+  "OttoPvDiagram.3.mobile": 9.73,
+  "OttoPvDiagram.4.desktop": 7,
+  "OttoPvDiagram.4.mobile": 9.73,
+  "OttoPvDiagram.5.desktop": 9,
+  "OttoPvDiagram.5.mobile": 9.18,
+  "OttoPvDiagram.6.desktop": 12,
+  "OttoPvDiagram.6.mobile": 13.32,
+  "OttoPvDiagram.7.desktop": 7,
+  "OttoPvDiagram.7.mobile": 8.75,
+  "OttoPvDiagram.8.desktop": 7,
+  "OttoPvDiagram.8.mobile": 8.75,
+  "OttoPvDiagram.9.desktop": 7,
+  "OttoPvDiagram.9.mobile": 8.75,
+  "OttoPvDiagram.10.desktop": 7,
+  "OttoPvDiagram.10.mobile": 8.75,
+  "OttoPvDiagram.11.desktop": 8,
+  "OttoPvDiagram.11.mobile": 8,
+  "OttoPvDiagram.12.desktop": 7,
+  "OttoPvDiagram.12.mobile": 7,
+  "OttoPvDiagram.13.desktop": 8,
+  "OttoPvDiagram.13.mobile": 8,
+  "OttoPvDiagram.14.desktop": 8,
+  "OttoPvDiagram.14.mobile": 8,
+  "OttoPvDiagram.15.desktop": 8,
+  "OttoPvDiagram.15.mobile": 8,
+  "OttoPvDiagram.16.desktop": 8,
+  "OttoPvDiagram.16.mobile": 8,
   "OttoProcessModal.1.desktop": 28,
   "OttoProcessModal.1.mobile": 16,
   "OttoProcessModal.2.desktop": 14,
@@ -100,14 +132,22 @@ const TX_DEFAULTS = {
   "OttoSchematicDiagram.13.mobile": 8.45,
   "OttoSchematicDiagram.14.desktop": 7,
   "OttoSchematicDiagram.14.mobile": 10.15,
-  "OttoEtaCurve.1": 7,
-  "OttoEtaCurve.2": 7,
-  "OttoEtaCurve.3": 8,
-  "OttoEtaCurve.4": 8,
-  "OttoEtaCurve.5": 5.5,
-  "OttoEtaCurve.6": 9,
-  "OttoEtaCurve.7": 7,
-  "OttoEtaCurve.8": 6.5,
+  "OttoEtaCurve.1.desktop": 7,
+  "OttoEtaCurve.1.mobile": 8.4,
+  "OttoEtaCurve.2.desktop": 7,
+  "OttoEtaCurve.2.mobile": 8.4,
+  "OttoEtaCurve.3.desktop": 8,
+  "OttoEtaCurve.3.mobile": 11.12,
+  "OttoEtaCurve.4.desktop": 8,
+  "OttoEtaCurve.4.mobile": 11.12,
+  "OttoEtaCurve.5.desktop": 5.5,
+  "OttoEtaCurve.5.mobile": 5.5,
+  "OttoEtaCurve.6.desktop": 9,
+  "OttoEtaCurve.6.mobile": 11.25,
+  "OttoEtaCurve.7.desktop": 7,
+  "OttoEtaCurve.7.mobile": 8.75,
+  "OttoEtaCurve.8.desktop": 6.5,
+  "OttoEtaCurve.8.mobile": 6.5,
   "OttoInfoModal.1.desktop": 28,
   "OttoInfoModal.1.mobile": 18,
   "OttoInfoModal.2.desktop": 14,
@@ -224,6 +264,14 @@ const TX_DEFAULTS = {
   "OttoPage.27.mobile": 9,
   "OttoPage.28.desktop": 15,
   "OttoPage.28.mobile": 9,
+  "ParamSlider.label.desktop": 16,
+  "ParamSlider.label.mobile": 10,
+  "ParamSlider.value.desktop": 22,
+  "ParamSlider.value.mobile": 14,
+  "ParamSlider.unit.desktop": 14,
+  "ParamSlider.unit.mobile": 10,
+  "ParamSlider.range.desktop": 13,
+  "ParamSlider.range.mobile": 8,
   "OttoPage.29.desktop": 15,
   "OttoPage.29.mobile": 9,
   "OttoPage.30.desktop": 15,
@@ -266,38 +314,70 @@ const TX_DEFAULTS = {
   "Schematic.moleculeRadius": 2.6
 };
 const TX_HINTS = {
-  "OttoTsDiagram.1": "\u2026",
-  "OttoTsDiagram.2": "\u2026",
-  "OttoTsDiagram.3": "s (kJ/kg\u00b7K)",
-  "OttoTsDiagram.4": "T (\u00b0C)",
-  "OttoTsDiagram.5": "\u2026",
-  "OttoTsDiagram.6": "\u2026",
-  "OttoTsDiagram.7": "Compression",
-  "OttoTsDiagram.8": "Combustion",
-  "OttoTsDiagram.9": "Expansion",
-  "OttoTsDiagram.10": "Heat Rejection",
-  "OttoTsDiagram.11": "\u2026",
-  "OttoTsDiagram.12": "\u2026",
-  "OttoTsDiagram.13": "Q_in (2\u21923) = \u2026 kJ/kg",
-  "OttoTsDiagram.14": "Q_out (4\u21921) = \u2212\u2026 kJ/kg",
-  "OttoTsDiagram.15": "W_net (1\u21922\u21923\u21924\u21921) = \u2026 kJ/kg",
-  "OttoTsDiagram.16": "\u03b7 = \u2026%",
-  "OttoPvDiagram.1": "\u2026",
-  "OttoPvDiagram.2": "= 1000 ? `$\u2026k` : p}",
-  "OttoPvDiagram.3": "v (m\u00b3/kg) \u2014 log scale",
-  "OttoPvDiagram.4": "P (kPa) \u2014 log",
-  "OttoPvDiagram.5": "\u2026",
-  "OttoPvDiagram.6": "\u2026",
-  "OttoPvDiagram.7": "Compression",
-  "OttoPvDiagram.8": "Combustion",
-  "OttoPvDiagram.9": "Expansion",
-  "OttoPvDiagram.10": "Heat Rejection",
-  "OttoPvDiagram.11": "\u2026",
-  "OttoPvDiagram.12": "\u2026",
-  "OttoPvDiagram.13": "W_expansion (3\u21924) = \u2026 kJ/kg",
-  "OttoPvDiagram.14": "W_comp (1\u21922) = \u2212\u2026 kJ/kg",
-  "OttoPvDiagram.15": "W_net = \u2026 kJ/kg",
-  "OttoPvDiagram.16": "MEP = \u2026",
+  "OttoTsDiagram.1.desktop": "\u2026",
+  "OttoTsDiagram.1.mobile": "\u2026",
+  "OttoTsDiagram.2.desktop": "\u2026",
+  "OttoTsDiagram.2.mobile": "\u2026",
+  "OttoTsDiagram.3.desktop": "s (kJ/kg\u00b7K)",
+  "OttoTsDiagram.3.mobile": "s (kJ/kg\u00b7K)",
+  "OttoTsDiagram.4.desktop": "T (\u00b0C)",
+  "OttoTsDiagram.4.mobile": "T (\u00b0C)",
+  "OttoTsDiagram.5.desktop": "\u2026",
+  "OttoTsDiagram.5.mobile": "\u2026",
+  "OttoTsDiagram.6.desktop": "\u2026",
+  "OttoTsDiagram.6.mobile": "\u2026",
+  "OttoTsDiagram.7.desktop": "Compression",
+  "OttoTsDiagram.7.mobile": "Compression",
+  "OttoTsDiagram.8.desktop": "Combustion",
+  "OttoTsDiagram.8.mobile": "Combustion",
+  "OttoTsDiagram.9.desktop": "Expansion",
+  "OttoTsDiagram.9.mobile": "Expansion",
+  "OttoTsDiagram.10.desktop": "Heat Rejection",
+  "OttoTsDiagram.10.mobile": "Heat Rejection",
+  "OttoTsDiagram.11.desktop": "\u2026",
+  "OttoTsDiagram.11.mobile": "\u2026",
+  "OttoTsDiagram.12.desktop": "\u2026",
+  "OttoTsDiagram.12.mobile": "\u2026",
+  "OttoTsDiagram.13.desktop": "Q_in (2\u21923) = \u2026 kJ/kg",
+  "OttoTsDiagram.13.mobile": "Q_in (2\u21923) = \u2026 kJ/kg",
+  "OttoTsDiagram.14.desktop": "Q_out (4\u21921) = \u2212\u2026 kJ/kg",
+  "OttoTsDiagram.14.mobile": "Q_out (4\u21921) = \u2212\u2026 kJ/kg",
+  "OttoTsDiagram.15.desktop": "W_net (1\u21922\u21923\u21924\u21921) = \u2026 kJ/kg",
+  "OttoTsDiagram.15.mobile": "W_net (1\u21922\u21923\u21924\u21921) = \u2026 kJ/kg",
+  "OttoTsDiagram.16.desktop": "\u03b7 = \u2026%",
+  "OttoTsDiagram.16.mobile": "\u03b7 = \u2026%",
+  "OttoPvDiagram.1.desktop": "\u2026",
+  "OttoPvDiagram.1.mobile": "\u2026",
+  "OttoPvDiagram.2.desktop": "= 1000 ? `$\u2026k` : p}",
+  "OttoPvDiagram.2.mobile": "= 1000 ? `$\u2026k` : p}",
+  "OttoPvDiagram.3.desktop": "v (m\u00b3/kg) \u2014 log scale",
+  "OttoPvDiagram.3.mobile": "v (m\u00b3/kg) \u2014 log scale",
+  "OttoPvDiagram.4.desktop": "P (kPa) \u2014 log",
+  "OttoPvDiagram.4.mobile": "P (kPa) \u2014 log",
+  "OttoPvDiagram.5.desktop": "\u2026",
+  "OttoPvDiagram.5.mobile": "\u2026",
+  "OttoPvDiagram.6.desktop": "\u2026",
+  "OttoPvDiagram.6.mobile": "\u2026",
+  "OttoPvDiagram.7.desktop": "Compression",
+  "OttoPvDiagram.7.mobile": "Compression",
+  "OttoPvDiagram.8.desktop": "Combustion",
+  "OttoPvDiagram.8.mobile": "Combustion",
+  "OttoPvDiagram.9.desktop": "Expansion",
+  "OttoPvDiagram.9.mobile": "Expansion",
+  "OttoPvDiagram.10.desktop": "Heat Rejection",
+  "OttoPvDiagram.10.mobile": "Heat Rejection",
+  "OttoPvDiagram.11.desktop": "\u2026",
+  "OttoPvDiagram.11.mobile": "\u2026",
+  "OttoPvDiagram.12.desktop": "\u2026",
+  "OttoPvDiagram.12.mobile": "\u2026",
+  "OttoPvDiagram.13.desktop": "W_expansion (3\u21924) = \u2026 kJ/kg",
+  "OttoPvDiagram.13.mobile": "W_expansion (3\u21924) = \u2026 kJ/kg",
+  "OttoPvDiagram.14.desktop": "W_comp (1\u21922) = \u2212\u2026 kJ/kg",
+  "OttoPvDiagram.14.mobile": "W_comp (1\u21922) = \u2212\u2026 kJ/kg",
+  "OttoPvDiagram.15.desktop": "W_net = \u2026 kJ/kg",
+  "OttoPvDiagram.15.mobile": "W_net = \u2026 kJ/kg",
+  "OttoPvDiagram.16.desktop": "MEP = \u2026",
+  "OttoPvDiagram.16.mobile": "MEP = \u2026",
   "OttoProcessModal.1.desktop": "\u2026",
   "OttoProcessModal.1.mobile": "\u2026",
   "OttoProcessModal.2.desktop": "Close",
@@ -358,14 +438,22 @@ const TX_HINTS = {
   "OttoSchematicDiagram.13.mobile": "{phase41",
   "OttoSchematicDiagram.14.desktop": "",
   "OttoSchematicDiagram.14.mobile": "",
-  "OttoEtaCurve.1": "\u2026%",
-  "OttoEtaCurve.2": "\u2026",
-  "OttoEtaCurve.3": "compression ratio r = v\u2081/v\u2082",
-  "OttoEtaCurve.4": "thermal efficiency \u03b7",
-  "OttoEtaCurve.5": "\u2026",
-  "OttoEtaCurve.6": "\u2026",
-  "OttoEtaCurve.7": "\u2026",
-  "OttoEtaCurve.8": "\u03b7 = 1 \u2212 r^(1\u2212k) \u00b7 tap or drag to set r",
+  "OttoEtaCurve.1.desktop": "\u2026%",
+  "OttoEtaCurve.1.mobile": "\u2026%",
+  "OttoEtaCurve.2.desktop": "\u2026",
+  "OttoEtaCurve.2.mobile": "\u2026",
+  "OttoEtaCurve.3.desktop": "compression ratio r = v\u2081/v\u2082",
+  "OttoEtaCurve.3.mobile": "compression ratio r = v\u2081/v\u2082",
+  "OttoEtaCurve.4.desktop": "thermal efficiency \u03b7",
+  "OttoEtaCurve.4.mobile": "thermal efficiency \u03b7",
+  "OttoEtaCurve.5.desktop": "\u2026",
+  "OttoEtaCurve.5.mobile": "\u2026",
+  "OttoEtaCurve.6.desktop": "\u2026",
+  "OttoEtaCurve.6.mobile": "\u2026",
+  "OttoEtaCurve.7.desktop": "\u2026",
+  "OttoEtaCurve.7.mobile": "\u2026",
+  "OttoEtaCurve.8.desktop": "\u03b7 = 1 \u2212 r^(1\u2212k) \u00b7 tap or drag to set r",
+  "OttoEtaCurve.8.mobile": "\u03b7 = 1 \u2212 r^(1\u2212k) \u00b7 tap or drag to set r",
   "OttoInfoModal.1.desktop": "The Otto Cycle",
   "OttoInfoModal.1.mobile": "The Otto Cycle",
   "OttoInfoModal.2.desktop": "Close",
@@ -482,6 +570,14 @@ const TX_HINTS = {
   "OttoPage.27.mobile": "",
   "OttoPage.28.desktop": "",
   "OttoPage.28.mobile": "",
+  "ParamSlider.label.desktop": "slider label",
+  "ParamSlider.label.mobile": "slider label",
+  "ParamSlider.value.desktop": "slider value",
+  "ParamSlider.value.mobile": "slider value",
+  "ParamSlider.unit.desktop": "slider unit",
+  "ParamSlider.unit.mobile": "slider unit",
+  "ParamSlider.range.desktop": "slider min / max",
+  "ParamSlider.range.mobile": "slider min / max",
   "OttoPage.29.desktop": "\u2014 Table 1",
   "OttoPage.29.mobile": "\u2014 Table 1",
   "OttoPage.30.desktop": "Heat Transfer",
@@ -525,38 +621,70 @@ const TX_HINTS = {
 };
 const TX_RANGES = {"Schematic.crankRadius": [10, 60, 1], "Schematic.moleculeRadius": [1, 6, 0.1]};
 const TX_CAT = {
-  "OttoTsDiagram.1": "Diagram · axis tick labels",
-  "OttoTsDiagram.2": "Diagram · axis tick labels",
-  "OttoTsDiagram.3": "Diagram · axis titles",
-  "OttoTsDiagram.4": "Diagram · axis titles",
-  "OttoTsDiagram.5": "Diagram · drag value box",
-  "OttoTsDiagram.6": "Diagram · state numbers",
-  "OttoTsDiagram.7": "Diagram · process labels",
-  "OttoTsDiagram.8": "Diagram · process labels",
-  "OttoTsDiagram.9": "Diagram · process labels",
-  "OttoTsDiagram.10": "Diagram · process labels",
-  "OttoTsDiagram.11": "Diagram · hints & notes",
-  "OttoTsDiagram.12": "Diagram · hints & notes",
-  "OttoTsDiagram.13": "Diagram · area legend",
-  "OttoTsDiagram.14": "Diagram · area legend",
-  "OttoTsDiagram.15": "Diagram · area legend",
-  "OttoTsDiagram.16": "Diagram · area legend",
-  "OttoPvDiagram.1": "Diagram · axis tick labels",
-  "OttoPvDiagram.2": "Diagram · axis tick labels",
-  "OttoPvDiagram.3": "Diagram · axis titles",
-  "OttoPvDiagram.4": "Diagram · axis titles",
-  "OttoPvDiagram.5": "Diagram · drag value box",
-  "OttoPvDiagram.6": "Diagram · state numbers",
-  "OttoPvDiagram.7": "Diagram · process labels",
-  "OttoPvDiagram.8": "Diagram · process labels",
-  "OttoPvDiagram.9": "Diagram · process labels",
-  "OttoPvDiagram.10": "Diagram · process labels",
-  "OttoPvDiagram.11": "Diagram · hints & notes",
-  "OttoPvDiagram.12": "Diagram · hints & notes",
-  "OttoPvDiagram.13": "Diagram · area legend",
-  "OttoPvDiagram.14": "Diagram · area legend",
-  "OttoPvDiagram.15": "Diagram · area legend",
-  "OttoPvDiagram.16": "Diagram · area legend",
+  "OttoTsDiagram.1.desktop": "Diagram · axis tick labels",
+  "OttoTsDiagram.1.mobile": "Diagram · axis tick labels",
+  "OttoTsDiagram.2.desktop": "Diagram · axis tick labels",
+  "OttoTsDiagram.2.mobile": "Diagram · axis tick labels",
+  "OttoTsDiagram.3.desktop": "Diagram · axis titles",
+  "OttoTsDiagram.3.mobile": "Diagram · axis titles",
+  "OttoTsDiagram.4.desktop": "Diagram · axis titles",
+  "OttoTsDiagram.4.mobile": "Diagram · axis titles",
+  "OttoTsDiagram.5.desktop": "Diagram · drag value box",
+  "OttoTsDiagram.5.mobile": "Diagram · drag value box",
+  "OttoTsDiagram.6.desktop": "Diagram · state numbers",
+  "OttoTsDiagram.6.mobile": "Diagram · state numbers",
+  "OttoTsDiagram.7.desktop": "Diagram · process labels",
+  "OttoTsDiagram.7.mobile": "Diagram · process labels",
+  "OttoTsDiagram.8.desktop": "Diagram · process labels",
+  "OttoTsDiagram.8.mobile": "Diagram · process labels",
+  "OttoTsDiagram.9.desktop": "Diagram · process labels",
+  "OttoTsDiagram.9.mobile": "Diagram · process labels",
+  "OttoTsDiagram.10.desktop": "Diagram · process labels",
+  "OttoTsDiagram.10.mobile": "Diagram · process labels",
+  "OttoTsDiagram.11.desktop": "Diagram · hints & notes",
+  "OttoTsDiagram.11.mobile": "Diagram · hints & notes",
+  "OttoTsDiagram.12.desktop": "Diagram · hints & notes",
+  "OttoTsDiagram.12.mobile": "Diagram · hints & notes",
+  "OttoTsDiagram.13.desktop": "Diagram · area legend",
+  "OttoTsDiagram.13.mobile": "Diagram · area legend",
+  "OttoTsDiagram.14.desktop": "Diagram · area legend",
+  "OttoTsDiagram.14.mobile": "Diagram · area legend",
+  "OttoTsDiagram.15.desktop": "Diagram · area legend",
+  "OttoTsDiagram.15.mobile": "Diagram · area legend",
+  "OttoTsDiagram.16.desktop": "Diagram · area legend",
+  "OttoTsDiagram.16.mobile": "Diagram · area legend",
+  "OttoPvDiagram.1.desktop": "Diagram · axis tick labels",
+  "OttoPvDiagram.1.mobile": "Diagram · axis tick labels",
+  "OttoPvDiagram.2.desktop": "Diagram · axis tick labels",
+  "OttoPvDiagram.2.mobile": "Diagram · axis tick labels",
+  "OttoPvDiagram.3.desktop": "Diagram · axis titles",
+  "OttoPvDiagram.3.mobile": "Diagram · axis titles",
+  "OttoPvDiagram.4.desktop": "Diagram · axis titles",
+  "OttoPvDiagram.4.mobile": "Diagram · axis titles",
+  "OttoPvDiagram.5.desktop": "Diagram · drag value box",
+  "OttoPvDiagram.5.mobile": "Diagram · drag value box",
+  "OttoPvDiagram.6.desktop": "Diagram · state numbers",
+  "OttoPvDiagram.6.mobile": "Diagram · state numbers",
+  "OttoPvDiagram.7.desktop": "Diagram · process labels",
+  "OttoPvDiagram.7.mobile": "Diagram · process labels",
+  "OttoPvDiagram.8.desktop": "Diagram · process labels",
+  "OttoPvDiagram.8.mobile": "Diagram · process labels",
+  "OttoPvDiagram.9.desktop": "Diagram · process labels",
+  "OttoPvDiagram.9.mobile": "Diagram · process labels",
+  "OttoPvDiagram.10.desktop": "Diagram · process labels",
+  "OttoPvDiagram.10.mobile": "Diagram · process labels",
+  "OttoPvDiagram.11.desktop": "Diagram · hints & notes",
+  "OttoPvDiagram.11.mobile": "Diagram · hints & notes",
+  "OttoPvDiagram.12.desktop": "Diagram · hints & notes",
+  "OttoPvDiagram.12.mobile": "Diagram · hints & notes",
+  "OttoPvDiagram.13.desktop": "Diagram · area legend",
+  "OttoPvDiagram.13.mobile": "Diagram · area legend",
+  "OttoPvDiagram.14.desktop": "Diagram · area legend",
+  "OttoPvDiagram.14.mobile": "Diagram · area legend",
+  "OttoPvDiagram.15.desktop": "Diagram · area legend",
+  "OttoPvDiagram.15.mobile": "Diagram · area legend",
+  "OttoPvDiagram.16.desktop": "Diagram · area legend",
+  "OttoPvDiagram.16.mobile": "Diagram · area legend",
   "OttoProcessModal.1.desktop": "Modals · titles",
   "OttoProcessModal.1.mobile": "Modals · titles",
   "OttoProcessModal.2.desktop": "Modals · buttons",
@@ -617,14 +745,22 @@ const TX_CAT = {
   "OttoSchematicDiagram.13.mobile": "Schematic · labels",
   "OttoSchematicDiagram.14.desktop": "Schematic · readout",
   "OttoSchematicDiagram.14.mobile": "Schematic · readout",
-  "OttoEtaCurve.1": "Diagram · axis tick labels",
-  "OttoEtaCurve.2": "Diagram · axis tick labels",
-  "OttoEtaCurve.3": "Diagram · axis titles",
-  "OttoEtaCurve.4": "Diagram · axis titles",
-  "OttoEtaCurve.5": "Diagram · hints & notes",
-  "OttoEtaCurve.6": "Diagram · process labels",
-  "OttoEtaCurve.7": "Diagram · process labels",
-  "OttoEtaCurve.8": "Diagram · hints & notes",
+  "OttoEtaCurve.1.desktop": "Diagram · axis tick labels",
+  "OttoEtaCurve.1.mobile": "Diagram · axis tick labels",
+  "OttoEtaCurve.2.desktop": "Diagram · axis tick labels",
+  "OttoEtaCurve.2.mobile": "Diagram · axis tick labels",
+  "OttoEtaCurve.3.desktop": "Diagram · axis titles",
+  "OttoEtaCurve.3.mobile": "Diagram · axis titles",
+  "OttoEtaCurve.4.desktop": "Diagram · axis titles",
+  "OttoEtaCurve.4.mobile": "Diagram · axis titles",
+  "OttoEtaCurve.5.desktop": "Diagram · hints & notes",
+  "OttoEtaCurve.5.mobile": "Diagram · hints & notes",
+  "OttoEtaCurve.6.desktop": "Diagram · process labels",
+  "OttoEtaCurve.6.mobile": "Diagram · process labels",
+  "OttoEtaCurve.7.desktop": "Diagram · process labels",
+  "OttoEtaCurve.7.mobile": "Diagram · process labels",
+  "OttoEtaCurve.8.desktop": "Diagram · hints & notes",
+  "OttoEtaCurve.8.mobile": "Diagram · hints & notes",
   "OttoInfoModal.1.desktop": "Modals · titles",
   "OttoInfoModal.1.mobile": "Modals · titles",
   "OttoInfoModal.2.desktop": "Modals · buttons",
@@ -741,6 +877,14 @@ const TX_CAT = {
   "OttoPage.27.mobile": "Panel · lock buttons",
   "OttoPage.28.desktop": "Parameters · derived summary",
   "OttoPage.28.mobile": "Parameters · derived summary",
+  "ParamSlider.label.desktop": "Parameters · sliders",
+  "ParamSlider.label.mobile": "Parameters · sliders",
+  "ParamSlider.value.desktop": "Parameters · sliders",
+  "ParamSlider.value.mobile": "Parameters · sliders",
+  "ParamSlider.unit.desktop": "Parameters · sliders",
+  "ParamSlider.unit.mobile": "Parameters · sliders",
+  "ParamSlider.range.desktop": "Parameters · sliders",
+  "ParamSlider.range.mobile": "Parameters · sliders",
   "OttoPage.29.desktop": "Panel · header subtitles",
   "OttoPage.29.mobile": "Panel · header subtitles",
   "OttoPage.30.desktop": "Energy balance · labels",
@@ -782,7 +926,8 @@ const TX_CAT = {
   "Schematic.crankRadius": "Schematic · geometry",
   "Schematic.moleculeRadius": "Schematic · geometry"
 };
-const TX_CAT_ORDER = ["Diagram · axis tick labels", "Diagram · axis titles", "Diagram · drag value box", "Diagram · state numbers", "Diagram · process labels", "Diagram · hints & notes", "Diagram · area legend", "Modals · titles", "Modals · buttons", "Modals · live values", "Modals · body text", "Schematic · labels", "Schematic · energy labels", "Schematic · badges", "Schematic · readout", "State table", "Panel · headers", "Page · header", "Page · header buttons", "Page · metrics strip", "Panel · header subtitles", "Panel · buttons", "Panel · lock buttons", "Parameters · derived summary", "Energy balance · labels", "Energy balance · values", "Energy balance · units", "Footer", "Schematic · geometry"];
+const TX_CAT_ORDER = ["Diagram · axis tick labels", "Diagram · axis titles", "Diagram · drag value box", "Diagram · state numbers", "Diagram · process labels", "Diagram · hints & notes", "Diagram · area legend", "Modals · titles", "Modals · buttons", "Modals · live values", "Modals · body text", "Schematic · labels", "Schematic · energy labels", "Schematic · badges", "Schematic · readout", "State table", "Panel · headers", "Page · header", "Page · header buttons", "Page · metrics strip", "Panel · header subtitles", "Panel · buttons", "Panel · lock buttons", "Parameters · derived summary", "Parameters · sliders", "Energy balance · labels", "Energy balance · values", "Energy balance · units", "Footer", "Schematic · geometry"];
+const TX_POS_DEFAULTS = { qin: [0, 0], qout: [0, 6], wnet: [0, 0] }; // energy-label offsets in the schematic viewBox
 const TX = { ...TX_DEFAULTS };
 
 /* ───────── Ideal-gas helpers (constant c_p / c_v — "cold-air standard" for air) ─────────
@@ -815,7 +960,7 @@ function calculateOtto(gas, r, p1, t1c, t3c) {
   const T3 = t3c + K2C, P3 = P2 * T3 / T2, v3 = v2;
   const T4 = T3 / Math.pow(r, km1), P4 = P3 / Math.pow(r, gas.k), v4 = v1;
   const mk = (label, TK, P, v, desc) => ({ label, T: TK - K2C, P, v, s: sOf(gas, TK, P), u: uOf(gas, TK), desc });
-  const states = [mk("1", T1, P1, v1, "BDC · Compression Start"), mk("2", T2, P2, v2, "TDC · Compression End"), mk("3", T3, P3, v3, "TDC · Peak (Combustion)"), mk("4", T4, P4, v4, "BDC · Expansion End")];
+  const states = [mk("1", T1, P1, v1, "BDC · start"), mk("2", T2, P2, v2, "TDC · compressed"), mk("3", T3, P3, v3, "TDC · after burn"), mk("4", T4, P4, v4, "BDC · expanded")];
   const [s1, s2, s3, s4] = states.map(s => s.s);
   const [u1, u2, u3, u4] = states.map(s => s.u);
   const wComp = u2 - u1, wExp = u3 - u4, qIn = u3 - u2, qOut = u4 - u1;
@@ -874,6 +1019,9 @@ const TS_PLOT = { x: TS_PAD.l, y: TS_PAD.t, w: TS_W - TS_PAD.l - TS_PAD.r, h: TS
 
 function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRChange, onP1Change, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
   const sz = px => px * (textScale || 1);
+  const desktop = useIsDesktop();
+  const T = (k) => TX[k + (desktop ? ".desktop" : ".mobile")]; // sizes are tuned separately for phones
+  const labelBox = (tx, ty, anchor, fs, text) => { const w = sz(fs * 0.62 * text.length + 6), h = sz(fs * 1.45); const x = anchor === "end" ? tx - w + sz(2) : anchor === "middle" ? tx - w / 2 : tx - sz(2); return <rect x={x} y={ty - sz(fs * 1.05)} width={w} height={h} rx={2} fill={K.card} />; };
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
@@ -991,10 +1139,10 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
       {tGrid.map((t, i) => <line key={`tg${i}`} x1={TS_PLOT.x} y1={mapT(t)} x2={TS_PLOT.x + TS_PLOT.w} y2={mapT(t)} stroke={K.gridMajor} strokeWidth={0.5} />)}
       <line x1={TS_PLOT.x} y1={axisY} x2={TS_PLOT.x + TS_PLOT.w} y2={axisY} stroke={K.ink} strokeWidth={1.2} />
       <line x1={TS_PLOT.x} y1={TS_PLOT.y} x2={TS_PLOT.x} y2={axisY} stroke={K.ink} strokeWidth={1.2} />
-      {sGrid.filter(s => mapS(s) < TS_W - sz(9)).map((s, i) => <text key={`sl${i}`} x={mapS(s)} y={axisY + 10} fill={K.inkMed} fontSize={sz(TX["OttoTsDiagram.1"])} textAnchor="middle" fontFamily={FM}>{+s.toFixed(2)}</text>)}
-      {tGrid.map((t, i) => <text key={`tl${i}`} x={TS_PLOT.x - 4} y={mapT(t) + 2.5} fill={K.inkMed} fontSize={sz(TX["OttoTsDiagram.2"])} textAnchor="end" fontFamily={FM}>{t}</text>)}
-      <text x={TS_W / 2} y={TS_H - 4} fill={K.inkMed} fontSize={sz(TX["OttoTsDiagram.3"])} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
-      <text x={10} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={sz(TX["OttoTsDiagram.4"])} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${TS_H / 2 - 8})`}>T (°C)</text>
+      {sGrid.filter(s => mapS(s) < TS_W - sz(9)).map((s, i) => <text key={`sl${i}`} x={mapS(s)} y={axisY + 10} fill={K.inkMed} fontSize={sz(T("OttoTsDiagram.1"))} textAnchor="middle" fontFamily={FM}>{+s.toFixed(2)}</text>)}
+      {tGrid.map((t, i) => <text key={`tl${i}`} x={TS_PLOT.x - 4} y={mapT(t) + 2.5} fill={K.inkMed} fontSize={sz(T("OttoTsDiagram.2"))} textAnchor="end" fontFamily={FM}>{t}</text>)}
+      <text x={TS_W / 2} y={TS_H - 4} fill={K.inkMed} fontSize={sz(T("OttoTsDiagram.3"))} textAnchor="middle" fontFamily={FM} fontStyle="italic">s (kJ/kg·K)</text>
+      <text x={10} y={TS_H / 2 - 8} fill={K.inkMed} fontSize={sz(T("OttoTsDiagram.4"))} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${TS_H / 2 - 8})`}>T (°C)</text>
       {showAreas && (() => {
         const qInD = [`M${mapS(st[1].s).toFixed(1)},${axisY.toFixed(1)}`, `L${mapS(st[1].s).toFixed(1)},${mapT(st[1].T).toFixed(1)}`, combD.replace(/^M/, "L"), `L${mapS(st[2].s).toFixed(1)},${axisY.toFixed(1)}`, "Z"].join(" ");
         const qOutD = [`M${mapS(st[3].s).toFixed(1)},${axisY.toFixed(1)}`, `L${mapS(st[3].s).toFixed(1)},${mapT(st[3].T).toFixed(1)}`, rejD.replace(/^M/, "L"), `L${mapS(st[0].s).toFixed(1)},${axisY.toFixed(1)}`, "Z"].join(" ");
@@ -1014,11 +1162,11 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
         const isComb = lineDragInfo.which === "combustion";
         const color = isComb ? K.heatIn : K.heatOut;
         const valueText = isComb ? `r = v₁/v₂ = ${cycle.r.toFixed(1)}` : `P₁ = ${fmtP(cycle.p1, u)}`;
-        const boxW = Math.max(sz(104), valueText.length * sz(5.7) + sz(16));
+        const boxW = Math.max(sz(104), valueText.length * sz(T("OttoTsDiagram.5") * 0.64) + sz(16));
         const boxY = TS_PLOT.y + 2;
         return (<>
           <rect x={TS_PLOT.x + TS_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={sz(18)} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
-          <text x={TS_PLOT.x + TS_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(TX["OttoTsDiagram.5"])} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
+          <text x={TS_PLOT.x + TS_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(T("OttoTsDiagram.5"))} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
       })()}
       {!showAreas && <>
@@ -1036,19 +1184,19 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
             <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
             <rect x={tx - sz(7)} y={ty - sz(10)} width={sz(14)} height={sz(13)} rx={1} fill={K.card} />
-            <text x={tx} y={ty} fill={K.accent} fontSize={sz(TX["OttoTsDiagram.6"])} fontFamily={FD} textAnchor="middle">{s.label}</text>
+            <text x={tx} y={ty} fill={K.accent} fontSize={sz(T("OttoTsDiagram.6"))} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
       })}
       {!showAreas && <>
-        <rect x={compLeft ? mapS(st[0].s) - sz(62) : mapS(st[0].s) + sz(6)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2 - sz(8)} width={sz(56)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(TX["OttoTsDiagram.7"])} fontFamily={FM} fontWeight="500" textAnchor={compLeft ? "end" : "start"}>Compression</text>
-        <rect x={combTextX - sz(26)} y={combTextY - sz(8)} width={sz(52)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(TX["OttoTsDiagram.8"])} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Combustion</text>
-        <rect x={expLeft ? mapS(st[2].s) - sz(50) : mapS(st[2].s) + sz(6)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2 - sz(8)} width={sz(44)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.workOut} fontSize={sz(TX["OttoTsDiagram.9"])} fontFamily={FM} fontWeight="500" textAnchor={expLeft ? "end" : "start"}>Expansion</text>
-        <rect x={rejTextX - sz(36)} y={rejTextY - sz(8)} width={sz(72)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={rejTextX} y={rejTextY} fill={K.heatOut} fontSize={sz(TX["OttoTsDiagram.10"])} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Heat Rejection</text>
+        {labelBox(compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8), (mapT(st[0].T) + mapT(st[1].T)) / 2, compLeft ? "end" : "start", T("OttoTsDiagram.7"), "Compression")}
+        <text x={compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(T("OttoTsDiagram.7"))} fontFamily={FM} fontWeight="500" textAnchor={compLeft ? "end" : "start"}>Compression</text>
+        {labelBox(combTextX, combTextY, "middle", T("OttoTsDiagram.8"), "Combustion")}
+        <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(T("OttoTsDiagram.8"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Combustion</text>
+        {labelBox(expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8), (mapT(st[2].T) + mapT(st[3].T)) / 2, expLeft ? "end" : "start", T("OttoTsDiagram.9"), "Expansion")}
+        <text x={expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.workOut} fontSize={sz(T("OttoTsDiagram.9"))} fontFamily={FM} fontWeight="500" textAnchor={expLeft ? "end" : "start"}>Expansion</text>
+        {labelBox(rejTextX, rejTextY, "middle", T("OttoTsDiagram.10"), "Heat Rejection")}
+        <text x={rejTextX} y={rejTextY} fill={K.heatOut} fontSize={sz(T("OttoTsDiagram.10"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Heat Rejection</text>
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {(() => {
@@ -1060,10 +1208,10 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
           rectX = Math.max(1, Math.min(TS_W - w - 1, rectX)); rectY = Math.max(1, Math.min(TS_H - sz(18) - 1, rectY)); // never leave the SVG
           return <>
             <rect x={rectX} y={rectY} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-            <text x={rectX + sz(4)} y={rectY + sz(12)} fill={K.ink} fontSize={sz(TX["OttoTsDiagram.11"])} fontFamily={FM}>{label}</text>
+            <text x={rectX + sz(4)} y={rectY + sz(12)} fill={K.ink} fontSize={sz(T("OttoTsDiagram.11"))} fontFamily={FM}>{label}</text>
           </>;
         })()}
-        {hintClear && <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(TX["OttoTsDiagram.12"])} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>}
+        {hintClear && <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(T("OttoTsDiagram.12"))} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>}
       </>}
       {showAreas && (() => {
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
@@ -1073,17 +1221,17 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
           <rect x={lx} y={ly} width={sz(160)} height={sz(52)} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
           <g onClick={() => setActiveArea("qIn")} style={{ cursor: "pointer" }} opacity={dot("qIn")}>
             <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatIn}30`} stroke={K.heatIn} strokeWidth={activeArea === "qIn" ? 1.4 : 0.6} />
-            <text x={lx + sz(17)} y={ly + sz(12)} fill={K.heatIn} fontSize={sz(TX["OttoTsDiagram.13"])} fontFamily={FM} fontWeight={activeArea === "qIn" ? 700 : 400}>Q_in (2→3) = {fmt(cycle.qIn)} kJ/kg</text>
+            <text x={lx + sz(17)} y={ly + sz(12)} fill={K.heatIn} fontSize={sz(T("OttoTsDiagram.13"))} fontFamily={FM} fontWeight={activeArea === "qIn" ? 700 : 400}>Q_in (2→3) = {fmt(cycle.qIn)} kJ/kg</text>
           </g>
           <g onClick={() => setActiveArea("qOut")} style={{ cursor: "pointer" }} opacity={dot("qOut")}>
             <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.heatOut}30`} stroke={K.heatOut} strokeWidth={activeArea === "qOut" ? 1.4 : 0.6} />
-            <text x={lx + sz(17)} y={ly + sz(25)} fill={K.heatOut} fontSize={sz(TX["OttoTsDiagram.14"])} fontFamily={FM} fontWeight={activeArea === "qOut" ? 700 : 400}>Q_out (4→1) = −{fmt(cycle.qOut)} kJ/kg</text>
+            <text x={lx + sz(17)} y={ly + sz(25)} fill={K.heatOut} fontSize={sz(T("OttoTsDiagram.14"))} fontFamily={FM} fontWeight={activeArea === "qOut" ? 700 : 400}>Q_out (4→1) = −{fmt(cycle.qOut)} kJ/kg</text>
           </g>
           <g onClick={() => setActiveArea("wNet")} style={{ cursor: "pointer" }} opacity={dot("wNet")}>
             <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={activeArea === "wNet" ? 1.4 : 0.6} />
-            <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(TX["OttoTsDiagram.15"])} fontFamily={FM} fontWeight={activeArea === "wNet" ? 700 : 400}>W_net (1→2→3→4→1) = {fmt(cycle.wNet)} kJ/kg</text>
+            <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(T("OttoTsDiagram.15"))} fontFamily={FM} fontWeight={activeArea === "wNet" ? 700 : 400}>W_net (1→2→3→4→1) = {fmt(cycle.wNet)} kJ/kg</text>
           </g>
-          <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(TX["OttoTsDiagram.16"])} fontFamily={FD} fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
+          <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(T("OttoTsDiagram.16"))} fontFamily={FD} fontWeight="bold">η = {(cycle.eta * 100).toFixed(1)}%</text>
         </>);
       })()}
     </svg>
@@ -1097,6 +1245,9 @@ const PV_PLOT = { x: PV_PAD.l, y: PV_PAD.t, w: PV_W - PV_PAD.l - PV_PAD.r, h: PV
 
 function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onRChange, onP1Change, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
   const sz = px => px * (textScale || 1);
+  const desktop = useIsDesktop();
+  const T = (k) => TX[k + (desktop ? ".desktop" : ".mobile")]; // sizes are tuned separately for phones
+  const labelBox = (tx, ty, anchor, fs, text) => { const w = sz(fs * 0.62 * text.length + 6), h = sz(fs * 1.45); const x = anchor === "end" ? tx - w + sz(2) : anchor === "middle" ? tx - w / 2 : tx - sz(2); return <rect x={x} y={ty - sz(fs * 1.05)} width={w} height={h} rx={2} fill={K.card} />; };
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
@@ -1205,10 +1356,10 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
       {pGrid.map((p, i) => <line key={`pg${i}`} x1={PV_PLOT.x} y1={mapP(p)} x2={PV_PLOT.x + PV_PLOT.w} y2={mapP(p)} stroke={K.gridMajor} strokeWidth={0.5} />)}
       <line x1={PV_PLOT.x} y1={axisY} x2={PV_PLOT.x + PV_PLOT.w} y2={axisY} stroke={K.ink} strokeWidth={1.2} />
       <line x1={PV_PLOT.x} y1={PV_PLOT.y} x2={PV_PLOT.x} y2={axisY} stroke={K.ink} strokeWidth={1.2} />
-      {vGrid.filter(v => mapV(v) < PV_W - sz(9)).map((v, i) => <text key={`vl${i}`} x={mapV(v)} y={axisY + 10} fill={K.inkMed} fontSize={sz(TX["OttoPvDiagram.1"])} textAnchor="middle" fontFamily={FM}>{+v.toPrecision(2)}</text>)}
-      {pGrid.map((p, i) => <text key={`pl${i}`} x={PV_PLOT.x - 4} y={mapP(p) + 2.5} fill={K.inkMed} fontSize={sz(TX["OttoPvDiagram.2"])} textAnchor="end" fontFamily={FM}>{p >= 1000 ? `${+(p / 1000).toFixed(2)}k` : p}</text>)}
-      <text x={PV_W / 2} y={PV_H - 5} fill={K.inkMed} fontSize={sz(TX["OttoPvDiagram.3"])} textAnchor="middle" fontFamily={FM} fontStyle="italic">v (m³/kg) — log scale</text>
-      <text x={10} y={PV_H / 2 - 8} fill={K.inkMed} fontSize={sz(TX["OttoPvDiagram.4"])} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${PV_H / 2 - 8})`}>P (kPa) — log</text>
+      {vGrid.filter(v => mapV(v) < PV_W - sz(9)).map((v, i) => <text key={`vl${i}`} x={mapV(v)} y={axisY + 10} fill={K.inkMed} fontSize={sz(T("OttoPvDiagram.1"))} textAnchor="middle" fontFamily={FM}>{+v.toPrecision(2)}</text>)}
+      {pGrid.map((p, i) => <text key={`pl${i}`} x={PV_PLOT.x - 4} y={mapP(p) + 2.5} fill={K.inkMed} fontSize={sz(T("OttoPvDiagram.2"))} textAnchor="end" fontFamily={FM}>{p >= 1000 ? `${+(p / 1000).toFixed(2)}k` : p}</text>)}
+      <text x={PV_W / 2} y={PV_H - 5} fill={K.inkMed} fontSize={sz(T("OttoPvDiagram.3"))} textAnchor="middle" fontFamily={FM} fontStyle="italic">v (m³/kg) — log scale</text>
+      <text x={10} y={PV_H / 2 - 8} fill={K.inkMed} fontSize={sz(T("OttoPvDiagram.4"))} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,10,${PV_H / 2 - 8})`}>P (kPa) — log</text>
       {showPvAreas && (() => {
         // Boundary work = ∫P dv: the region between each isentrope and the v axis
         const wExpD = [`M${mapV(st[2].v).toFixed(1)},${axisY.toFixed(1)}`, `L${mapV(st[2].v).toFixed(1)},${mapP(st[2].P).toFixed(1)}`, expD.replace(/^M/, "L"), `L${mapV(st[3].v).toFixed(1)},${axisY.toFixed(1)}`, "Z"].join(" ");
@@ -1229,12 +1380,12 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
         const lineX = isComb ? mapV(cycle.v2) : mapV(cycle.v1);
         const color = isComb ? K.heatIn : K.heatOut;
         const valueText = isComb ? `r = v₁/v₂ = ${cycle.r.toFixed(1)} (v₂ = ${cycle.v2.toFixed(3)} m³/kg)` : `P₁ = ${fmtP(cycle.p1, u)} (v₁ = ${cycle.v1.toFixed(3)} m³/kg)`;
-        const boxW = Math.max(sz(96), valueText.length * sz(5.7) + sz(16));
+        const boxW = Math.max(sz(96), valueText.length * sz(T("OttoPvDiagram.5") * 0.64) + sz(16));
         const boxY = PV_PLOT.y + 2;
         return (<>
           <line x1={lineX} y1={PV_PLOT.y} x2={lineX} y2={axisY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
           <rect x={PV_PLOT.x + PV_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={sz(18)} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
-          <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(TX["OttoPvDiagram.5"])} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
+          <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(T("OttoPvDiagram.5"))} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
       })()}
       {!showPvAreas && <>
@@ -1252,26 +1403,26 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
             <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
             <rect x={tx - sz(7)} y={ty - sz(10)} width={sz(14)} height={sz(13)} rx={1} fill={K.card} />
-            <text x={tx} y={ty} fill={K.accent} fontSize={sz(TX["OttoPvDiagram.6"])} fontFamily={FD} textAnchor="middle">{s.label}</text>
+            <text x={tx} y={ty} fill={K.accent} fontSize={sz(T("OttoPvDiagram.6"))} fontFamily={FD} textAnchor="middle">{s.label}</text>
           </g>
         );
       })}
       {!showPvAreas && <>
         {(() => {
-          // below-left of the 1→2 isentrope: outside the loop and clear of the 4→1 label
-          const mid = cycle.compPvPath[10];
-          const x = mapV(mid.v) - sz(6), y = mapP(mid.P) + sz(10);
-          return <><rect x={x - sz(54)} y={y - sz(8)} width={sz(56)} height={sz(11)} rx={2} fill={K.card} /><text x={x} y={y} fill={K.workIn} fontSize={sz(TX["OttoPvDiagram.7"])} fontFamily={FM} fontWeight="500" textAnchor="end">Compression</text></>;
+          // below-left of the 1→2 isentrope, well up the curve so it stays clear of the Heat Rejection label at state 1
+          const mid = cycle.compPvPath[15];
+          const x = mapV(mid.v) - sz(6), y = mapP(mid.P) + sz(12);
+          return <>{labelBox(x, y, "end", T("OttoPvDiagram.7"), "Compression")}<text x={x} y={y} fill={K.workIn} fontSize={sz(T("OttoPvDiagram.7"))} fontFamily={FM} fontWeight="500" textAnchor="end">Compression</text></>;
         })()}
-        <rect x={combTextX - sz(26)} y={combTextY - sz(8)} width={sz(52)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(TX["OttoPvDiagram.8"])} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ew-resize" }}>Combustion</text>
+        {labelBox(combTextX, combTextY, "middle", T("OttoPvDiagram.8"), "Combustion")}
+        <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(T("OttoPvDiagram.8"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ew-resize" }}>Combustion</text>
         {(() => {
           const mid = cycle.expPvPath[10];
           const x = mapV(mid.v) + sz(8), y = mapP(mid.P) - sz(3);
-          return <><rect x={x - sz(2)} y={y - sz(8)} width={sz(44)} height={sz(11)} rx={2} fill={K.card} /><text x={x} y={y} fill={K.workOut} fontSize={sz(TX["OttoPvDiagram.9"])} fontFamily={FM} fontWeight="500">Expansion</text></>;
+          return <>{labelBox(x, y, "start", T("OttoPvDiagram.9"), "Expansion")}<text x={x} y={y} fill={K.workOut} fontSize={sz(T("OttoPvDiagram.9"))} fontFamily={FM} fontWeight="500">Expansion</text></>;
         })()}
-        <rect x={rejTextX - sz(36)} y={rejTextY - sz(8)} width={sz(72)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={rejTextX} y={rejTextY} fill={K.heatOut} fontSize={sz(TX["OttoPvDiagram.10"])} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ew-resize" }}>Heat Rejection</text>
+        {labelBox(rejTextX, rejTextY, "middle", T("OttoPvDiagram.10"), "Heat Rejection")}
+        <text x={rejTextX} y={rejTextY} fill={K.heatOut} fontSize={sz(T("OttoPvDiagram.10"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ew-resize" }}>Heat Rejection</text>
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {(() => {
@@ -1283,10 +1434,10 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
           rectX = Math.max(1, Math.min(PV_W - w - 1, rectX)); rectY = Math.max(1, Math.min(PV_H - sz(18) - 1, rectY)); // never leave the SVG
           return <>
             <rect x={rectX} y={rectY} width={w} height={sz(18)} rx={2} fill={K.card} stroke={K.ink} strokeWidth={0.8} />
-            <text x={rectX + sz(4)} y={rectY + sz(12)} fill={K.ink} fontSize={sz(TX["OttoPvDiagram.11"])} fontFamily={FM}>{label}</text>
+            <text x={rectX + sz(4)} y={rectY + sz(12)} fill={K.ink} fontSize={sz(T("OttoPvDiagram.11"))} fontFamily={FM}>{label}</text>
           </>;
         })()}
-        <text x={PV_W - 8} y={PV_PLOT.y + 10} fill={K.inkLight} fontSize={sz(TX["OttoPvDiagram.12"])} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockV ? "v locked" : "tap & drag"}</text>
+        <text x={PV_W - 8} y={PV_PLOT.y + 10} fill={K.inkLight} fontSize={sz(T("OttoPvDiagram.12"))} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockP ? "P locked" : lockV ? "v locked" : "tap & drag"}</text>
       </>}
       {showPvAreas && (() => {
         const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
@@ -1297,17 +1448,17 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
           <rect x={lx} y={ly} width={boxW} height={sz(52)} rx={2} fill={K.card} stroke={K.border} strokeWidth={0.8} />
           <g onClick={() => setActiveArea("wExp")} style={{ cursor: "pointer" }} opacity={dot("wExp")}>
             <rect x={lx + sz(5)} y={ly + sz(5)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}30`} stroke={K.workOut} strokeWidth={activeArea === "wExp" ? 1.4 : 0.6} />
-            <text x={lx + sz(17)} y={ly + sz(12)} fill={K.workOut} fontSize={sz(TX["OttoPvDiagram.13"])} fontFamily={FM} fontWeight={activeArea === "wExp" ? 700 : 400}>W_expansion (3→4) = {fmt(cycle.wExp)} kJ/kg</text>
+            <text x={lx + sz(17)} y={ly + sz(12)} fill={K.workOut} fontSize={sz(T("OttoPvDiagram.13"))} fontFamily={FM} fontWeight={activeArea === "wExp" ? 700 : 400}>W_expansion (3→4) = {fmt(cycle.wExp)} kJ/kg</text>
           </g>
           <g onClick={() => setActiveArea("wComp")} style={{ cursor: "pointer" }} opacity={dot("wComp")}>
             <rect x={lx + sz(5)} y={ly + sz(18)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workIn}30`} stroke={K.workIn} strokeWidth={activeArea === "wComp" ? 1.4 : 0.6} />
-            <text x={lx + sz(17)} y={ly + sz(25)} fill={K.workIn} fontSize={sz(TX["OttoPvDiagram.14"])} fontFamily={FM} fontWeight={activeArea === "wComp" ? 700 : 400}>W_comp (1→2) = −{fmt(cycle.wComp)} kJ/kg</text>
+            <text x={lx + sz(17)} y={ly + sz(25)} fill={K.workIn} fontSize={sz(T("OttoPvDiagram.14"))} fontFamily={FM} fontWeight={activeArea === "wComp" ? 700 : 400}>W_comp (1→2) = −{fmt(cycle.wComp)} kJ/kg</text>
           </g>
           <g onClick={() => setActiveArea("wNet")} style={{ cursor: "pointer" }} opacity={dot("wNet")}>
             <rect x={lx + sz(5)} y={ly + sz(31)} width={sz(8)} height={sz(8)} rx={1} fill={`${K.workOut}40`} stroke={K.workOut} strokeWidth={activeArea === "wNet" ? 1.4 : 0.6} />
-            <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(TX["OttoPvDiagram.15"])} fontFamily={FM} fontWeight={activeArea === "wNet" ? 700 : 400}>W_net = {fmt(cycle.wNet)} kJ/kg</text>
+            <text x={lx + sz(17)} y={ly + sz(38)} fill={K.workOut} fontSize={sz(T("OttoPvDiagram.15"))} fontFamily={FM} fontWeight={activeArea === "wNet" ? 700 : 400}>W_net = {fmt(cycle.wNet)} kJ/kg</text>
           </g>
-          <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(TX["OttoPvDiagram.16"])} fontFamily={FD} fontWeight="bold">MEP = {fmtP(cycle.mep, u)}</text>
+          <text x={lx + sz(5)} y={ly + sz(49)} fill={K.ink} fontSize={sz(T("OttoPvDiagram.16"))} fontFamily={FD} fontWeight="bold">MEP = {fmtP(cycle.mep, u)}</text>
         </>);
       })()}
     </svg>
@@ -1453,10 +1604,21 @@ const PORT = { intake: 152, exhaust: 208, halfW: 8 };
 const N_MOL = 56, EXIT_POOL = 14;
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const gasRGB = (t) => `rgb(${Math.round(60 + t * 170)},${Math.round(120 - t * 30)},${Math.round(200 - t * 160)})`;
-function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, animSeg }) {
+function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, animSeg, pos, movable, onMove }) {
   const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
   const desktop = useIsDesktop();
   const T = (k) => TX[k + (desktop ? ".desktop" : ".mobile")]; // schematic sizes are tuned separately for phones
+  // Energy labels can be repositioned from the text tuner; offsets live in `pos` (viewBox px) and ship as TX_POS_DEFAULTS
+  const P = { ...TX_POS_DEFAULTS, ...(pos || {}) };
+  const svgRef = useRef(null), dragRef = useRef(null);
+  const dragProps = (id) => !movable ? {} : {
+    style: { cursor: "move" },
+    onPointerDown: (e) => { e.stopPropagation(); e.currentTarget.setPointerCapture?.(e.pointerId); dragRef.current = { id, x: e.clientX, y: e.clientY, dx: P[id][0], dy: P[id][1] }; },
+    onPointerMove: (e) => { const d = dragRef.current; if (!d || d.id !== id) return; const r = svgRef.current?.getBoundingClientRect(); const k = r && r.width ? 381 / r.width : 1; onMove?.(id, Math.round(d.dx + (e.clientX - d.x) * k), Math.round(d.dy + (e.clientY - d.y) * k)); },
+    onPointerUp: () => { dragRef.current = null; }, onPointerCancel: () => { dragRef.current = null; },
+  };
+  const tr = (id) => `translate(${P[id][0]},${P[id][1]})`;
+  const outline = (x, y, w, h) => movable ? <rect x={x} y={y} width={w} height={h} rx={3} fill="none" stroke={K.accent} strokeWidth={0.8} strokeDasharray="3 2" /> : null;
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeProcess, setActiveProcess] = useState(null);
@@ -1555,7 +1717,7 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
     <text x={x + 7} y={CYL.head + CYL.stroke + 14} fill={K.inkMed} fontSize={sz(T("OttoSchematicDiagram.1"))} textAnchor="middle" fontFamily={FD} fontStyle="italic">{lab}</text>
   </g>);
   return (<>
-    <svg viewBox="-8 -2 381 348" style={{ width: "100%" }}>
+    <svg ref={svgRef} viewBox="-8 -2 381 348" style={{ width: "100%", touchAction: movable ? "none" : undefined, userSelect: movable ? "none" : undefined }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -1601,8 +1763,11 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       {/* Hub carries the W_net label; the value sits outside the crank circle */}
       <rect x={crank.cx - 20} y={crank.cy - 7.5} width={40} height={15} rx={7.5} fill={K.card} stroke={K.workOut} strokeWidth={1.2} />
       <text x={crank.cx} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.4"))} textAnchor="middle" fontFamily={FM} fontWeight="700">W_net</text>
-      <line x1={crank.cx + crank.r + 4} y1={crank.cy} x2={crank.cx + crank.r + 22} y2={crank.cy} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
-      <text x={crank.cx + crank.r + 26} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.5"))} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
+      <g transform={tr("wnet")} {...dragProps("wnet")}>
+        {outline(crank.cx + crank.r + 2, crank.cy - 10, 96, 20)}
+        <line x1={crank.cx + crank.r + 4} y1={crank.cy} x2={crank.cx + crank.r + 22} y2={crank.cy} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
+        <text x={crank.cx + crank.r + 26} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.5"))} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
+      </g>
       <text x={crank.cx - crank.r - 6} y={crank.cy + 3} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.6"))} textAnchor="end" fontFamily={FM} fontStyle="italic">crank</text>
       {/* TDC / BDC ticks (left) and P / T bars (right) */}
       <line x1={CYL.x - 12} y1={CYL.head + CYL.stroke / cycle.r} x2={CYL.x - 4} y2={CYL.head + CYL.stroke / cycle.r} stroke={K.inkLight} strokeWidth={1} />
@@ -1613,19 +1778,29 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       {/* Process badges (clickable) */}
       {badges.map(b => {
         const on = animating && animSeg === b.seg;
+        // Badge grows with its text; right-hand badges keep their right edge at x = 364
+        const f1 = sz(T("OttoSchematicDiagram.9")), f2 = sz(T("OttoSchematicDiagram.10"));
+        const w = Math.max(82, Math.round(b.l2.length * f2 * 0.62 + 14)), h = Math.max(36, Math.round(f1 * 1.3 + f2 * 1.5 + 8));
+        const x = b.x > 180 ? 364 - w : b.x;
         return (
           <g key={b.id} style={{ cursor: "pointer" }} onClick={() => setActiveProcess(b.id)}>
-            <rect x={b.x} y={b.y} width={82} height={36} rx={2} fill={on ? `${b.c}22` : K.card} stroke={b.c} strokeWidth={on ? 2.4 : 1.5} />
-            <text x={b.x + 41} y={b.y + 14} fill={b.c} fontSize={sz(T("OttoSchematicDiagram.9"))} textAnchor="middle" fontFamily={FD}>{b.l1}</text>
-            <text x={b.x + 41} y={b.y + 28} fill={b.c} fontSize={sz(T("OttoSchematicDiagram.10"))} textAnchor="middle" fontFamily={FM} fontWeight="500">{b.l2}</text>
+            <rect x={x} y={b.y} width={w} height={h} rx={2} fill={on ? `${b.c}22` : K.card} stroke={b.c} strokeWidth={on ? 2.4 : 1.5} />
+            <text x={x + w / 2} y={b.y + f1 * 1.25} fill={b.c} fontSize={f1} textAnchor="middle" fontFamily={FD}>{b.l1}</text>
+            <text x={x + w / 2} y={b.y + h - f2 * 0.55} fill={b.c} fontSize={f2} textAnchor="middle" fontFamily={FM} fontWeight="500">{b.l2}</text>
           </g>
         );
       })}
       {/* Energy */}
-      <line x1={112} y1={14} x2={128} y2={26} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#oO)" />
-      <text x={108} y={12} fill={K.heatIn} fontSize={sz(T("OttoSchematicDiagram.11"))} textAnchor="end" fontFamily={FM} fontWeight="700">Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
-      <line x1={128} y1={238} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
-      <text x={104} y={266} fill={K.heatOut} fontSize={sz(T("OttoSchematicDiagram.12"))} textAnchor="end" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
+      <g transform={tr("qin")} {...dragProps("qin")}>
+        {outline(14, 0, 118, 30)}
+        <line x1={112} y1={14} x2={128} y2={26} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#oO)" />
+        <text x={108} y={12} fill={K.heatIn} fontSize={sz(T("OttoSchematicDiagram.11"))} textAnchor="end" fontFamily={FM} fontWeight="700">Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
+      </g>
+      <g transform={tr("qout")} {...dragProps("qout")}>
+        {outline(4, 232, 128, 40)}
+        <line x1={128} y1={238} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
+        <text x={104} y={266} fill={K.heatOut} fontSize={sz(T("OttoSchematicDiagram.12"))} textAnchor="end" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
+      </g>
       {onIso && <text x={CYL.x + CYL.w + 6} y={262} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.13"))} textAnchor="start" fontFamily={FM} fontStyle="italic">{phase41 < 0.5 ? "exhaust stroke ↑" : "intake stroke ↓"}</text>}
       {/* Live state readout */}
       <text x={180} y={340} fill={K.inkMed} fontSize={sz(T("OttoSchematicDiagram.14"))} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
@@ -1642,6 +1817,8 @@ const ETA_R_LO = 1, ETA_R_HI = R_MAX + 2;
 const etaOf = (k, r) => 1 - Math.pow(r, 1 - k);
 function OttoEtaCurve({ cycle, onRChange, textScale }) {
   const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
+  const desktop = useIsDesktop();
+  const T = (k) => TX[k + (desktop ? ".desktop" : ".mobile")]; // sizes are tuned separately for phones
   const svgRef = useRef(null), dragRef = useRef(false);
   const yMax = Math.ceil(Math.max(...GASES.map(g => etaOf(g.k, ETA_R_HI))) * 10) / 10;
   const mapR = r => ETA_PLOT.x + (r - ETA_R_LO) / (ETA_R_HI - ETA_R_LO) * ETA_PLOT.w;
@@ -1669,15 +1846,15 @@ function OttoEtaCurve({ cycle, onRChange, textScale }) {
       {rTicks.map(t => <line key={t} x1={mapR(t)} y1={ETA_PLOT.y} x2={mapR(t)} y2={ETA_PLOT.y + ETA_PLOT.h} stroke={K.gridFine} strokeWidth={1} />)}
       <line x1={ETA_PLOT.x} y1={ETA_PLOT.y} x2={ETA_PLOT.x} y2={ETA_PLOT.y + ETA_PLOT.h} stroke={K.ink} strokeWidth={1.2} />
       <line x1={ETA_PLOT.x} y1={ETA_PLOT.y + ETA_PLOT.h} x2={ETA_PLOT.x + ETA_PLOT.w} y2={ETA_PLOT.y + ETA_PLOT.h} stroke={K.ink} strokeWidth={1.2} />
-      {eTicks.map(t => <text key={t} x={ETA_PLOT.x - 5} y={mapE(t) + 2.5} fill={K.inkMed} fontSize={sz(TX["OttoEtaCurve.1"])} textAnchor="end" fontFamily={FM}>{Math.round(t * 100)}%</text>)}
-      {rTicks.map(t => <text key={t} x={mapR(t)} y={ETA_PLOT.y + ETA_PLOT.h + 11} fill={K.inkMed} fontSize={sz(TX["OttoEtaCurve.2"])} textAnchor="middle" fontFamily={FM}>{t}</text>)}
-      <text x={ETA_PLOT.x + ETA_PLOT.w / 2} y={ETA_H - 5} fill={K.inkMed} fontSize={sz(TX["OttoEtaCurve.3"])} textAnchor="middle" fontFamily={FM} fontStyle="italic">compression ratio r = v₁/v₂</text>
-      <text x={11} y={ETA_PLOT.y + ETA_PLOT.h / 2} fill={K.inkMed} fontSize={sz(TX["OttoEtaCurve.4"])} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,11,${ETA_PLOT.y + ETA_PLOT.h / 2})`}>thermal efficiency η</text>
+      {eTicks.map(t => <text key={t} x={ETA_PLOT.x - 5} y={mapE(t) + 2.5} fill={K.inkMed} fontSize={sz(T("OttoEtaCurve.1"))} textAnchor="end" fontFamily={FM}>{Math.round(t * 100)}%</text>)}
+      {rTicks.map(t => <text key={t} x={mapR(t)} y={ETA_PLOT.y + ETA_PLOT.h + 11} fill={K.inkMed} fontSize={sz(T("OttoEtaCurve.2"))} textAnchor="middle" fontFamily={FM}>{t}</text>)}
+      <text x={ETA_PLOT.x + ETA_PLOT.w / 2} y={ETA_H - 5} fill={K.inkMed} fontSize={sz(T("OttoEtaCurve.3"))} textAnchor="middle" fontFamily={FM} fontStyle="italic">compression ratio r = v₁/v₂</text>
+      <text x={11} y={ETA_PLOT.y + ETA_PLOT.h / 2} fill={K.inkMed} fontSize={sz(T("OttoEtaCurve.4"))} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,11,${ETA_PLOT.y + ETA_PLOT.h / 2})`}>thermal efficiency η</text>
       {/* Other gases, then the selected gas on top */}
       {GASES.filter(g => g.id !== g0.id).map(g => (
         <g key={g.id}>
           <path d={path(g)} fill="none" stroke={K.inkLight} strokeWidth={1} strokeDasharray="4 3" opacity={0.7} />
-          <text x={ETA_PLOT.x + ETA_PLOT.w + 3} y={mapE(etaOf(g.k, ETA_R_HI)) + 2.5} fill={K.inkLight} fontSize={sz(TX["OttoEtaCurve.5"])} fontFamily={FM}>{g.formula.split(" ")[0]}</text>
+          <text x={ETA_PLOT.x + ETA_PLOT.w + 3} y={mapE(etaOf(g.k, ETA_R_HI)) + 2.5} fill={K.inkLight} fontSize={sz(T("OttoEtaCurve.5"))} fontFamily={FM}>{g.formula.split(" ")[0]}</text>
         </g>
       ))}
       <path d={path(g0)} fill="none" stroke={K.workOut} strokeWidth={2.4} />
@@ -1694,16 +1871,16 @@ function OttoEtaCurve({ cycle, onRChange, textScale }) {
         return (<g>
           <rect x={bx(w1)} y={y1 - sz(9)} width={w1} height={sz(12)} rx={2} fill={K.card} />
           <rect x={bx(w2)} y={y2 - sz(7.5)} width={w2} height={sz(10)} rx={2} fill={K.card} />
-          <text x={tx} y={y1} fill={K.workOut} fontSize={sz(TX["OttoEtaCurve.6"])} textAnchor={anchor} fontFamily={FD}>{l1}</text>
-          <text x={tx} y={y2} fill={K.inkMed} fontSize={sz(TX["OttoEtaCurve.7"])} textAnchor={anchor} fontFamily={FM}>{l2}</text>
+          <text x={tx} y={y1} fill={K.workOut} fontSize={sz(T("OttoEtaCurve.6"))} textAnchor={anchor} fontFamily={FD}>{l1}</text>
+          <text x={tx} y={y2} fill={K.inkMed} fontSize={sz(T("OttoEtaCurve.7"))} textAnchor={anchor} fontFamily={FM}>{l2}</text>
         </g>);
       })()}
-      <text x={ETA_PLOT.x + ETA_PLOT.w - 4} y={ETA_PLOT.y + ETA_PLOT.h - 6} fill={K.inkLight} fontSize={sz(TX["OttoEtaCurve.8"])} textAnchor="end" fontFamily={FM} fontStyle="italic">η = 1 − r^(1−k) · tap or drag to set r</text>
+      <text x={ETA_PLOT.x + ETA_PLOT.w - 4} y={ETA_PLOT.y + ETA_PLOT.h - 6} fill={K.inkLight} fontSize={sz(T("OttoEtaCurve.8"))} textAnchor="end" fontFamily={FM} fontStyle="italic">η = 1 − r^(1−k) · tap or drag to set r</text>
     </svg>
   );
 }
 
-function OttoTextTuner({ open, tune, onChange, onClose }) {
+function OttoTextTuner({ open, tune, onChange, onClose, moveLabels, onToggleMove }) {
   const desktop = useIsDesktop();
   const [copied, setCopied] = useState("");
   const [openCats, setOpenCats] = useState({});
@@ -1721,11 +1898,13 @@ function OttoTextTuner({ open, tune, onChange, onClose }) {
   const keys = Object.keys(TX_DEFAULTS);
   const eff = (k) => Math.round(tx[k] * (cs[TX_CAT[k]] ?? 1) * 100) / 100;
   const changed = keys.filter(k => eff(k) !== TX_DEFAULTS[k]);
-  const dump = () => "{\n" + keys.map(k => `  "${k}": ${eff(k)}${eff(k) !== TX_DEFAULTS[k] ? "  // was " + TX_DEFAULTS[k] : ""}`).join(",\n") + "\n}";
+  const pos = { ...TX_POS_DEFAULTS, ...(tune.pos || {}) };
+  const posLines = Object.keys(pos).map(id => `  "Schematic.pos.${id}": [${pos[id][0]}, ${pos[id][1]}]${pos[id][0] !== TX_POS_DEFAULTS[id][0] || pos[id][1] !== TX_POS_DEFAULTS[id][1] ? "  // was [" + TX_POS_DEFAULTS[id] + "]" : ""}`);
+  const dump = () => "{\n" + keys.map(k => `  "${k}": ${eff(k)}${eff(k) !== TX_DEFAULTS[k] ? "  // was " + TX_DEFAULTS[k] : ""}`).concat(posLines).join(",\n") + "\n}";
   const persist = (next) => { onChange(next); try { localStorage.setItem("ottoTextTune", JSON.stringify(next)); } catch {} };
   const setKey = (k, v) => persist({ ...tune, tx: { ...tx, [k]: v } });
   const setCat = (c, f) => persist({ ...tune, cs: { ...cs, [c]: f } });
-  const reset = () => { persist({ tx: { ...TX_DEFAULTS }, cs: {} }); setCopied(""); };
+  const reset = () => { persist({ tx: { ...TX_DEFAULTS }, cs: {}, pos: { ...TX_POS_DEFAULTS } }); setCopied(""); };
   const copy = async () => { const text = dump(); try { await navigator.clipboard.writeText(text); setCopied(`copied ${keys.length} values (${changed.length} changed)`); } catch { setCopied("clipboard blocked — select the text below"); } };
   const scrollPage = (pct) => { const max = document.documentElement.scrollHeight - window.innerHeight; window.scrollTo({ top: max * pct / 100 }); setPageScroll(pct); };
   const row = { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 100px 46px", alignItems: "center", gap: 8, padding: "3px 0" };
@@ -1778,6 +1957,7 @@ function OttoTextTuner({ open, tune, onChange, onClose }) {
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <button onClick={copy} style={{ ...btn, background: K.ink, color: K.bg, border: "none", fontSize: 12, padding: "6px 16px" }}>Copy</button>
           <button onClick={reset} style={btn}>Reset all</button>
+          <button onClick={onToggleMove} style={{ ...btn, ...(moveLabels ? { background: K.accent, color: "#fff", borderColor: K.accent } : {}) }} title="Drag Q_in, Q_out and the W_net value on the schematic; Copy includes their offsets">{moveLabels ? "✓ Moving labels" : "Move labels"}</button>
           <span style={{ fontSize: 10, color: K.inkLight }}>{copied}</span>
         </div>
         {copied.startsWith("clipboard") && <textarea readOnly value={dump()} onFocus={e => e.target.select()} style={{ width: "100%", height: 100, marginTop: 8, fontFamily: FM, fontSize: 10 }} />}
@@ -2139,7 +2319,10 @@ function OttoStateTable({ cycle, onSelectState, textScale, units }) {
                   <svg width="8" height="8" viewBox="0 0 8 8" style={{ opacity: 0.4 }}><circle cx="4" cy="4" r="3" fill="none" stroke={K.accent} strokeWidth="1" /><circle cx="4" cy="4" r="1" fill={K.accent} /></svg>
                 </span>
               </td>
-              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.inkLight, fontSize: sz(isWide ? TX["OttoStateTable.4.desktop"] : TX["OttoStateTable.4.mobile"]) }}>{s.desc}</td>
+              <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.inkLight, fontSize: sz(isWide ? TX["OttoStateTable.4.desktop"] : TX["OttoStateTable.4.mobile"]), whiteSpace: "nowrap" }}>
+                <div style={{ color: K.inkMed, fontWeight: 500 }}>{s.desc.split(" · ")[0]}</div>
+                <div>{s.desc.split(" · ")[1]}</div>
+              </td>
               <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtT(s.T, u))}</td>
               <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtP(s.P, u))}</td>
               <td style={{ padding: isWide ? "10px 4px" : "6px 3px", textAlign: "center", color: K.ink }}>{fmt(cvtH(s.u, u))}</td>
@@ -2248,6 +2431,9 @@ export default function OttoPage({ onBack }) {
   }, [animating, cycle, animSpeed]);
 
   const desktop = useIsDesktop();
+  const [moveLabels, setMoveLabels] = useState(false);
+  const dm = desktop ? "desktop" : "mobile";
+  const sliderSizes = { label: TX[`ParamSlider.label.${dm}`], value: TX[`ParamSlider.value.${dm}`], unit: TX[`ParamSlider.unit.${dm}`], range: TX[`ParamSlider.range.${dm}`] };
   const gap = desktop ? 25 : 12;
   const card = { margin: `${gap}px ${gap}px 0`, padding: desktop ? "24px" : "14px", background: K.card, border: `1px solid ${K.border}` };
   const sec = { margin: "0 0 14px 0", fontSize: sz(desktop ? TX["OttoPage.1.desktop"] : TX["OttoPage.1.mobile"]), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
@@ -2330,7 +2516,7 @@ export default function OttoPage({ onBack }) {
               color: animating ? "#fff" : K.inkMed, fontSize: sz(desktop ? TX["OttoPage.15.desktop"] : TX["OttoPage.15.mobile"]), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
             }} data-anim-keep="1">{animating ? "⏸ Pause" : "▶ Animate"}</button>
           </div>
-          <div data-tour="otto-schematic"><OttoSchematicDiagram cycle={cycle} dragPoint={dragPoint} textScale={textScale} units={units} animating={animating} animSeg={animSeg} /></div>
+          <div data-tour="otto-schematic"><OttoSchematicDiagram cycle={cycle} dragPoint={dragPoint} textScale={textScale} units={units} animating={animating} animSeg={animSeg} pos={tune.pos} movable={showTuner && moveLabels} onMove={(id, dx, dy) => { const next = { ...tune, pos: { ...TX_POS_DEFAULTS, ...(tune.pos || {}), [id]: [dx, dy] } }; setTune(next); try { localStorage.setItem("ottoTextTune", JSON.stringify(next)); } catch {} }} /></div>
         </div>
         <div data-tour="otto-eta-curve" style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>Efficiency vs Compression Ratio <span style={{ fontFamily: FM, fontSize: desktop ? TX["OttoPage.16.desktop"] : TX["OttoPage.16.mobile"], color: K.inkLight, fontStyle: "italic" }}>— all gases, {gas.name} selected</span></h3>
@@ -2406,11 +2592,11 @@ export default function OttoPage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : { ...card, padding: "16px" }}>
           <h3 style={sec}>Cycle Parameters</h3>
-          <ParamSlider label="Compression Ratio (r = v₁/v₂)" unit="" color={K.workOut} value={r} min={R_MIN} max={R_MAX} step={0.5} onChange={v => setR(clampR(v))} textScale={textScale} />
-          <ParamSlider label="Peak Temperature (T₃)" kind="T" color={K.workOut} value={adjustedT3} min={minT3} max={T3_MAX} step={10} onChange={setT3} textScale={textScale} units={units} />
-          <ParamSlider label="Intake Temperature (T₁)" kind="T" color={K.workIn} value={t1} min={T1_MIN} max={T1_MAX} step={1} onChange={setT1} textScale={textScale} units={units} />
-          <ParamSlider label="Intake Pressure (P₁)" kind="P" color={K.heatOut} value={p1} min={P1_MIN} max={P1_MAX} step={5} onChange={setP1} textScale={textScale} units={units} />
-          <div style={{ marginTop: 6, fontSize: sz(desktop ? TX["OttoPage.28.desktop"] : TX["OttoPage.28.mobile"]), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic" }}>
+          <ParamSlider sizes={sliderSizes} label="Compression Ratio (r = v₁/v₂)" unit="" color={K.workOut} value={r} min={R_MIN} max={R_MAX} step={0.5} onChange={v => setR(clampR(v))} textScale={textScale} />
+          <ParamSlider sizes={sliderSizes} label="Peak Temperature (T₃)" kind="T" color={K.workOut} value={adjustedT3} min={minT3} max={T3_MAX} step={10} onChange={setT3} textScale={textScale} units={units} />
+          <ParamSlider sizes={sliderSizes} label="Intake Temperature (T₁)" kind="T" color={K.workIn} value={t1} min={T1_MIN} max={T1_MAX} step={1} onChange={setT1} textScale={textScale} units={units} />
+          <ParamSlider sizes={sliderSizes} label="Intake Pressure (P₁)" kind="P" color={K.heatOut} value={p1} min={P1_MIN} max={P1_MAX} step={5} onChange={setP1} textScale={textScale} units={units} />
+          <div style={{ marginTop: 6, fontSize: sz(desktop ? TX["OttoPage.28.desktop"] : TX["OttoPage.28.mobile"]), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic", textAlign: "center" }}>
             T₂ = {fmtT(cycle.T2, units)} &nbsp;|&nbsp; T₄ = {fmtT(cycle.T4, units)} &nbsp;|&nbsp; P₂ = {fmtP(cycle.p2, units)} &nbsp;|&nbsp; P₃ = {fmtP(cycle.p3, units)}
           </div>
         </div>
@@ -2513,7 +2699,7 @@ export default function OttoPage({ onBack }) {
         <span onClick={() => { const a = "scottypres", d = "gmail", t = "com"; window.location.href = "mailto:" + a + "@" + d + "." + t; }} style={{ fontSize: sz(desktop ? TX["OttoPage.46.desktop"] : TX["OttoPage.46.mobile"]), color: K.accent, fontFamily: FM, textDecoration: "underline", cursor: "pointer" }}>{"scottypres" + "@" + "gmail.com"}</span>
         <button data-anim-keep="1" onClick={() => setShowTuner(t => !t)} style={{ marginLeft: 14, background: "none", border: `1px dashed ${K.border}`, color: K.inkLight, fontSize: sz(desktop ? TX["OttoPage.47.desktop"] : TX["OttoPage.47.mobile"]), fontFamily: FM, cursor: "pointer", padding: "2px 8px" }}>text tuner (dev)</button>
       </div>
-      <OttoTextTuner open={showTuner} tune={tune} onChange={setTune} onClose={() => setShowTuner(false)} />
+      <OttoTextTuner open={showTuner} tune={tune} onChange={setTune} onClose={() => { setShowTuner(false); setMoveLabels(false); }} moveLabels={moveLabels} onToggleMove={() => setMoveLabels(m => !m)} />
     </div>
   );
 }

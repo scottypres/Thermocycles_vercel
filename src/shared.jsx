@@ -264,10 +264,11 @@ export function UnitsPopover({ open, units, onChange, onClose, anchor, K, FD, FM
    value/min/max are stored in SI; if `kind` and `units` are provided, the
    readout, unit label, and min/max ticks display in the user's chosen units.
    The native slider input stays in SI so step/handle behave consistently. */
-export function ParamSlider({ label, unit, kind, value, min, max, step, onChange, color, textScale, units }) {
+export function ParamSlider({ label, unit, kind, value, min, max, step, onChange, color, textScale, units, sizes }) {
   const sc = textScale || 1;
   const sz = (px) => Math.round(px * sc);
   const desktop = useIsDesktop();
+  const S = { label: desktop ? 16 : 10, value: desktop ? 22 : 14, unit: desktop ? 14 : 10, range: desktop ? 13 : 8, ...(sizes || {}) }; // px before textScale; a page may pass its own
   const pct = ((value - min) / (max - min)) * 100;
   const conv = kind && units ? pick(kind, units) : null;
   const dispVal = conv ? conv.to(value) : value;
@@ -285,15 +286,15 @@ export function ParamSlider({ label, unit, kind, value, min, max, step, onChange
   return (
     <div style={{ marginBottom: desktop ? 24 : 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: desktop ? 8 : 5 }}>
-        <span style={{ fontSize: sz(desktop ? 16 : 10), fontFamily: FM, color: K.inkMed }}>{label}</span>
-        <span style={{ fontSize: sz(desktop ? 22 : 14), fontFamily: FD, color: color || K.accent }}>{dispVal.toFixed(dispDigits(dispVal))} <span style={{ fontSize: sz(desktop ? 14 : 10), fontFamily: FM, color: K.inkLight }}>{dispUnit}</span></span>
+        <span style={{ fontSize: sz(S.label), fontFamily: FM, color: K.inkMed }}>{label}</span>
+        <span style={{ fontSize: sz(S.value), fontFamily: FD, color: color || K.accent }}>{dispVal.toFixed(dispDigits(dispVal))} <span style={{ fontSize: sz(S.unit), fontFamily: FM, color: K.inkLight }}>{dispUnit}</span></span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
         style={{ width: "100%", height: desktop ? 4 : 3, appearance: "none", WebkitAppearance: "none", background: `linear-gradient(to right, ${color || K.accent} 0%, ${color || K.accent} ${pct}%, ${K.border} ${pct}%, ${K.border} 100%)`, borderRadius: 0, outline: "none", cursor: "pointer" }} />
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: desktop ? 5 : 3 }}>
-        <span style={{ fontSize: sz(desktop ? 13 : 8), color: K.inkLight, fontFamily: FM }}>{fmtTick(dispMin)}</span>
-        <span style={{ fontSize: sz(desktop ? 13 : 8), color: K.inkLight, fontFamily: FM }}>{fmtTick(dispMax)}</span>
+        <span style={{ fontSize: sz(S.range), color: K.inkLight, fontFamily: FM }}>{fmtTick(dispMin)}</span>
+        <span style={{ fontSize: sz(S.range), color: K.inkLight, fontFamily: FM }}>{fmtTick(dispMax)}</span>
       </div>
     </div>
   );
