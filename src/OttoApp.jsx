@@ -1789,9 +1789,9 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       {/* Dead-centre ticks (left) and P / T bars (right). At low r the TDC tick sits beside the Compression badge, so its label stays above the badge on a short leader. */}
       <line x1={CYL.x - 12} y1={tdcY} x2={CYL.x - 4} y2={tdcY} stroke={K.inkLight} strokeWidth={1} />
       {tdcLabY < tdcY && <line x1={CYL.x - 8} y1={tdcLabY + 2} x2={CYL.x - 8} y2={tdcY} stroke={K.inkLight} strokeWidth={0.8} strokeDasharray="2 2" />}
-      <text x={CYL.x - 14} y={tdcLabY} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.7"))} textAnchor="end" fontFamily={FM} fontStyle="italic"><title>{TIP.tdc}</title>Top dead centre</text>
+      <text x={CYL.x - 14} y={tdcLabY} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.7"))} textAnchor="end" fontFamily={FM} fontStyle="italic"><title>{TIP.tdc}</title>Top dead centre (TDC)</text>
       <line x1={CYL.x - 12} y1={CYL.head + CYL.stroke} x2={CYL.x - 4} y2={CYL.head + CYL.stroke} stroke={K.inkLight} strokeWidth={1} />
-      <text x={CYL.x - 14} y={CYL.head + CYL.stroke + 2.5} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.8"))} textAnchor="end" fontFamily={FM} fontStyle="italic"><title>{TIP.bdc}</title>Bottom dead centre</text>
+      <text x={CYL.x - 14} y={CYL.head + CYL.stroke + 2.5} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.8"))} textAnchor="end" fontFamily={FM} fontStyle="italic"><title>{TIP.bdc}</title>Bottom dead centre (BDC)</text>
       {bar(244, pNorm, K.heatIn, "P")}{bar(262, tNorm, K.workIn, "T")}
       {/* Process badges (clickable) */}
       {badges.map(b => {
