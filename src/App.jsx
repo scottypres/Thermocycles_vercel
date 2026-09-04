@@ -1776,7 +1776,8 @@ function RankinePage({ onBack }) {
   const [units, setUnits] = useState(() => loadUnits());
   const [showSettings, setShowSettings] = useState(false);
   const handleUnitsChange = useCallback((u) => { setUnits(u); saveUnits(u); }, []);
-  const [animating, setAnimating] = useState(false);
+  const [animating, setAnimating] = useState(true); // the page opens mid-cycle; any click, drag or slider move pauses it
+  const stopAnim = (e) => { if (!(e.target.closest && e.target.closest("[data-anim-keep]"))) setAnimating(false); };
   const [animProgress, setAnimProgress] = useState(0);
   const [animSpeed, setAnimSpeed] = useState(() => loadAnimSpeed());
   const handleAnimSpeedChange = useCallback((v) => { setAnimSpeed(v); saveAnimSpeed(v); }, []);
@@ -1868,7 +1869,7 @@ function RankinePage({ onBack }) {
   const sec = { margin: "0 0 14px 0", fontSize: sz(desktop ? 22.50 : 12), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   return (
-    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
+    <div onClickCapture={stopAnim} onInputCapture={stopAnim} onPointerDownCapture={e => { if (e.target.closest && e.target.closest("svg")) stopAnim(e); }} style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1943,7 +1944,7 @@ function RankinePage({ onBack }) {
               <button onClick={() => setAnimating(a => !a)} style={{
                 background: animating ? K.accent : "none", border: `1px solid ${animating ? K.accent : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: animating ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
-              }}>{animating ? "⏸ Pause" : "▶ Animate"}</button>
+              }} data-anim-keep="1">{animating ? "⏸ Pause" : "▶ Animate"}</button>
               <button data-tour="eta-areas" onClick={() => setShowAreas(a => !a)} style={{
                 background: showAreas ? K.workOut : "none", border: `1px solid ${showAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: showAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
@@ -1976,7 +1977,7 @@ function RankinePage({ onBack }) {
               <button onClick={() => setAnimating(a => !a)} style={{
                 background: animating ? K.accent : "none", border: `1px solid ${animating ? K.accent : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: animating ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
-              }}>{animating ? "⏸ Pause" : "▶ Animate"}</button>
+              }} data-anim-keep="1">{animating ? "⏸ Pause" : "▶ Animate"}</button>
               <button data-tour="pv-areas" onClick={() => setShowPvAreas(a => !a)} style={{
                 background: showPvAreas ? K.workOut : "none", border: `1px solid ${showPvAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: showPvAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",

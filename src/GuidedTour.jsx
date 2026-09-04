@@ -55,7 +55,7 @@ function SizingPanel({ textScale, onScaleChange, K }) {
 export function WelcomePopup({ open, onStart, onDismiss, K, textScale, onScaleChange }) {
   if (!open) return null;
   return (
-    <div style={{
+    <div data-anim-keep="1" style={{
       position: "fixed", inset: 0, zIndex: 10000,
       display: "flex", alignItems: "center", justifyContent: "center",
       background: "rgba(0,0,0,0.5)",
@@ -168,10 +168,10 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
           }
         `}</style>
         {/* Semi-transparent backdrop — page visible so user sees live changes */}
-        <div style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.25)" }}
+        <div data-anim-keep="1" style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.25)" }}
           onClick={forced ? undefined : onClose} />
         {/* Welcome card — pinned to top so page elements visible below */}
-        <div onClick={e => e.stopPropagation()} style={{
+        <div data-anim-keep="1" onClick={e => e.stopPropagation()} style={{
           position: "fixed", zIndex: 10000,
           top: 16, left: "50%", transform: "translateX(-50%)",
           background: K.card, border: `2px solid ${accent}`,
@@ -217,7 +217,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         }
       `}</style>
 
-      <div style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={forced ? undefined : onClose}>
+      <div data-anim-keep="1" style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={forced ? undefined : onClose}>
         <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
           <defs>
             <mask id="tour-mask">
@@ -239,7 +239,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
       </div>
 
       {/* ── Fixed sheet (top or bottom) ── */}
-      <div onClick={e => e.stopPropagation()} style={{
+      <div data-anim-keep="1" onClick={e => e.stopPropagation()} style={{
         position: "fixed", zIndex: 10000,
         left: 0, right: 0,
         ...(step.sheet === "top"
@@ -327,7 +327,7 @@ export const OTTO_TOUR_STEPS = [
   { target: "otto-theory", title: "Theory", description: "Open the Theory section to learn about the ideal Otto (spark-ignition engine) cycle, the closed-system air-standard assumptions, and its four processes." },
   { target: "otto-gas-selector", title: "Working Gas", description: "Switch the working gas — air, nitrogen, helium, argon, or CO₂. The specific-heat ratio k sets efficiency for a given compression ratio; the Gases button lists every property." },
   { target: "otto-schematic", title: "Piston–Cylinder Schematic", description: "The piston follows the drag point's specific volume and the charge colour follows its temperature. Click any process badge — Compression, Combustion, Expansion, or Heat Rejection — for its equations and live values." },
-  { target: "otto-visualizer", title: "Volume Visualizer", description: "The charge stays a gas throughout the Otto cycle, so this box shows specific volume: it shrinks to the clearance volume at TDC and grows to full displacement at BDC, while particle speed and colour track temperature." },
+  { target: "otto-eta-curve", title: "Efficiency vs Compression Ratio", description: "The ideal Otto efficiency depends only on r and the gas's specific-heat ratio k. Every gas is drawn; the selected one is bold. Tap or drag along the curve to set the compression ratio." },
   { target: "otto-ts-diagram", title: "Drag Labels on T–s", description: "Drag the 'Combustion' label to change the compression ratio, or the 'Heat Rejection' label to change the intake pressure P₁." },
   { target: "otto-fx", title: "Equations Reference", description: "Open the equations modal to see every formula used in the Otto cycle analysis, including the isentropic relations and mean effective pressure." },
   { target: "otto-eta-areas", title: "Efficiency Areas", description: "Toggle shaded areas on the T–s diagram to visualize thermal efficiency as the ratio of net work to heat input." },

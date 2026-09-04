@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop, SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
 import { GuidedTour, WelcomePopup, OTTO_TOUR_STEPS } from "./GuidedTour.jsx";
-import { GASES, VolumeBoxVisualizer } from "./BraytonApp.jsx";
+import { GASES } from "./BraytonApp.jsx";
 let K = K_LIGHT;
 
 /* ───────── Ideal-gas helpers (constant c_p / c_v — "cold-air standard" for air) ─────────
@@ -682,40 +682,52 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
   const rel23 = nearTDC ? clamp01((dragPoint.T - cycle.T2) / Math.max(1, cycle.T3 - cycle.T2)) : 0;
   const spark = rel23 > 0.01 ? Math.max(0, 1 - rel23 / 0.5) : 0; // flash as the burn begins, gone by the time T has climbed halfway to T₃
   const rel41 = clamp01((dragPoint.T - cycle.T1) / Math.max(1, cycle.T4 - cycle.T1));
-  const exhaust = vFrac > 0.97 && rel41 > 0.02 ? 0.3 + 0.7 * rel41 : 0; // on the v₁ isochore above state 1: blowdown + charge swap
-  const valvesOpen = exhaust > 0;
+  // On the v₁ isochore above state 1 the ideal heat rejection stands in for the exhaust and intake strokes:
+  // blowdown first (exhaust valve open, charge leaves), then fresh charge (intake valve open). Never both at once.
+  const onIso = vFrac > 0.97 && rel41 > 0.02;
+  const exOpen = onIso && rel41 > 0.5, inOpen = onIso && rel41 <= 0.5;
+  const aliveTarget = !onIso ? N_MOL : Math.round(N_MOL * (exOpen ? rel41 : 1 - rel41));
   // Crank angle from piston position; the compression stroke sweeps the other half-turn so the crank rotates during Animate
   const xs = Math.max(0, Math.min(1, (dragPoint.v - cycle.v2) / Math.max(1e-9, cycle.v1 - cycle.v2)));
   const theta = animSeg === 0 ? 2 * Math.PI - Math.acos(1 - 2 * xs) : Math.acos(1 - 2 * xs);
-  const crank = { cx: 180, cy: 292, r: 22 };
+  const crank = { cx: 180, cy: 296, r: 30 };
   const pin = { x: crank.cx + crank.r * Math.sin(theta), y: crank.cy - crank.r * Math.cos(theta) };
 
   // Molecule simulation lives outside React state; the loop writes circle attributes directly.
-  const live = useRef(null); live.current = { yTop, tNorm, exhaust };
+  const live = useRef(null); live.current = { yTop, tNorm, aliveTarget, inOpen };
   const molG = useRef(null), exitG = useRef(null);
   const sim = useRef(null);
   if (!sim.current) {
-    sim.current = { mols: Array.from({ length: N_MOL }, () => { const a = Math.random() * Math.PI * 2; return { x: CYL.x + 4 + Math.random() * (CYL.w - 8), y: CYL.head + 6 + Math.random() * (yTop - CYL.head - 12), vx: Math.cos(a), vy: Math.sin(a), t: tNorm, entering: false }; }), exits: [], acc: 0, prevY: null };
+    sim.current = { mols: Array.from({ length: N_MOL }, () => { const a = Math.random() * Math.PI * 2; return { x: CYL.x + 4 + Math.random() * (CYL.w - 8), y: CYL.head + 6 + Math.random() * (yTop - CYL.head - 12), vx: Math.cos(a), vy: Math.sin(a), t: tNorm, entering: false, gone: false }; }), exits: [], acc: 0, prevY: null };
   }
   useEffect(() => {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let raf, last = performance.now();
     const step = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
-      const { yTop, tNorm, exhaust } = live.current; const S = sim.current;
+      const { yTop, tNorm, aliveTarget, inOpen } = live.current; const S = sim.current;
       const pistonV = S.prevY == null ? 0 : (yTop - S.prevY) / dt; S.prevY = yTop; // px/s; the gas must keep up with a fast-moving piston
       const sc = Math.max((0.5 + 2.4 * tNorm) * 60 * dt, Math.abs(pistonV) * dt * 1.6);
       const lo = CYL.head + 3, hi = yTop - 3, x0 = CYL.x + 4, x1 = CYL.x + CYL.w - 4;
-      S.acc += exhaust * 14 * dt;
-      while (S.acc >= 1 && S.exits.length < EXIT_POOL) { // the molecule nearest the exhaust port leaves; a fresh one enters through the intake
-        S.acc -= 1;
+      S.acc = Math.min(2, S.acc + 14 * dt); // rate limit on molecules leaving or entering
+      let alive = S.mols.reduce((n, m) => n + (m.gone ? 0 : 1), 0);
+      while (alive > aliveTarget && S.acc >= 1 && S.exits.length < EXIT_POOL) { // blowdown: the molecule nearest the exhaust port leaves
+        S.acc -= 1; alive -= 1;
         let bi = -1, bd = 1e9;
-        S.mols.forEach((m, i) => { if (m.entering) return; const d = Math.hypot(m.x - PORT.exhaust, m.y - CYL.head); if (d < bd) { bd = d; bi = i; } });
+        S.mols.forEach((m, i) => { if (m.gone || m.entering) return; const d = Math.hypot(m.x - PORT.exhaust, m.y - CYL.head); if (d < bd) { bd = d; bi = i; } });
         if (bi < 0) break;
         S.exits.push({ x: PORT.exhaust + (Math.random() - 0.5) * 8, y: CYL.head - 2, vy: -(1.6 + Math.random()), life: 1 });
-        Object.assign(S.mols[bi], { x: PORT.intake + (Math.random() - 0.5) * 8, y: 6, vx: (Math.random() - 0.5) * 0.3, vy: 1, t: 0, entering: true });
+        S.mols[bi].gone = true;
+      }
+      while (alive < aliveTarget && S.acc >= 1) { // fresh charge through the intake; off the isochore the charge simply reappears in place
+        S.acc -= 1; alive += 1;
+        const m = S.mols.find(q => q.gone); if (!m) break;
+        m.gone = false;
+        if (inOpen) Object.assign(m, { x: PORT.intake + (Math.random() - 0.5) * 8, y: 6, vx: (Math.random() - 0.5) * 0.3, vy: 1, t: 0, entering: true });
+        else { const a = Math.random() * Math.PI * 2; Object.assign(m, { x: CYL.x + 4 + Math.random() * (CYL.w - 8), y: CYL.head + 6 + Math.random() * Math.max(4, yTop - CYL.head - 12), vx: Math.cos(a), vy: Math.sin(a), t: tNorm }); }
       }
       for (const m of S.mols) {
+        if (m.gone) continue;
         m.t += (tNorm - m.t) * Math.min(1, 3 * dt);
         if (m.entering) { m.y += 2.2 * 60 * dt; if (m.y > lo + 4) { m.entering = false; const a = Math.random() * Math.PI; m.vx = Math.cos(a); m.vy = Math.sin(a); } continue; }
         if (Math.random() < 0.05) { const a = Math.random() * Math.PI * 2; m.vx = Math.cos(a); m.vy = Math.sin(a); }
@@ -725,7 +737,7 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       }
       for (const e of S.exits) { e.y += e.vy * 60 * dt; e.life -= 1.4 * dt; }
       S.exits = S.exits.filter(e => e.life > 0 && e.y > -6);
-      if (molG.current) { const cs = molG.current.children; S.mols.forEach((m, i) => { const c = cs[i]; if (!c) return; c.setAttribute("cx", m.x.toFixed(1)); c.setAttribute("cy", m.y.toFixed(1)); c.setAttribute("fill", gasRGB(m.t)); }); }
+      if (molG.current) { const cs = molG.current.children; S.mols.forEach((m, i) => { const c = cs[i]; if (!c) return; c.setAttribute("cx", m.x.toFixed(1)); c.setAttribute("cy", m.y.toFixed(1)); c.setAttribute("fill", gasRGB(m.t)); c.setAttribute("opacity", m.gone ? "0" : "1"); }); }
       if (exitG.current) { const cs = exitG.current.children; for (let i = 0; i < EXIT_POOL; i++) { const c = cs[i], e = S.exits[i]; if (!c) continue; if (e) { c.setAttribute("cx", e.x.toFixed(1)); c.setAttribute("cy", e.y.toFixed(1)); c.setAttribute("opacity", e.life.toFixed(2)); } else c.setAttribute("opacity", "0"); } }
       raf = requestAnimationFrame(step);
     };
@@ -752,7 +764,7 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
     <text x={x + 7} y={CYL.head + CYL.stroke + 14} fill={K.inkMed} fontSize={sz(9)} textAnchor="middle" fontFamily={FD} fontStyle="italic">{lab}</text>
   </g>);
   return (<>
-    <svg viewBox="-8 -2 381 330" style={{ width: "100%" }}>
+    <svg viewBox="-8 -2 381 348" style={{ width: "100%" }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -775,9 +787,9 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <rect x={CYL.x - 8} y={CYL.head - 16} width={CYL.w + 16} height={16} fill={K.cardAlt} stroke={K.ink} strokeWidth={1.5} />
       <rect x={PORT.intake - PORT.halfW} y={CYL.head - 16} width={PORT.halfW * 2} height={16} fill={K.card} />
       <rect x={PORT.exhaust - PORT.halfW} y={CYL.head - 16} width={PORT.halfW * 2} height={16} fill={K.card} />
-      {valve(PORT.intake, valvesOpen)}{valve(PORT.exhaust, valvesOpen)}
-      <text x={PORT.intake - PORT.halfW - 4} y={16} fill={valvesOpen ? K.heatOut : K.inkLight} fontSize={sz(5.5)} textAnchor="end" fontFamily={FM} fontStyle="italic">intake</text>
-      <text x={PORT.exhaust + PORT.halfW + 4} y={16} fill={valvesOpen ? K.inkMed : K.inkLight} fontSize={sz(5.5)} textAnchor="start" fontFamily={FM} fontStyle="italic">exhaust</text>
+      {valve(PORT.intake, inOpen)}{valve(PORT.exhaust, exOpen)}
+      <text x={PORT.intake - PORT.halfW - 4} y={16} fill={inOpen ? K.heatOut : K.inkLight} fontSize={sz(5.5)} textAnchor="end" fontFamily={FM} fontStyle="italic">intake</text>
+      <text x={PORT.exhaust + PORT.halfW + 4} y={16} fill={exOpen ? K.inkMed : K.inkLight} fontSize={sz(5.5)} textAnchor="start" fontFamily={FM} fontStyle="italic">exhaust</text>
       {/* Spark plug */}
       <rect x={176} y={CYL.head - 30} width={8} height={14} fill={K.cardAlt} stroke={K.ink} strokeWidth={1} />
       <line x1={180} y1={CYL.head - 30} x2={180} y2={CYL.head - 38} stroke={K.ink} strokeWidth={1.2} />
@@ -793,11 +805,11 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <line x1={CYL.x + 1} y1={yTop + 9} x2={CYL.x + CYL.w - 1} y2={yTop + 9} stroke={K.inkLight} strokeWidth={1} />
       <circle cx={180} cy={yTop + 12} r={3.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
       <circle cx={crank.cx} cy={crank.cy} r={crank.r} fill="none" stroke={K.inkLight} strokeWidth={1} strokeDasharray="3 3" />
-      <line x1={crank.cx} y1={crank.cy} x2={pin.x} y2={pin.y} stroke={K.ink} strokeWidth={3} strokeLinecap="round" />
-      <circle cx={pin.x} cy={pin.y} r={3.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
+      <line x1={crank.cx} y1={crank.cy} x2={pin.x} y2={pin.y} stroke={K.ink} strokeWidth={3.5} strokeLinecap="round" />
+      <circle cx={pin.x} cy={pin.y} r={4.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
       {/* Hub carries the W_net label; the value sits outside the crank circle */}
-      <rect x={crank.cx - 17} y={crank.cy - 6.5} width={34} height={13} rx={6.5} fill={K.card} stroke={K.workOut} strokeWidth={1.2} />
-      <text x={crank.cx} y={crank.cy + 2.8} fill={K.workOut} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontWeight="700">W_net</text>
+      <rect x={crank.cx - 20} y={crank.cy - 7.5} width={40} height={15} rx={7.5} fill={K.card} stroke={K.workOut} strokeWidth={1.2} />
+      <text x={crank.cx} y={crank.cy + 3} fill={K.workOut} fontSize={sz(7.5)} textAnchor="middle" fontFamily={FM} fontWeight="700">W_net</text>
       <line x1={crank.cx + crank.r + 4} y1={crank.cy} x2={crank.cx + crank.r + 22} y2={crank.cy} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
       <text x={crank.cx + crank.r + 26} y={crank.cy + 3} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
       <text x={crank.cx - crank.r - 6} y={crank.cy + 3} fill={K.inkLight} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontStyle="italic">crank</text>
@@ -824,15 +836,73 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <line x1={128} y1={238} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
       <text x={104} y={266} fill={K.heatOut} fontSize={sz(8)} textAnchor="end" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
       {/* Play / pause (same toggle as the diagram buttons) */}
-      {onToggleAnimate && <g style={{ cursor: "pointer" }} onClick={onToggleAnimate}>
+      {onToggleAnimate && <g data-anim-keep="1" style={{ cursor: "pointer" }} onClick={onToggleAnimate}>
         <rect x={282} y={14} width={82} height={22} rx={4} fill={animating ? K.accent : K.card} stroke={animating ? K.accent : K.border} strokeWidth={1.2} />
         <text x={323} y={28.5} fill={animating ? "#fff" : K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>{animating ? "⏸ Pause" : "▶ Animate"}</text>
       </g>}
       {/* Live state readout */}
-      <text x={180} y={322} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
+      <text x={180} y={340} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
     </svg>
     <OttoProcessModal process={activeProcess} cycle={cycle} onClose={() => setActiveProcess(null)} units={u} />
   </>);
+}
+
+/* ───────── Efficiency vs compression ratio ─────────
+   η = 1 − r^(1−k) depends only on r and the gas. All gases are drawn; the selected one is
+   bold with the current operating point marked. Tap or drag along r to set the ratio. */
+const ETA_W = 360, ETA_H = 285, ETA_PLOT = { x: 42, y: 16, w: 306, h: 236 };
+const ETA_R_LO = 1, ETA_R_HI = R_MAX + 2;
+const etaOf = (k, r) => 1 - Math.pow(r, 1 - k);
+function OttoEtaCurve({ cycle, onRChange, textScale }) {
+  const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
+  const svgRef = useRef(null), dragRef = useRef(false);
+  const yMax = Math.ceil(Math.max(...GASES.map(g => etaOf(g.k, ETA_R_HI))) * 10) / 10;
+  const mapR = r => ETA_PLOT.x + (r - ETA_R_LO) / (ETA_R_HI - ETA_R_LO) * ETA_PLOT.w;
+  const mapE = e => ETA_PLOT.y + ETA_PLOT.h - e / yMax * ETA_PLOT.h;
+  const path = g => Array.from({ length: 81 }, (_, i) => { const r = ETA_R_LO + (ETA_R_HI - ETA_R_LO) * i / 80; return `${i ? "L" : "M"}${mapR(r).toFixed(1)},${mapE(etaOf(g.k, r)).toFixed(1)}`; }).join(" ");
+  const setFromEvent = useCallback((e) => {
+    const svg = svgRef.current; if (!svg || !onRChange) return;
+    const rect = svg.getBoundingClientRect(); if (!rect.width) return;
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const r = ETA_R_LO + (cx * ETA_W / rect.width - ETA_PLOT.x) / ETA_PLOT.w * (ETA_R_HI - ETA_R_LO);
+    onRChange(clampR(r));
+  }, [onRChange]);
+  const g0 = cycle.gas, r0 = cycle.r, e0 = etaOf(g0.k, r0);
+  const rTicks = Array.from({ length: 8 }, (_, i) => 2 + i * 2);
+  const eTicks = Array.from({ length: Math.round(yMax / 0.1) + 1 }, (_, i) => i * 0.1);
+  const labelRight = mapR(r0) > ETA_PLOT.x + ETA_PLOT.w * 0.6;
+  return (
+    <svg ref={svgRef} viewBox={`0 0 ${ETA_W} ${ETA_H}`} style={{ width: "100%", touchAction: "none", cursor: "ew-resize" }}
+      onPointerDown={e => { dragRef.current = true; e.currentTarget.setPointerCapture?.(e.pointerId); setFromEvent(e); }}
+      onPointerMove={e => { if (dragRef.current) setFromEvent(e); }}
+      onPointerUp={() => { dragRef.current = false; }} onPointerCancel={() => { dragRef.current = false; }}>
+      {/* Allowed r band, grid, axes */}
+      <rect x={mapR(R_MIN)} y={ETA_PLOT.y} width={mapR(R_MAX) - mapR(R_MIN)} height={ETA_PLOT.h} fill={K.workOut} opacity={0.05} />
+      {eTicks.map(t => <line key={t} x1={ETA_PLOT.x} y1={mapE(t)} x2={ETA_PLOT.x + ETA_PLOT.w} y2={mapE(t)} stroke={K.gridFine} strokeWidth={1} />)}
+      {rTicks.map(t => <line key={t} x1={mapR(t)} y1={ETA_PLOT.y} x2={mapR(t)} y2={ETA_PLOT.y + ETA_PLOT.h} stroke={K.gridFine} strokeWidth={1} />)}
+      <line x1={ETA_PLOT.x} y1={ETA_PLOT.y} x2={ETA_PLOT.x} y2={ETA_PLOT.y + ETA_PLOT.h} stroke={K.ink} strokeWidth={1.2} />
+      <line x1={ETA_PLOT.x} y1={ETA_PLOT.y + ETA_PLOT.h} x2={ETA_PLOT.x + ETA_PLOT.w} y2={ETA_PLOT.y + ETA_PLOT.h} stroke={K.ink} strokeWidth={1.2} />
+      {eTicks.map(t => <text key={t} x={ETA_PLOT.x - 5} y={mapE(t) + 2.5} fill={K.inkMed} fontSize={sz(7)} textAnchor="end" fontFamily={FM}>{Math.round(t * 100)}%</text>)}
+      {rTicks.map(t => <text key={t} x={mapR(t)} y={ETA_PLOT.y + ETA_PLOT.h + 11} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>{t}</text>)}
+      <text x={ETA_PLOT.x + ETA_PLOT.w / 2} y={ETA_H - 5} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontStyle="italic">compression ratio r = v₁/v₂</text>
+      <text x={11} y={ETA_PLOT.y + ETA_PLOT.h / 2} fill={K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FM} fontStyle="italic" transform={`rotate(-90,11,${ETA_PLOT.y + ETA_PLOT.h / 2})`}>thermal efficiency η</text>
+      {/* Other gases, then the selected gas on top */}
+      {GASES.filter(g => g.id !== g0.id).map(g => (
+        <g key={g.id}>
+          <path d={path(g)} fill="none" stroke={K.inkLight} strokeWidth={1} strokeDasharray="4 3" opacity={0.7} />
+          <text x={ETA_PLOT.x + ETA_PLOT.w + 3} y={mapE(etaOf(g.k, ETA_R_HI)) + 2.5} fill={K.inkLight} fontSize={sz(5.5)} fontFamily={FM}>{g.formula.split(" ")[0]}</text>
+        </g>
+      ))}
+      <path d={path(g0)} fill="none" stroke={K.workOut} strokeWidth={2.4} />
+      <line x1={mapR(r0)} y1={mapE(e0)} x2={mapR(r0)} y2={ETA_PLOT.y + ETA_PLOT.h} stroke={K.workOut} strokeWidth={1} strokeDasharray="3 3" />
+      <line x1={ETA_PLOT.x} y1={mapE(e0)} x2={mapR(r0)} y2={mapE(e0)} stroke={K.workOut} strokeWidth={1} strokeDasharray="3 3" />
+      <circle cx={mapR(r0)} cy={mapE(e0)} r={5} fill={K.card} stroke={K.workOut} strokeWidth={2.2} />
+      {/* The curve rises to the right, so the label sits below-right of the marker (or above-left near the right edge) to stay clear of it */}
+      <text x={mapR(r0) + (labelRight ? -10 : 10)} y={mapE(e0) + (labelRight ? -20 : 16)} fill={K.workOut} fontSize={sz(9)} textAnchor={labelRight ? "end" : "start"} fontFamily={FD}>η = {(e0 * 100).toFixed(1)}%</text>
+      <text x={mapR(r0) + (labelRight ? -10 : 10)} y={mapE(e0) + (labelRight ? -9 : 27)} fill={K.inkMed} fontSize={sz(7)} textAnchor={labelRight ? "end" : "start"} fontFamily={FM}>{g0.name} · k = {g0.k.toFixed(3)} · r = {r0.toFixed(1)}</text>
+      <text x={ETA_PLOT.x + ETA_PLOT.w - 4} y={ETA_PLOT.y + ETA_PLOT.h - 6} fill={K.inkLight} fontSize={sz(6.5)} textAnchor="end" fontFamily={FM} fontStyle="italic">η = 1 − r^(1−k) · tap or drag to set r</text>
+    </svg>
+  );
 }
 
 /* ───────── Info Modal (Theory) ───────── */
@@ -1234,7 +1304,8 @@ export default function OttoPage({ onBack }) {
   const [units, setUnits] = useState(() => loadUnits());
   const [showSettings, setShowSettings] = useState(false);
   const handleUnitsChange = useCallback((up) => { setUnits(up); saveUnits(up); }, []);
-  const [animating, setAnimating] = useState(false);
+  const [animating, setAnimating] = useState(true); // the page opens mid-cycle; any click, drag or slider move pauses it
+  const stopAnim = (e) => { if (!(e.target.closest && e.target.closest("[data-anim-keep]"))) setAnimating(false); };
   const [animProgress, setAnimProgress] = useState(0);
   const [animSpeed, setAnimSpeed] = useState(() => loadAnimSpeed());
   const handleAnimSpeedChange = useCallback((v) => { setAnimSpeed(v); saveAnimSpeed(v); }, []);
@@ -1294,7 +1365,7 @@ export default function OttoPage({ onBack }) {
   const sec = { margin: "0 0 14px 0", fontSize: sz(desktop ? 22.50 : 12), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   return (
-    <div style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
+    <div onClickCapture={stopAnim} onInputCapture={stopAnim} onPointerDownCapture={e => { if (e.target.closest && e.target.closest("svg")) stopAnim(e); }} style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1367,9 +1438,9 @@ export default function OttoPage({ onBack }) {
           <h3 style={sec}>Piston–Cylinder Schematic <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— {gas.name}</span></h3>
           <div data-tour="otto-schematic"><OttoSchematicDiagram cycle={cycle} dragPoint={dragPoint} textScale={textScale} units={units} animating={animating} animSeg={animSeg} onToggleAnimate={() => setAnimating(a => !a)} /></div>
         </div>
-        <div data-tour="otto-visualizer" style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
-          <h3 style={sec}>Volume Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
-          <VolumeBoxVisualizer K={K} speedRefK={2400} legend="Box size ∝ v (v₂ → v₁)" T={dragPoint.T} P={dragPoint.P} v={dragPoint.v} vMin={cycle.vMin} vMax={cycle.vMax} tLow={cycle.T1} tHigh={cycle.T3} fillHeight={desktop} textScale={textScale} units={units} smooth={!animating} />
+        <div data-tour="otto-eta-curve" style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
+          <h3 style={sec}>Efficiency vs Compression Ratio <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— all gases, {gas.name} selected</span></h3>
+          <OttoEtaCurve cycle={cycle} onRChange={setR} textScale={textScale} />
         </div>
       </div>
 
@@ -1382,7 +1453,7 @@ export default function OttoPage({ onBack }) {
               <button onClick={() => setAnimating(a => !a)} style={{
                 background: animating ? K.accent : "none", border: `1px solid ${animating ? K.accent : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: animating ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
-              }}>{animating ? "⏸ Pause" : "▶ Animate"}</button>
+              }} data-anim-keep="1">{animating ? "⏸ Pause" : "▶ Animate"}</button>
               <button data-tour="otto-eta-areas" onClick={() => setShowAreas(a => !a)} style={{
                 background: showAreas ? K.workOut : "none", border: `1px solid ${showAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: showAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
@@ -1414,7 +1485,7 @@ export default function OttoPage({ onBack }) {
               <button onClick={() => setAnimating(a => !a)} style={{
                 background: animating ? K.accent : "none", border: `1px solid ${animating ? K.accent : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: animating ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
-              }}>{animating ? "⏸ Pause" : "▶ Animate"}</button>
+              }} data-anim-keep="1">{animating ? "⏸ Pause" : "▶ Animate"}</button>
               <button data-tour="otto-pv-areas" onClick={() => setShowPvAreas(a => !a)} style={{
                 background: showPvAreas ? K.workOut : "none", border: `1px solid ${showPvAreas ? K.workOut : K.border}`, padding: desktop ? "5px 12px" : "3px 8px",
                 color: showPvAreas ? "#fff" : K.inkMed, fontSize: sz(desktop ? 15 : 9), fontFamily: FM, cursor: "pointer", borderRadius: 4, transition: "all 0.15s",
