@@ -96,45 +96,26 @@ const walkPath = (pts, frac, kx, ky) => {
 };
 
 /* ───────── Specific-Volume Box Visualizer ─────────
-   A fixed mass of air in a box whose width tracks specific volume. Particle
-   speed and colour track temperature. Replaces the phase visualizer (no phase
-   change in a gas cycle). */
+   A fixed mass of gas in a box whose size tracks specific volume, interpolated in
+   log(v) between the cycle's smallest and largest v so the intermediate states spread
+   out visibly. Particle speed and colour track temperature. Shared by the Brayton and
+   Otto pages; the readout row sits above the frame so the box never has to fit it. */
 const NUM_PARTICLES = 320;
 const W_CANVAS = 680, H_CANVAS = 480;
-const BOX_PAD = 6; // px of clearance between the readout overlay and the smallest box
-
-/* Box side runs from "just larger than the readout" at the cycle's smallest
-   specific volume to the full frame at its largest, interpolated in log(v) so
-   the intermediate states spread out visibly. */
-function VolumeBoxVisualizer({ T, P, v, vMin, vMax, tLow, tHigh, fillHeight, textScale, units, smooth }) {
+const FRAC_MIN = 0.32; // box side at the cycle's smallest v, as a fraction of the frame
+export function VolumeBoxVisualizer({ K, T, P, v, vMin, vMax, tLow, tHigh, fillHeight, textScale, units, smooth, speedRefK = 1600, legend = "Box width ∝ v" }) {
   const ts = textScale || 1;
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const canvasRef = useRef(null);
-  const frameRef = useRef(null);
-  const overlayRef = useRef(null);
   const particlesRef = useRef(null);
   const animRef = useRef(null);
-  const [fracMin, setFracMin] = useState(0.4);
-  useEffect(() => {
-    const measure = () => {
-      const f = frameRef.current?.getBoundingClientRect(), o = overlayRef.current?.getBoundingClientRect();
-      if (!f || !o || !f.width || !f.height) return;
-      const m = Math.min(0.95, Math.max((o.width + 2 * BOX_PAD) / f.width, (o.height + 2 * BOX_PAD) / f.height));
-      setFracMin(prev => Math.abs(prev - m) > 0.003 ? m : prev);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (frameRef.current) ro.observe(frameRef.current);
-    if (overlayRef.current) ro.observe(overlayRef.current);
-    return () => ro.disconnect();
-  }, [fillHeight, ts, u.T, u.P]);
   const span = Math.log(Math.max(1e-9, vMax) / Math.max(1e-9, vMin));
   const t = span > 1e-9 ? Math.max(0, Math.min(1, Math.log(Math.max(1e-9, v) / Math.max(1e-9, vMin)) / span)) : 1;
-  const frac = fracMin + (1 - fracMin) * t;
+  const frac = FRAC_MIN + (1 - FRAC_MIN) * t;
   const cw = Math.round(W_CANVAS * frac), ch = Math.round(H_CANVAS * frac);
   const TK = Math.max(1, T + K2C);
   const tNorm = Math.max(0, Math.min(1, (T - tLow) / Math.max(1, tHigh - tLow)));
-  const speedF = 0.4 + 7 * Math.pow(Math.min(1, TK / 1600), 0.75);
+  const speedF = 0.4 + 7 * Math.pow(Math.min(1, TK / speedRefK), 0.75);
 
   // Positions are stored normalised (u, w ∈ [0,1]) so the fixed mass of particles
   // compresses with the box instead of piling up against a moving wall.
@@ -180,7 +161,6 @@ function VolumeBoxVisualizer({ T, P, v, vMin, vMax, tLow, tHigh, fillHeight, tex
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
   }, [cw, ch, tNorm, speedF]);
 
-  const overlayBg = K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)";
   const rows = [
     { l: "SPECIFIC VOLUME (v)", v: `${v.toFixed(3)} m³/kg`, c: K.accent },
     { l: "TEMPERATURE (T)", v: fmtT(T, u, 0), c: K.heatIn },
@@ -188,29 +168,28 @@ function VolumeBoxVisualizer({ T, P, v, vMin, vMax, tLow, tHigh, fillHeight, tex
   ];
   return (
     <div style={{ position: "relative", ...(fillHeight ? { flex: 1, display: "flex", flexDirection: "column", minHeight: 0 } : {}) }}>
-      {/* Fixed-footprint frame: its only children are absolutely positioned, so the box
+      {/* Readout row: centred along the top of the visualizer */}
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start", gap: (fillHeight ? 36 : 18) * ts, flexWrap: "wrap", marginBottom: (fillHeight ? 10 : 6) * ts }}>
+        {rows.map((r, i) => (
+          <div key={i} style={{ textAlign: "center" }}>
+            <div style={{ fontSize: (fillHeight ? 26 : 15) * ts, fontFamily: FD, color: r.c, lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>{r.v}</div>
+            <div style={{ fontSize: (fillHeight ? 10 : 7) * ts, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: 1 }}>{r.l}</div>
+          </div>
+        ))}
+      </div>
+      {/* Fixed-footprint frame: its only child is absolutely positioned, so the box
           can shrink or grow without ever changing the page layout. */}
-      <div ref={frameRef} style={fillHeight ? { flex: 1, minHeight: 0, position: "relative" } : { width: "100%", aspectRatio: `${W_CANVAS} / ${H_CANVAS}`, position: "relative" }}>
+      <div style={fillHeight ? { flex: 1, minHeight: 0, position: "relative" } : { width: "100%", aspectRatio: `${W_CANVAS} / ${H_CANVAS}`, position: "relative" }}>
         {/* No CSS transition while animating: a transition restarted every frame never gets to move in some browsers */}
         <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", width: `${frac * 100}%`, height: `${frac * 100}%`,
           border: `1.5px solid ${K.ink}`, background: K.cardAlt, boxSizing: "border-box", transition: smooth ? "width 0.12s linear, height 0.12s linear" : "none" }}>
           <canvas ref={canvasRef} width={cw} height={ch} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
         </div>
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div ref={overlayRef} style={{ background: overlayBg, padding: fillHeight ? `${12 * ts}px ${26 * ts}px` : `${6 * ts}px ${14 * ts}px`, border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
-            {rows.map((r, i) => (
-              <div key={i} style={{ marginTop: i === 0 ? 0 : (fillHeight ? 8 : 4) * ts }}>
-                <div style={{ fontSize: (fillHeight ? 26 : 15) * ts, fontFamily: FD, color: r.c, lineHeight: 1.1 }}>{r.v}</div>
-                <div style={{ fontSize: (fillHeight ? 10 : 7) * ts, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: 1 }}>{r.l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
       <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 6, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 10, height: 8, border: `1.5px solid ${K.ink}` }} />
-          <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>Box width ∝ v</span>
+          <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>{legend}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: `linear-gradient(90deg, ${K.liquidBlue}, ${K.vaporRed})` }} />
@@ -1435,7 +1414,7 @@ export default function BraytonPage({ onBack }) {
         </div>
         <div data-tour="bry-visualizer" style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Volume Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
-          <VolumeBoxVisualizer T={dragPoint.T} P={dragPoint.P} v={dragPoint.v} vMin={cycle.vMin} vMax={cycle.vMax} tLow={cycle.T1} tHigh={cycle.T3} fillHeight={desktop} textScale={textScale} units={units} smooth={!animating} />
+          <VolumeBoxVisualizer K={K} T={dragPoint.T} P={dragPoint.P} v={dragPoint.v} vMin={cycle.vMin} vMax={cycle.vMax} tLow={cycle.T1} tHigh={cycle.T3} fillHeight={desktop} textScale={textScale} units={units} smooth={!animating} />
         </div>
       </div>
 

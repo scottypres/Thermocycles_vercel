@@ -19,7 +19,7 @@ export default function LandingPage({ onNavigate }) {
           onClick={() => onNavigate("rankine")}
           style={{
             background: "#fff", border: `1.5px solid ${K.border}`, padding: "34px 38px", cursor: "pointer",
-            width: 340, textAlign: "left", transition: "all 0.2s",
+            width: "100%", maxWidth: 340, boxSizing: "border-box", textAlign: "left", transition: "all 0.2s",
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
           }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = K.accent; e.currentTarget.style.boxShadow = "0 4px 20px rgba(192,57,43,0.12)"; }}
@@ -32,7 +32,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={{ fontSize: 13, color: K.inkMed, lineHeight: 1.7 }}>
             Steam power plant analysis with interactive T-s and P-v diagrams. Explore turbine work, boiler heat, and thermal efficiency.
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
             {["Turbine", "Boiler", "Pump", "Condenser"].map((c, i) => (
               <span key={i} style={{ fontSize: 10, padding: "3px 8px", background: K.cardAlt, border: `1px solid ${K.border}`, color: K.inkLight }}>{c}</span>
             ))}
@@ -44,7 +44,7 @@ export default function LandingPage({ onNavigate }) {
           onClick={() => onNavigate("refrigeration")}
           style={{
             background: "#fff", border: `1.5px solid ${K.border}`, padding: "34px 38px", cursor: "pointer",
-            width: 340, textAlign: "left", transition: "all 0.2s",
+            width: "100%", maxWidth: 340, boxSizing: "border-box", textAlign: "left", transition: "all 0.2s",
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
           }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = K.heatOut; e.currentTarget.style.boxShadow = "0 4px 20px rgba(36,113,163,0.12)"; }}
@@ -57,7 +57,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={{ fontSize: 13, color: K.inkMed, lineHeight: 1.7 }}>
             Vapor-compression refrigeration with T-s and P-h diagrams. Compare 7 refrigerants, analyze COP, and explore phase changes.
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
             {["Compressor", "Condenser", "Valve", "Evaporator"].map((c, i) => (
               <span key={i} style={{ fontSize: 10, padding: "3px 8px", background: K.cardAlt, border: `1px solid ${K.border}`, color: K.inkLight }}>{c}</span>
             ))}
@@ -69,7 +69,7 @@ export default function LandingPage({ onNavigate }) {
           onClick={() => onNavigate("brayton")}
           style={{
             background: "#fff", border: `1.5px solid ${K.border}`, padding: "34px 38px", cursor: "pointer",
-            width: 340, textAlign: "left", transition: "all 0.2s",
+            width: "100%", maxWidth: 340, boxSizing: "border-box", textAlign: "left", transition: "all 0.2s",
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
           }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = K.workIn; e.currentTarget.style.boxShadow = "0 4px 20px rgba(183,149,11,0.14)"; }}
@@ -82,7 +82,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={{ fontSize: 13, color: K.inkMed, lineHeight: 1.7 }}>
             Gas-turbine analysis with interactive T-s and P-v diagrams. Compare 5 working gases, explore pressure ratio and turbine inlet temperature, and watch a live specific-volume visualizer.
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
             {["Compressor", "Combustor", "Turbine", "Exhaust"].map((c, i) => (
               <span key={i} style={{ fontSize: 10, padding: "3px 8px", background: K.cardAlt, border: `1px solid ${K.border}`, color: K.inkLight }}>{c}</span>
             ))}
@@ -93,7 +93,7 @@ export default function LandingPage({ onNavigate }) {
           onClick={() => onNavigate("otto")}
           style={{
             background: "#fff", border: `1.5px solid ${K.border}`, padding: "34px 38px", cursor: "pointer",
-            width: 340, textAlign: "left", transition: "all 0.2s",
+            width: "100%", maxWidth: 340, boxSizing: "border-box", textAlign: "left", transition: "all 0.2s",
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
           }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = K.workOut; e.currentTarget.style.boxShadow = "0 4px 20px rgba(30,132,73,0.14)"; }}
@@ -106,7 +106,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={{ fontSize: 13, color: K.inkMed, lineHeight: 1.7 }}>
             Piston-engine analysis with interactive T-s and P-v diagrams. Set the compression ratio and peak temperature, watch the piston and crank move, and compare 5 working gases.
           </div>
-          <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
             {["Compression", "Combustion", "Expansion", "Exhaust"].map((c, i) => (
               <span key={i} style={{ fontSize: 10, padding: "3px 8px", background: K.cardAlt, border: `1px solid ${K.border}`, color: K.inkLight }}>{c}</span>
             ))}

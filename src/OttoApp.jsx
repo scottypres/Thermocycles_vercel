@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop, SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
 import { GuidedTour, WelcomePopup, OTTO_TOUR_STEPS } from "./GuidedTour.jsx";
-import { GASES } from "./BraytonApp.jsx";
+import { GASES, VolumeBoxVisualizer } from "./BraytonApp.jsx";
 let K = K_LIGHT;
 
 /* ───────── Ideal-gas helpers (constant c_p / c_v — "cold-air standard" for air) ─────────
@@ -81,123 +81,6 @@ const walkPath = (pts, frac, kx, ky) => {
   }
   return pts[pts.length - 1];
 };
-
-/* ───────── Specific-Volume Box Visualizer ─────────
-   The charge trapped in the cylinder: a fixed mass in a box whose size tracks specific
-   volume between v₂ (TDC) and v₁ (BDC). Particle speed and colour track temperature. */
-const NUM_PARTICLES = 320;
-const W_CANVAS = 680, H_CANVAS = 480;
-const BOX_PAD = 6; // px of clearance between the readout overlay and the smallest box
-
-function VolumeBoxVisualizer({ T, P, v, vMin, vMax, tLow, tHigh, fillHeight, textScale, units, smooth }) {
-  const ts = textScale || 1;
-  const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
-  const canvasRef = useRef(null);
-  const frameRef = useRef(null);
-  const overlayRef = useRef(null);
-  const particlesRef = useRef(null);
-  const animRef = useRef(null);
-  const [fracMin, setFracMin] = useState(0.4);
-  useEffect(() => {
-    const measure = () => {
-      const f = frameRef.current?.getBoundingClientRect(), o = overlayRef.current?.getBoundingClientRect();
-      if (!f || !o || !f.width || !f.height) return;
-      const m = Math.min(0.95, Math.max((o.width + 2 * BOX_PAD) / f.width, (o.height + 2 * BOX_PAD) / f.height));
-      setFracMin(prev => Math.abs(prev - m) > 0.003 ? m : prev);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (frameRef.current) ro.observe(frameRef.current);
-    if (overlayRef.current) ro.observe(overlayRef.current);
-    return () => ro.disconnect();
-  }, [fillHeight, ts, u.T, u.P]);
-  const span = Math.log(Math.max(1e-9, vMax) / Math.max(1e-9, vMin));
-  const t = span > 1e-9 ? Math.max(0, Math.min(1, Math.log(Math.max(1e-9, v) / Math.max(1e-9, vMin)) / span)) : 1;
-  const frac = fracMin + (1 - fracMin) * t;
-  const cw = Math.round(W_CANVAS * frac), ch = Math.round(H_CANVAS * frac);
-  const TK = Math.max(1, T + K2C);
-  const tNorm = Math.max(0, Math.min(1, (T - tLow) / Math.max(1, tHigh - tLow)));
-  const speedF = 0.4 + 7 * Math.pow(Math.min(1, TK / 2400), 0.75);
-
-  if (!particlesRef.current) {
-    particlesRef.current = Array.from({ length: NUM_PARTICLES }, (_, i) => ({
-      u: Math.random(), w: Math.random(),
-      vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4,
-      r: 4.5 + Math.random() * 2.5, id: i,
-    }));
-  }
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.width = cw; canvas.height = ch;
-    const ctx = canvas.getContext("2d");
-    const cr = Math.round(60 + tNorm * 170), cg = Math.round(120 - tNorm * 30), cb = Math.round(200 - tNorm * 160);
-    const glowR = Math.round(90 + tNorm * 150), glowB = Math.round(220 - tNorm * 180);
-    const maxV = speedF * 4;
-    function draw() {
-      ctx.clearRect(0, 0, cw, ch);
-      const particles = particlesRef.current;
-      for (const p of particles) {
-        p.vx += (Math.random() - 0.5) * speedF;
-        p.vy += (Math.random() - 0.5) * speedF;
-        p.vx *= 0.96; p.vy *= 0.96;
-        const sp = Math.hypot(p.vx, p.vy);
-        if (sp > maxV) { p.vx = (p.vx / sp) * maxV; p.vy = (p.vy / sp) * maxV; }
-        let x = p.u * cw + p.vx, y = p.w * ch + p.vy;
-        if (x < p.r) { x = p.r; p.vx = Math.abs(p.vx); }
-        if (x > cw - p.r) { x = cw - p.r; p.vx = -Math.abs(p.vx); }
-        if (y < p.r) { y = p.r; p.vy = Math.abs(p.vy); }
-        if (y > ch - p.r) { y = ch - p.r; p.vy = -Math.abs(p.vy); }
-        p.u = x / cw; p.w = y / ch;
-        ctx.beginPath(); ctx.arc(x, y, p.r * (0.7 + tNorm * 0.2), 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${cr},${cg},${cb},0.72)`; ctx.fill();
-        ctx.beginPath(); ctx.arc(x, y, p.r + 2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${glowR},80,${glowB},0.1)`; ctx.fill();
-      }
-      animRef.current = requestAnimationFrame(draw);
-    }
-    draw();
-    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [cw, ch, tNorm, speedF]);
-
-  const overlayBg = K.bg === "#0d1117" ? "rgba(13,17,23,0.88)" : "rgba(255,255,255,0.88)";
-  const rows = [
-    { l: "SPECIFIC VOLUME (v)", v: `${v.toFixed(3)} m³/kg`, c: K.accent },
-    { l: "TEMPERATURE (T)", v: fmtT(T, u, 0), c: K.heatIn },
-    { l: "PRESSURE (P)", v: fmtP(P, u), c: K.heatOut },
-  ];
-  return (
-    <div style={{ position: "relative", ...(fillHeight ? { flex: 1, display: "flex", flexDirection: "column", minHeight: 0 } : {}) }}>
-      <div ref={frameRef} style={fillHeight ? { flex: 1, minHeight: 0, position: "relative" } : { width: "100%", aspectRatio: `${W_CANVAS} / ${H_CANVAS}`, position: "relative" }}>
-        <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", width: `${frac * 100}%`, height: `${frac * 100}%`,
-          border: `1.5px solid ${K.ink}`, background: K.cardAlt, boxSizing: "border-box", transition: smooth ? "width 0.12s linear, height 0.12s linear" : "none" }}>
-          <canvas ref={canvasRef} width={cw} height={ch} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
-        </div>
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div ref={overlayRef} style={{ background: overlayBg, padding: fillHeight ? `${12 * ts}px ${26 * ts}px` : `${6 * ts}px ${14 * ts}px`, border: `1.5px solid ${K.ink}`, textAlign: "center" }}>
-            {rows.map((r, i) => (
-              <div key={i} style={{ marginTop: i === 0 ? 0 : (fillHeight ? 8 : 4) * ts }}>
-                <div style={{ fontSize: (fillHeight ? 26 : 15) * ts, fontFamily: FD, color: r.c, lineHeight: 1.1 }}>{r.v}</div>
-                <div style={{ fontSize: (fillHeight ? 10 : 7) * ts, fontFamily: FM, color: K.inkMed, letterSpacing: fillHeight ? 1.4 : 1, marginTop: 1 }}>{r.l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 6, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <div style={{ width: 10, height: 8, border: `1.5px solid ${K.ink}` }} />
-          <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>Box size ∝ v (v₂ → v₁)</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: `linear-gradient(90deg, ${K.liquidBlue}, ${K.vaporRed})` }} />
-          <span style={{ fontSize: (fillHeight ? 18 : 10) * ts, fontFamily: FM, color: K.inkLight }}>Speed & colour ∝ T</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ───────── T-s Diagram ───────── */
 const TS_W = 360, TS_H = 285;
@@ -785,7 +668,7 @@ const PORT = { intake: 152, exhaust: 208, halfW: 8 };
 const N_MOL = 56, EXIT_POOL = 14;
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const gasRGB = (t) => `rgb(${Math.round(60 + t * 170)},${Math.round(120 - t * 30)},${Math.round(200 - t * 160)})`;
-function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, animSeg }) {
+function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, animSeg, onToggleAnimate }) {
   const sz = px => px * (1 + ((textScale || 1) - 1) * 0.4);
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
@@ -801,7 +684,11 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
   const rel41 = clamp01((dragPoint.T - cycle.T1) / Math.max(1, cycle.T4 - cycle.T1));
   const exhaust = vFrac > 0.97 && rel41 > 0.02 ? 0.3 + 0.7 * rel41 : 0; // on the v₁ isochore above state 1: blowdown + charge swap
   const valvesOpen = exhaust > 0;
-  const dir = animating ? (animSeg === 0 ? -1 : animSeg === 2 ? 1 : 0) : 0; // piston travel: -1 up (compression), +1 down (expansion)
+  // Crank angle from piston position; the compression stroke sweeps the other half-turn so the crank rotates during Animate
+  const xs = Math.max(0, Math.min(1, (dragPoint.v - cycle.v2) / Math.max(1e-9, cycle.v1 - cycle.v2)));
+  const theta = animSeg === 0 ? 2 * Math.PI - Math.acos(1 - 2 * xs) : Math.acos(1 - 2 * xs);
+  const crank = { cx: 180, cy: 292, r: 22 };
+  const pin = { x: crank.cx + crank.r * Math.sin(theta), y: crank.cy - crank.r * Math.cos(theta) };
 
   // Molecule simulation lives outside React state; the loop writes circle attributes directly.
   const live = useRef(null); live.current = { yTop, tNorm, exhaust };
@@ -864,7 +751,6 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
     <rect x={x} y={CYL.head + CYL.stroke * (1 - v)} width={14} height={CYL.stroke * v} fill={c} opacity={0.85} />
     <text x={x + 7} y={CYL.head + CYL.stroke + 14} fill={K.inkMed} fontSize={sz(9)} textAnchor="middle" fontFamily={FD} fontStyle="italic">{lab}</text>
   </g>);
-  const rodEnd = Math.min(268, yTop + 62);
   return (<>
     <svg viewBox="-8 -2 381 330" style={{ width: "100%" }}>
       <defs>
@@ -900,15 +786,21 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
         {[[-0.8, 0.6], [0.8, 0.6], [0, 1], [-0.45, 0.9], [0.45, 0.9]].map(([dx, dy], i) => <line key={i} x1={180} y1={CYL.head + 5} x2={180 + dx * 14 * spark} y2={CYL.head + 5 + dy * 14 * spark} stroke="#ffd23f" strokeWidth={1.4} />)}
         <circle cx={180} cy={CYL.head + 5} r={3 + 3 * spark} fill="#ffd23f" opacity={0.8} />
       </g>}
-      {/* Piston + rod stub */}
+      {/* Piston, pin, rod, crank */}
+      <line x1={180} y1={yTop + 12} x2={pin.x} y2={pin.y} stroke={K.inkMed} strokeWidth={4} strokeLinecap="round" />
       <rect x={CYL.x + 1} y={yTop} width={CYL.w - 2} height={24} fill={K.cardAlt} stroke={K.ink} strokeWidth={1.5} />
       <line x1={CYL.x + 1} y1={yTop + 5} x2={CYL.x + CYL.w - 1} y2={yTop + 5} stroke={K.inkLight} strokeWidth={1} />
       <line x1={CYL.x + 1} y1={yTop + 9} x2={CYL.x + CYL.w - 1} y2={yTop + 9} stroke={K.inkLight} strokeWidth={1} />
-      <line x1={180} y1={yTop + 24} x2={180} y2={rodEnd} stroke={K.inkMed} strokeWidth={4} strokeLinecap="round" />
-      {dir !== 0 && <g stroke={dir < 0 ? K.workIn : K.workOut} strokeWidth={1.5} fill="none">
-        <line x1={196} y1={yTop + 38 - dir * 8} x2={196} y2={yTop + 38 + dir * 8} />
-        <polyline points={`192,${yTop + 38 + dir * 4} 196,${yTop + 38 + dir * 9} 200,${yTop + 38 + dir * 4}`} />
-      </g>}
+      <circle cx={180} cy={yTop + 12} r={3.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
+      <circle cx={crank.cx} cy={crank.cy} r={crank.r} fill="none" stroke={K.inkLight} strokeWidth={1} strokeDasharray="3 3" />
+      <line x1={crank.cx} y1={crank.cy} x2={pin.x} y2={pin.y} stroke={K.ink} strokeWidth={3} strokeLinecap="round" />
+      <circle cx={pin.x} cy={pin.y} r={3.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
+      {/* Hub carries the W_net label; the value sits outside the crank circle */}
+      <rect x={crank.cx - 17} y={crank.cy - 6.5} width={34} height={13} rx={6.5} fill={K.card} stroke={K.workOut} strokeWidth={1.2} />
+      <text x={crank.cx} y={crank.cy + 2.8} fill={K.workOut} fontSize={sz(7)} textAnchor="middle" fontFamily={FM} fontWeight="700">W_net</text>
+      <line x1={crank.cx + crank.r + 4} y1={crank.cy} x2={crank.cx + crank.r + 22} y2={crank.cy} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
+      <text x={crank.cx + crank.r + 26} y={crank.cy + 3} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
+      <text x={crank.cx - crank.r - 6} y={crank.cy + 3} fill={K.inkLight} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontStyle="italic">crank</text>
       {/* TDC / BDC ticks (left) and P / T bars (right) */}
       <line x1={CYL.x - 12} y1={CYL.head + CYL.stroke / cycle.r} x2={CYL.x - 4} y2={CYL.head + CYL.stroke / cycle.r} stroke={K.inkLight} strokeWidth={1} />
       <text x={CYL.x - 14} y={CYL.head + CYL.stroke / cycle.r + 2.5} fill={K.inkLight} fontSize={sz(6)} textAnchor="end" fontFamily={FM} fontStyle="italic">TDC</text>
@@ -931,9 +823,11 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <text x={108} y={12} fill={K.heatIn} fontSize={sz(8)} textAnchor="end" fontFamily={FM} fontWeight="700">Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
       <line x1={128} y1={238} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
       <text x={104} y={266} fill={K.heatOut} fontSize={sz(8)} textAnchor="end" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
-      <line x1={180} y1={276} x2={180} y2={296} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
-      <text x={188} y={284} fill={K.workOut} fontSize={sz(7.5)} textAnchor="start" fontFamily={FM} fontWeight="700">W_net</text>
-      <text x={188} y={295} fill={K.workOut} fontSize={sz(7)} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
+      {/* Play / pause (same toggle as the diagram buttons) */}
+      {onToggleAnimate && <g style={{ cursor: "pointer" }} onClick={onToggleAnimate}>
+        <rect x={282} y={14} width={82} height={22} rx={4} fill={animating ? K.accent : K.card} stroke={animating ? K.accent : K.border} strokeWidth={1.2} />
+        <text x={323} y={28.5} fill={animating ? "#fff" : K.inkMed} fontSize={sz(8)} textAnchor="middle" fontFamily={FM}>{animating ? "⏸ Pause" : "▶ Animate"}</text>
+      </g>}
       {/* Live state readout */}
       <text x={180} y={322} fill={K.inkMed} fontSize={sz(7)} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
     </svg>
@@ -1471,11 +1365,11 @@ export default function OttoPage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
           <h3 style={sec}>Piston–Cylinder Schematic <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— {gas.name}</span></h3>
-          <div data-tour="otto-schematic"><OttoSchematicDiagram cycle={cycle} dragPoint={dragPoint} textScale={textScale} units={units} animating={animating} animSeg={animSeg} /></div>
+          <div data-tour="otto-schematic"><OttoSchematicDiagram cycle={cycle} dragPoint={dragPoint} textScale={textScale} units={units} animating={animating} animSeg={animSeg} onToggleAnimate={() => setAnimating(a => !a)} /></div>
         </div>
         <div data-tour="otto-visualizer" style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
           <h3 style={sec}>Volume Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
-          <VolumeBoxVisualizer T={dragPoint.T} P={dragPoint.P} v={dragPoint.v} vMin={cycle.vMin} vMax={cycle.vMax} tLow={cycle.T1} tHigh={cycle.T3} fillHeight={desktop} textScale={textScale} units={units} smooth={!animating} />
+          <VolumeBoxVisualizer K={K} speedRefK={2400} legend="Box size ∝ v (v₂ → v₁)" T={dragPoint.T} P={dragPoint.P} v={dragPoint.v} vMin={cycle.vMin} vMax={cycle.vMax} tLow={cycle.T1} tHigh={cycle.T3} fillHeight={desktop} textScale={textScale} units={units} smooth={!animating} />
         </div>
       </div>
 
