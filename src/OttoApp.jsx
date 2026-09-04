@@ -1193,6 +1193,7 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
         <text x={expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.workOut} fontSize={sz(T("OttoTsDiagram.9"))} fontFamily={FM} fontWeight="500" textAnchor={expLeft ? "end" : "start"}>Expansion</text>
         {labelBox(rejTextX, rejTextY, "middle", T("OttoTsDiagram.10"), "Heat Rejection")}
         <text x={rejTextX} y={rejTextY} fill={K.heatOut} fontSize={sz(T("OttoTsDiagram.10"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Heat Rejection</text>
+        <g className="ts-drag-point">{/* the tour hides this group while it demonstrates label dragging */}
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
         <circle cx={dpx} cy={dpy} r={4} fill={K.accent} />
         {(() => {
@@ -1207,6 +1208,7 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
             <text x={rectX + sz(4)} y={rectY + sz(12)} fill={K.ink} fontSize={sz(T("OttoTsDiagram.11"))} fontFamily={FM}>{label}</text>
           </>;
         })()}
+        </g>
         {hintClear && <text x={TS_W - 8} y={TS_PLOT.y + 10} fill={K.inkLight} fontSize={sz(T("OttoTsDiagram.12"))} fontFamily={FM} textAnchor="end" fontStyle="italic">{lockS ? "s locked" : lockT ? "T locked" : "tap & drag"}</text>}
       </>}
       {showAreas && (() => {

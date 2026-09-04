@@ -153,7 +153,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
     const sel = demo.click || demo.drag;
     const mouse = (type, el, x, y, extra) => el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, ...extra }));
     (async () => {
-      await wait(750); // after the scroll settles
+      await wait(demo.click ? 1200 : 750); // after the scroll settles
       const el = document.querySelector(sel);
       if (!el || !alive) return;
       const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
@@ -161,14 +161,15 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
       await wait(60);
       setCursor({ x, y });
       setHl({ left: r.left - 3, top: r.top - 3, width: r.width + 6, height: r.height + 6 });
-      await wait(750);
+      await wait(demo.click ? 1500 : 750);
       if (!alive) return;
       if (demo.click) {
         setCursor({ x, y, down: true });
-        await wait(170);
+        await wait(260);
         setCursor({ x, y });
+        await wait(300);
         mouse("click", el, x, y);
-        await wait(350);
+        await wait(700);
         if (!alive) return;
         setHl(null); setCursor(null);
         measureRef.current?.(); timers.push(setTimeout(() => measureRef.current?.(), 500)); // spotlight the window it opened
@@ -273,6 +274,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
           50% { box-shadow: 0 0 0 3px ${accent}22, 0 0 0px ${accent}00; }
         }
         @keyframes tour-ring { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+        ${step.hide ? `${step.hide} { visibility: hidden; }` : ""}
       `}</style>
 
       <div data-anim-keep="1" style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={forced ? undefined : onClose}>
@@ -298,7 +300,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         {cursor?.down && <div style={{ position: "fixed", left: cursor.x - 14, top: cursor.y - 14, width: 28, height: 28, borderRadius: "50%", border: `2px solid ${accent}`, pointerEvents: "none", zIndex: 10001, animation: "tour-ring .5s ease-out forwards" }} />}
         {cursor && <svg viewBox="0 0 24 28" style={{
           position: "fixed", left: cursor.x - 3, top: cursor.y - 2, width: 26, height: 30, zIndex: 10001, pointerEvents: "none",
-          transition: cursor.fast ? "transform .12s" : "left .65s cubic-bezier(.4,0,.2,1), top .65s cubic-bezier(.4,0,.2,1), transform .12s",
+          transition: cursor.fast ? "transform .12s" : "left 1.1s cubic-bezier(.4,0,.2,1), top 1.1s cubic-bezier(.4,0,.2,1), transform .12s",
           transform: cursor.down ? "scale(.85)" : "scale(1)", transformOrigin: "3px 2px", filter: "drop-shadow(0 1px 2px rgba(0,0,0,.45))",
         }}><path d="M3 2 L3 22 L8.5 17 L12 25 L15.5 23.5 L12 15.5 L19 15.5 Z" fill="#fff" stroke="#111" strokeWidth="1.5" strokeLinejoin="round" /></svg>}
       </div>
@@ -395,7 +397,7 @@ export const OTTO_TOUR_STEPS = [
   { target: "otto-gas-selector", title: "Working Gas", description: "Switch the working gas — air, nitrogen, helium, argon, or CO₂. The specific-heat ratio k sets efficiency for a given compression ratio; the Gases button lists every property." },
   { target: "otto-schematic", title: "Piston–Cylinder Schematic", description: "The piston follows the drag point's specific volume and the charge colour follows its temperature. Click any process badge — Compression, Combustion, Expansion, or Heat Rejection — for its equations and live values.", demo: { click: "[data-demo='badge-compression']" } },
   { target: "otto-eta-curve", title: "Efficiency vs Compression Ratio", description: "The ideal Otto efficiency depends only on r and the gas's specific-heat ratio k. Every gas is drawn; the selected one is bold. Tap or drag along the curve to set the compression ratio." },
-  { target: "otto-ts-diagram", title: "Drag Labels on T–s", description: "Drag the 'Combustion' label to change the compression ratio, or the 'Heat Rejection' label to change the intake pressure P₁.", demo: { drag: "[data-demo='ts-combustion']", anchor: "[data-demo='ts-combustion-anchor']", dy: 25 } },
+  { target: "otto-ts-diagram", title: "Drag Labels on T–s", description: "Drag the 'Combustion' label to change the compression ratio, or the 'Heat Rejection' label to change the intake pressure P₁.", demo: { drag: "[data-demo='ts-combustion']", anchor: "[data-demo='ts-combustion-anchor']", dy: 25 }, hide: ".ts-drag-point" },
   { target: "otto-fx", title: "Equations Reference", description: "Open the equations modal to see every formula used in the Otto cycle analysis, including the isentropic relations and mean effective pressure." },
   { target: "otto-eta-areas", title: "Efficiency Areas", description: "Toggle shaded areas on the T–s diagram to visualize thermal efficiency as the ratio of net work to heat input." },
   { target: "otto-pv-areas", title: "Work Areas", description: "Toggle shaded areas on the P–v diagram to visualize compression work, expansion work, and net work as boundary work ∫P dv." },
