@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FD, FM } from "./shared.jsx";
 
 /* ───────── Sizing Preview Panel ───────── */
@@ -85,12 +85,15 @@ export function WelcomePopup({ open, onStart, onDismiss, K, textScale, onScaleCh
 }
 
 /* ───────── Bottom sheet height (fraction of viewport) ───────── */
-const SHEET_HEIGHT_VH = 35; // bottom sheet takes ~35% of viewport
+const SHEET_HEIGHT_VH = 45; // sheet takes up to ~45% of the viewport; its text scrolls, its buttons stay put
 
 /* ───────── Guided Tour ───────── */
 export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange, forced }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [rect, setRect] = useState(null);
+  const [cursor, setCursor] = useState(null); // demo pointer {x, y, down, fast}
+  const [hl, setHl] = useState(null);         // grey box over the element the demo is about to click
+  const measureRef = useRef(null);
 
   useEffect(() => { if (isOpen) setStepIdx(0); }, [isOpen]);
 
@@ -125,9 +128,11 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
     }
 
     const measure = () => {
-      const r = el.getBoundingClientRect();
-      setRect({ left: r.left, top: r.top, width: r.width, height: r.height, bottom: r.bottom });
+      const win = document.querySelector("[data-tour-window]"); // a modal the demo opened takes over the spotlight
+      const r = (win || el).getBoundingClientRect();
+      setRect({ left: r.left, top: r.top, width: r.width, height: r.height, bottom: r.bottom, win: !!win });
     };
+    measureRef.current = measure;
     const t = setTimeout(measure, 450);
 
     window.addEventListener("scroll", measure, true);
@@ -136,6 +141,58 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
       clearTimeout(t);
       window.removeEventListener("scroll", measure, true);
       window.removeEventListener("resize", measure);
+    };
+  }, [isOpen, stepIdx, steps]);
+
+  /* ── Demo: a pointer glides to the element, clicks it (or drags it) for real, then the step goes on ── */
+  useEffect(() => {
+    const demo = isOpen && steps[stepIdx]?.demo;
+    if (!demo) return;
+    let alive = true; const timers = [];
+    const wait = ms => new Promise(res => timers.push(setTimeout(res, ms)));
+    const sel = demo.click || demo.drag;
+    const mouse = (type, el, x, y, extra) => el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, ...extra }));
+    (async () => {
+      await wait(750); // after the scroll settles
+      const el = document.querySelector(sel);
+      if (!el || !alive) return;
+      const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      setCursor({ x: x + 90, y: y + 70 });
+      await wait(60);
+      setCursor({ x, y });
+      setHl({ left: r.left - 3, top: r.top - 3, width: r.width + 6, height: r.height + 6 });
+      await wait(750);
+      if (!alive) return;
+      if (demo.click) {
+        setCursor({ x, y, down: true });
+        await wait(170);
+        setCursor({ x, y });
+        mouse("click", el, x, y);
+        await wait(350);
+        if (!alive) return;
+        setHl(null); setCursor(null);
+        measureRef.current?.(); timers.push(setTimeout(() => measureRef.current?.(), 500)); // spotlight the window it opened
+      } else {
+        setCursor({ x, y, down: true, fast: true }); setHl(null);
+        mouse("mousedown", el, x, y, { button: 0, buttons: 1 });
+        // The page maps the pointer's absolute position to the value, so the motion is centred on the anchor (the line itself) and ends there: the value comes back to where it started
+        const ab = document.querySelector(demo.anchor)?.getBoundingClientRect(), y0 = ab ? ab.top + ab.height / 2 : y;
+        const A = demo.dy || 25, D = 2600, t0 = performance.now();
+        await new Promise(res => { const f = () => { // up, then down past the start, then back: one sine period
+          if (!alive) return res();
+          const q = Math.min(1, (performance.now() - t0) / D), yy = y0 - A * Math.sin(q * 2 * Math.PI);
+          setCursor({ x, y: yy, down: true, fast: true }); mouse("mousemove", el, x, yy, { buttons: 1 });
+          q < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+        mouse("mouseup", el, x, y0);
+        setCursor({ x, y: y0, fast: true });
+        await wait(350);
+        setHl(null); setCursor(null);
+      }
+    })();
+    return () => {
+      alive = false; timers.forEach(clearTimeout); setCursor(null); setHl(null);
+      if (demo.drag) { const el = document.querySelector(demo.drag); if (el) mouse("mouseup", el, 0, 0); }
+      if (demo.click) document.querySelector("[data-tour-window] [data-tour-close]")?.click(); // leave the page as we found it
     };
   }, [isOpen, stepIdx, steps]);
 
@@ -215,6 +272,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
           0%, 100% { box-shadow: 0 0 0 3px ${accent}cc, 0 0 14px ${accent}44; }
           50% { box-shadow: 0 0 0 3px ${accent}22, 0 0 0px ${accent}00; }
         }
+        @keyframes tour-ring { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
       `}</style>
 
       <div data-anim-keep="1" style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={forced ? undefined : onClose}>
@@ -236,28 +294,37 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
           borderRadius: 4, animation: "tour-blink 1s ease-in-out infinite",
           pointerEvents: "none", zIndex: 9999,
         }} />}
+        {hl && <div style={{ position: "fixed", ...hl, background: "rgba(0,0,0,0.18)", borderRadius: 4, pointerEvents: "none", zIndex: 9999 }} />}
+        {cursor?.down && <div style={{ position: "fixed", left: cursor.x - 14, top: cursor.y - 14, width: 28, height: 28, borderRadius: "50%", border: `2px solid ${accent}`, pointerEvents: "none", zIndex: 10001, animation: "tour-ring .5s ease-out forwards" }} />}
+        {cursor && <svg viewBox="0 0 24 28" style={{
+          position: "fixed", left: cursor.x - 3, top: cursor.y - 2, width: 26, height: 30, zIndex: 10001, pointerEvents: "none",
+          transition: cursor.fast ? "transform .12s" : "left .65s cubic-bezier(.4,0,.2,1), top .65s cubic-bezier(.4,0,.2,1), transform .12s",
+          transform: cursor.down ? "scale(.85)" : "scale(1)", transformOrigin: "3px 2px", filter: "drop-shadow(0 1px 2px rgba(0,0,0,.45))",
+        }}><path d="M3 2 L3 22 L8.5 17 L12 25 L15.5 23.5 L12 15.5 L19 15.5 Z" fill="#fff" stroke="#111" strokeWidth="1.5" strokeLinejoin="round" /></svg>}
       </div>
 
       {/* ── Fixed sheet (top or bottom) ── */}
       <div data-anim-keep="1" onClick={e => e.stopPropagation()} style={{
         position: "fixed", zIndex: 10000,
         left: 0, right: 0,
-        ...(step.sheet === "top"
+        ...(step.sheet === "top" && !rect?.win
           ? { top: 0, borderBottom: `2px solid ${accent}`, boxShadow: "0 4px 24px rgba(0,0,0,0.25)", padding: "24px 20px 18px" }
           : { bottom: 0, borderTop: `2px solid ${accent}`, boxShadow: "0 -4px 24px rgba(0,0,0,0.25)", padding: "18px 20px 24px" }),
         background: K.card,
-        maxHeight: `${SHEET_HEIGHT_VH}vh`,
-        overflowY: "auto",
+        maxHeight: `${SHEET_HEIGHT_VH}vh`, boxSizing: "border-box",
+        display: "flex", flexDirection: "column",
       }}>
-        <div style={{ maxWidth: 480, margin: "0 auto" }}>
-          <div style={{ fontSize: 12, fontFamily: FM, color: K.inkLight, marginBottom: 4 }}>
-            Step {stepIdx + 1} of {steps.length}
-          </div>
-          <div style={{ fontSize: 19, fontFamily: FD, color: K.ink, marginBottom: 6 }}>
-            {step.title}
-          </div>
-          <div style={{ fontSize: 14, fontFamily: FM, color: K.inkMed, lineHeight: 1.5, marginBottom: 14 }}>
-            {step.description}
+        <div style={{ maxWidth: 480, margin: "0 auto", width: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <div style={{ overflowY: "auto", minHeight: 0, marginBottom: 14 }}>
+            <div style={{ fontSize: 12, fontFamily: FM, color: K.inkLight, marginBottom: 4 }}>
+              Step {stepIdx + 1} of {steps.length}
+            </div>
+            <div style={{ fontSize: 19, fontFamily: FD, color: K.ink, marginBottom: 6 }}>
+              {step.title}
+            </div>
+            <div style={{ fontSize: 14, fontFamily: FM, color: K.inkMed, lineHeight: 1.5 }}>
+              {step.description}
+            </div>
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -326,14 +393,14 @@ export const OTTO_TOUR_STEPS = [
   { target: null, type: "sizing", title: "Display Size", description: "" },
   { target: "otto-theory", title: "Theory", description: "Open the Theory section to learn about the ideal Otto (spark-ignition engine) cycle, the closed-system air-standard assumptions, and its four processes." },
   { target: "otto-gas-selector", title: "Working Gas", description: "Switch the working gas — air, nitrogen, helium, argon, or CO₂. The specific-heat ratio k sets efficiency for a given compression ratio; the Gases button lists every property." },
-  { target: "otto-schematic", title: "Piston–Cylinder Schematic", description: "The piston follows the drag point's specific volume and the charge colour follows its temperature. Click any process badge — Compression, Combustion, Expansion, or Heat Rejection — for its equations and live values." },
+  { target: "otto-schematic", title: "Piston–Cylinder Schematic", description: "The piston follows the drag point's specific volume and the charge colour follows its temperature. Click any process badge — Compression, Combustion, Expansion, or Heat Rejection — for its equations and live values.", demo: { click: "[data-demo='badge-compression']" } },
   { target: "otto-eta-curve", title: "Efficiency vs Compression Ratio", description: "The ideal Otto efficiency depends only on r and the gas's specific-heat ratio k. Every gas is drawn; the selected one is bold. Tap or drag along the curve to set the compression ratio." },
-  { target: "otto-ts-diagram", title: "Drag Labels on T–s", description: "Drag the 'Combustion' label to change the compression ratio, or the 'Heat Rejection' label to change the intake pressure P₁." },
+  { target: "otto-ts-diagram", title: "Drag Labels on T–s", description: "Drag the 'Combustion' label to change the compression ratio, or the 'Heat Rejection' label to change the intake pressure P₁.", demo: { drag: "[data-demo='ts-combustion']", anchor: "[data-demo='ts-combustion-anchor']", dy: 25 } },
   { target: "otto-fx", title: "Equations Reference", description: "Open the equations modal to see every formula used in the Otto cycle analysis, including the isentropic relations and mean effective pressure." },
   { target: "otto-eta-areas", title: "Efficiency Areas", description: "Toggle shaded areas on the T–s diagram to visualize thermal efficiency as the ratio of net work to heat input." },
   { target: "otto-pv-areas", title: "Work Areas", description: "Toggle shaded areas on the P–v diagram to visualize compression work, expansion work, and net work as boundary work ∫P dv." },
   { target: "otto-lock-buttons", title: "Lock Properties", description: "Lock entropy (s), temperature (T), pressure (P), or specific volume (v) to constrain your drag point on the diagrams." },
-  { target: "otto-energy-balance", title: "Energy Balance", description: "Click any energy value — Q in, Q out, W expansion, or W compression — to jump directly to its equation in the reference.", sheet: "top" },
+  { target: "otto-energy-balance", title: "Energy Balance", description: "Click any energy value — Q in, Q out, W expansion, or W compression — to jump directly to its equation in the reference.", sheet: "top", demo: { click: "[data-demo='energy-qin']" } },
   { target: "otto-settings", title: "Settings", description: "Open the Settings dialog to adjust display size, theme (light/dark), units (T/P/h/s), and animation speed. Preferences persist across sessions." },
   { target: "otto-share-solution", title: "Share & Copy Solution", description: "Share Setup copies a deep link to your current cycle parameters — open it on another device or share with a classmate to land on the same configuration. Copy Solution copies a plain-text dump of every state point and process result in your chosen units, ready to paste into a homework write-up.", sheet: "top" },
 ];

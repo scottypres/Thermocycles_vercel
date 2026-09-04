@@ -2013,7 +2013,7 @@ function RankinePage({ onBack }) {
           </div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
+          <h3 style={sec}>State Point Properties</h3>
           <StateTable cycle={cycle} onSelectState={setDragPoint} textScale={textScale} units={units} />
         </div>
       </div>

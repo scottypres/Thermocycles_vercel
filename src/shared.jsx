@@ -264,7 +264,7 @@ export function UnitsPopover({ open, units, onChange, onClose, anchor, K, FD, FM
    value/min/max are stored in SI; if `kind` and `units` are provided, the
    readout, unit label, and min/max ticks display in the user's chosen units.
    The native slider input stays in SI so step/handle behave consistently. */
-export function ParamSlider({ label, unit, kind, value, min, max, step, onChange, color, textScale, units, sizes }) {
+export function ParamSlider({ label, unit, kind, value, min, max, step, onChange, color, textScale, units, sizes, title }) {
   const sc = textScale || 1;
   const sz = (px) => Math.round(px * sc);
   const desktop = useIsDesktop();
@@ -286,7 +286,7 @@ export function ParamSlider({ label, unit, kind, value, min, max, step, onChange
   return (
     <div style={{ marginBottom: desktop ? 24 : 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: desktop ? 8 : 5 }}>
-        <span style={{ fontSize: sz(S.label), fontFamily: FM, color: K.inkMed }}>{label}</span>
+        <span title={title} style={{ fontSize: sz(S.label), fontFamily: FM, color: K.inkMed, cursor: title ? "help" : undefined }}>{label}</span>
         <span style={{ fontSize: sz(S.value), fontFamily: FD, color: color || K.accent }}>{dispVal.toFixed(dispDigits(dispVal))} <span style={{ fontSize: sz(S.unit), fontFamily: FM, color: K.inkLight }}>{dispUnit}</span></span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}

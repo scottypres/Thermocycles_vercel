@@ -272,8 +272,6 @@ const TX_DEFAULTS = {
   "ParamSlider.unit.mobile": 10,
   "ParamSlider.range.desktop": 13,
   "ParamSlider.range.mobile": 8,
-  "OttoPage.29.desktop": 15,
-  "OttoPage.29.mobile": 9,
   "OttoPage.30.desktop": 15,
   "OttoPage.30.mobile": 9,
   "OttoPage.31.desktop": 13.75,
@@ -578,8 +576,6 @@ const TX_HINTS = {
   "ParamSlider.unit.mobile": "slider unit",
   "ParamSlider.range.desktop": "slider min / max",
   "ParamSlider.range.mobile": "slider min / max",
-  "OttoPage.29.desktop": "\u2014 Table 1",
-  "OttoPage.29.mobile": "\u2014 Table 1",
   "OttoPage.30.desktop": "Heat Transfer",
   "OttoPage.30.mobile": "Heat Transfer",
   "OttoPage.31.desktop": "\u2026",
@@ -885,8 +881,6 @@ const TX_CAT = {
   "ParamSlider.unit.mobile": "Parameters · sliders",
   "ParamSlider.range.desktop": "Parameters · sliders",
   "ParamSlider.range.mobile": "Parameters · sliders",
-  "OttoPage.29.desktop": "Panel · header subtitles",
-  "OttoPage.29.mobile": "Panel · header subtitles",
   "OttoPage.30.desktop": "Energy balance · labels",
   "OttoPage.30.mobile": "Energy balance · labels",
   "OttoPage.31.desktop": "Energy balance · labels",
@@ -1181,6 +1175,7 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
         const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
+            <title>State {i + 1} — {s.desc}</title>
             <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
             <rect x={tx - sz(7)} y={ty - sz(10)} width={sz(14)} height={sz(13)} rx={1} fill={K.card} />
@@ -1192,7 +1187,8 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
         {labelBox(compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8), (mapT(st[0].T) + mapT(st[1].T)) / 2, compLeft ? "end" : "start", T("OttoTsDiagram.7"), "Compression")}
         <text x={compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(T("OttoTsDiagram.7"))} fontFamily={FM} fontWeight="500" textAnchor={compLeft ? "end" : "start"}>Compression</text>
         {labelBox(combTextX, combTextY, "middle", T("OttoTsDiagram.8"), "Combustion")}
-        <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(T("OttoTsDiagram.8"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Combustion</text>
+        <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(T("OttoTsDiagram.8"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }} data-demo="ts-combustion">Combustion</text>
+        <circle data-demo="ts-combustion-anchor" cx={combTextX} cy={mapT(combMidT)} r={0.5} fill="none" pointerEvents="none" />{/* tour demo: the drag comes to rest here so r returns to its starting value */}
         {labelBox(expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8), (mapT(st[2].T) + mapT(st[3].T)) / 2, expLeft ? "end" : "start", T("OttoTsDiagram.9"), "Expansion")}
         <text x={expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.workOut} fontSize={sz(T("OttoTsDiagram.9"))} fontFamily={FM} fontWeight="500" textAnchor={expLeft ? "end" : "start"}>Expansion</text>
         {labelBox(rejTextX, rejTextY, "middle", T("OttoTsDiagram.10"), "Heat Rejection")}
@@ -1400,6 +1396,7 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
         const tx = cx + off[i].dx, ty = cy + off[i].dy;
         return (
           <g key={i}>
+            <title>State {i + 1} — {s.desc}</title>
             <circle cx={cx} cy={cy} r={5} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} />
             <circle cx={cx} cy={cy} r={1.8} fill={K.stateFill} />
             <rect x={tx - sz(7)} y={ty - sz(10)} width={sz(14)} height={sz(13)} rx={1} fill={K.card} />
@@ -1555,10 +1552,10 @@ function OttoProcessModal({ process, cycle, onClose, units }) {
   const live = liveValues[process];
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 780 : 420, width: "100%", padding: isWide ? "36px 40px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+      <div data-tour-window="1" style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 780 : 420, width: "100%", padding: isWide ? "36px 40px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 22 : 14, borderBottom: `2px solid ${color}`, paddingBottom: 12 }}>
           <h2 style={{ margin: 0, fontSize: isWide ? TX["OttoProcessModal.1.desktop"] : TX["OttoProcessModal.1.mobile"], fontFamily: FD, color }}>{info.title}</h2>
-          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? TX["OttoProcessModal.2.desktop"] : TX["OttoProcessModal.2.mobile"], cursor: "pointer", padding: isWide ? "6px 20px" : "3px 12px", fontFamily: FM }}>Close</button>
+          <button data-tour-close="1" onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? TX["OttoProcessModal.2.desktop"] : TX["OttoProcessModal.2.mobile"], cursor: "pointer", padding: isWide ? "6px 20px" : "3px 12px", fontFamily: FM }}>Close</button>
         </div>
         <div style={{ display: "flex", gap: 10, marginBottom: isWide ? 20 : 12, flexWrap: "wrap" }}>
           <span style={{ background: color, color: "#fff", padding: isWide ? "5px 14px" : "3px 10px", fontSize: isWide ? TX["OttoProcessModal.3.desktop"] : TX["OttoProcessModal.3.mobile"], fontFamily: FM, fontWeight: 700 }}>Process {info.process}</span>
@@ -1599,6 +1596,23 @@ function OttoProcessModal({ process, cycle, onClose, units }) {
    charge is drawn as molecules whose speed and colour track temperature; a spark and flame
    appear in the clearance volume during 2→3, and on the 4→1 isochore the exhaust valve opens
    and hot molecules leave while fresh (cool) charge enters through the intake. */
+const TIP = {
+  tdc: "Top dead centre (TDC): the piston's highest point. Only the clearance volume v₂ remains — states 2 and 3.",
+  bdc: "Bottom dead centre (BDC): the piston's lowest point. The cylinder holds its full volume v₁ — states 1 and 4.",
+  intake: "Intake valve: opens on the intake stroke (second half of 4→1) to draw in fresh charge while the piston descends.",
+  exhaust: "Exhaust valve: opens at BDC for blowdown, then stays open while the piston pushes the spent gas out (first half of 4→1).",
+  spark: "Spark plug: fires at TDC (2→3). The ideal cycle treats the burn as instantaneous, so the volume stays at v₂.",
+  crank: "Crankshaft: the piston's up-and-down motion becomes rotation. A four-stroke cycle turns it twice per cycle.",
+  pbar: "Cylinder pressure relative to the peak P₃.",
+  tbar: "Charge temperature relative to the peak T₃.",
+  qin: "Heat added by the burn at constant volume: q_in = c_v (T₃ − T₂).",
+  qout: "Heat rejected with the exhaust at constant volume: q_out = c_v (T₄ − T₁).",
+  wnet: "Net work per cycle: w_net = q_in − q_out = expansion work − compression work.",
+  compression: "1→2 Both valves closed; the piston rises from BDC to TDC. Isentropic: no heat transfer, T and P climb.",
+  combustion: "2→3 Spark at TDC. Pressure and temperature jump at constant volume; this is where q_in enters.",
+  expansion: "3→4 The power stroke: hot gas pushes the piston from TDC to BDC, delivering work to the crank.",
+  rejection: "4→1 Exhaust valve opens at BDC and the pressure collapses to P₁ at constant volume (q_out).",
+};
 const CYL = { x: 130, w: 100, head: 40, stroke: 160 }; // piston top runs from y = head + stroke/r (TDC) to head + stroke (BDC)
 const PORT = { intake: 152, exhaust: 208, halfW: 8 };
 const N_MOL = 56, EXIT_POOL = 14;
@@ -1644,6 +1658,7 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
   const rising = animSeg === 0 || (onIso && phase41 < 0.5);
   const theta = rising ? 2 * Math.PI - Math.acos(1 - 2 * xs) : Math.acos(1 - 2 * xs);
   const crank = { cx: 180, cy: 296, r: TX["Schematic.crankRadius"] };
+  const tdcY = CYL.head + CYL.stroke / cycle.r, tdcLabY = Math.min(tdcY + 2.5, 56); // label clears the Compression badge (top at y = 64)
   const pin = { x: crank.cx + crank.r * Math.sin(theta), y: crank.cy - crank.r * Math.cos(theta) };
 
   // Molecule simulation lives outside React state; the loop writes circle attributes directly.
@@ -1705,19 +1720,19 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
     { id: "expansion", seg: 2, x: 282, y: 206, c: K.workOut, l1: "3 → 4", l2: "Expansion" },
   ];
   const mk = [{ id: "oO", c: K.heatIn }, { id: "oB", c: K.heatOut }, { id: "oG", c: K.workOut }, { id: "oY", c: K.workIn }];
-  const valve = (x, open) => { const yd = CYL.head + 1 + (open ? 9 : 0); return (<g>
+  const valve = (x, open, tip) => { const yd = CYL.head + 1 + (open ? 9 : 0); return (<g><title>{tip}</title>
     <line x1={x - PORT.halfW} y1={CYL.head - 16} x2={x - PORT.halfW} y2={6} stroke={K.ink} strokeWidth={1.2} />
     <line x1={x + PORT.halfW} y1={CYL.head - 16} x2={x + PORT.halfW} y2={6} stroke={K.ink} strokeWidth={1.2} />
     <line x1={x} y1={CYL.head - 16} x2={x} y2={yd} stroke={K.inkMed} strokeWidth={1.5} />
     <line x1={x - 9} y1={yd} x2={x + 9} y2={yd} stroke={K.ink} strokeWidth={2.5} />
   </g>); };
-  const bar = (x, v, c, lab) => (<g>
+  const bar = (x, v, c, lab) => (<g><title>{lab === "P" ? TIP.pbar : TIP.tbar}</title>
     <rect x={x} y={CYL.head} width={14} height={CYL.stroke} fill={K.cardAlt} stroke={K.border} />
     <rect x={x} y={CYL.head + CYL.stroke * (1 - v)} width={14} height={CYL.stroke * v} fill={c} opacity={0.85} />
     <text x={x + 7} y={CYL.head + CYL.stroke + 14} fill={K.inkMed} fontSize={sz(T("OttoSchematicDiagram.1"))} textAnchor="middle" fontFamily={FD} fontStyle="italic">{lab}</text>
   </g>);
   return (<>
-    <svg ref={svgRef} viewBox="-8 -2 381 348" style={{ width: "100%", touchAction: movable ? "none" : undefined, userSelect: movable ? "none" : undefined }}>
+    <svg ref={svgRef} viewBox="-8 -2 381 362" style={{ width: "100%", touchAction: movable ? "none" : undefined, userSelect: movable ? "none" : undefined }}>
       <defs>
         {mk.map(m => (
           <marker key={m.id} id={m.id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth={7} markerHeight={7} orient="auto">
@@ -1740,13 +1755,15 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <rect x={CYL.x - 8} y={CYL.head - 16} width={CYL.w + 16} height={16} fill={K.cardAlt} stroke={K.ink} strokeWidth={1.5} />
       <rect x={PORT.intake - PORT.halfW} y={CYL.head - 16} width={PORT.halfW * 2} height={16} fill={K.card} />
       <rect x={PORT.exhaust - PORT.halfW} y={CYL.head - 16} width={PORT.halfW * 2} height={16} fill={K.card} />
-      {valve(PORT.intake, inOpen)}{valve(PORT.exhaust, exOpen)}
+      {valve(PORT.intake, inOpen, TIP.intake)}{valve(PORT.exhaust, exOpen, TIP.exhaust)}
       <text x={PORT.intake - PORT.halfW - 4} y={16} fill={inOpen ? K.heatOut : K.inkLight} fontSize={sz(T("OttoSchematicDiagram.2"))} textAnchor="end" fontFamily={FM} fontStyle="italic">intake</text>
       <text x={PORT.exhaust + PORT.halfW + 4} y={16} fill={exOpen ? K.inkMed : K.inkLight} fontSize={sz(T("OttoSchematicDiagram.3"))} textAnchor="start" fontFamily={FM} fontStyle="italic">exhaust</text>
       {/* Spark plug */}
+      <g><title>{TIP.spark}</title>
       <rect x={176} y={CYL.head - 30} width={8} height={14} fill={K.cardAlt} stroke={K.ink} strokeWidth={1} />
       <line x1={180} y1={CYL.head - 30} x2={180} y2={CYL.head - 38} stroke={K.ink} strokeWidth={1.2} />
       <polyline points={`180,${CYL.head} 177,${CYL.head + 4} 183,${CYL.head + 6}`} fill="none" stroke={K.ink} strokeWidth={1} />
+      </g>
       {spark > 0 && <g opacity={spark}>
         {[[-0.8, 0.6], [0.8, 0.6], [0, 1], [-0.45, 0.9], [0.45, 0.9]].map(([dx, dy], i) => <line key={i} x1={180} y1={CYL.head + 5} x2={180 + dx * 14 * spark} y2={CYL.head + 5 + dy * 14 * spark} stroke="#ffd23f" strokeWidth={1.4} />)}
         <circle cx={180} cy={CYL.head + 5} r={3 + 3 * spark} fill="#ffd23f" opacity={0.8} />
@@ -1757,23 +1774,24 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <line x1={CYL.x + 1} y1={yTop + 5} x2={CYL.x + CYL.w - 1} y2={yTop + 5} stroke={K.inkLight} strokeWidth={1} />
       <line x1={CYL.x + 1} y1={yTop + 9} x2={CYL.x + CYL.w - 1} y2={yTop + 9} stroke={K.inkLight} strokeWidth={1} />
       <circle cx={180} cy={yTop + 12} r={3.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
-      <circle cx={crank.cx} cy={crank.cy} r={crank.r} fill="none" stroke={K.inkLight} strokeWidth={1} strokeDasharray="3 3" />
+      <circle cx={crank.cx} cy={crank.cy} r={crank.r} fill="none" stroke={K.inkLight} strokeWidth={1} strokeDasharray="3 3"><title>{TIP.crank}</title></circle>
       <line x1={crank.cx} y1={crank.cy} x2={pin.x} y2={pin.y} stroke={K.ink} strokeWidth={3.5} strokeLinecap="round" />
       <circle cx={pin.x} cy={pin.y} r={4.5} fill={K.card} stroke={K.ink} strokeWidth={1.2} />
       {/* Hub carries the W_net label; the value sits outside the crank circle */}
       <rect x={crank.cx - 20} y={crank.cy - 7.5} width={40} height={15} rx={7.5} fill={K.card} stroke={K.workOut} strokeWidth={1.2} />
-      <text x={crank.cx} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.4"))} textAnchor="middle" fontFamily={FM} fontWeight="700">W_net</text>
+      <text x={crank.cx} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.4"))} textAnchor="middle" fontFamily={FM} fontWeight="700"><title>{TIP.wnet}</title>W_net</text>
       <g transform={tr("wnet")} {...dragProps("wnet")}>
         {outline(crank.cx + crank.r + 2, crank.cy - 10, 96, 20)}
         <line x1={crank.cx + crank.r + 4} y1={crank.cy} x2={crank.cx + crank.r + 22} y2={crank.cy} stroke={K.workOut} strokeWidth={1.8} markerEnd="url(#oG)" />
         <text x={crank.cx + crank.r + 26} y={crank.cy + 3} fill={K.workOut} fontSize={sz(T("OttoSchematicDiagram.5"))} textAnchor="start" fontFamily={FM} fontWeight="700">{fmt(cvtH(cycle.wNet, u))} {lblH(u)}</text>
       </g>
       <text x={crank.cx - crank.r - 6} y={crank.cy + 3} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.6"))} textAnchor="end" fontFamily={FM} fontStyle="italic">crank</text>
-      {/* TDC / BDC ticks (left) and P / T bars (right) */}
-      <line x1={CYL.x - 12} y1={CYL.head + CYL.stroke / cycle.r} x2={CYL.x - 4} y2={CYL.head + CYL.stroke / cycle.r} stroke={K.inkLight} strokeWidth={1} />
-      <text x={CYL.x - 14} y={CYL.head + CYL.stroke / cycle.r + 2.5} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.7"))} textAnchor="end" fontFamily={FM} fontStyle="italic">TDC</text>
+      {/* Dead-centre ticks (left) and P / T bars (right). At low r the TDC tick sits beside the Compression badge, so its label stays above the badge on a short leader. */}
+      <line x1={CYL.x - 12} y1={tdcY} x2={CYL.x - 4} y2={tdcY} stroke={K.inkLight} strokeWidth={1} />
+      {tdcLabY < tdcY && <line x1={CYL.x - 8} y1={tdcLabY + 2} x2={CYL.x - 8} y2={tdcY} stroke={K.inkLight} strokeWidth={0.8} strokeDasharray="2 2" />}
+      <text x={CYL.x - 14} y={tdcLabY} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.7"))} textAnchor="end" fontFamily={FM} fontStyle="italic"><title>{TIP.tdc}</title>Top dead centre</text>
       <line x1={CYL.x - 12} y1={CYL.head + CYL.stroke} x2={CYL.x - 4} y2={CYL.head + CYL.stroke} stroke={K.inkLight} strokeWidth={1} />
-      <text x={CYL.x - 14} y={CYL.head + CYL.stroke + 2.5} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.8"))} textAnchor="end" fontFamily={FM} fontStyle="italic">BDC</text>
+      <text x={CYL.x - 14} y={CYL.head + CYL.stroke + 2.5} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.8"))} textAnchor="end" fontFamily={FM} fontStyle="italic"><title>{TIP.bdc}</title>Bottom dead centre</text>
       {bar(244, pNorm, K.heatIn, "P")}{bar(262, tNorm, K.workIn, "T")}
       {/* Process badges (clickable) */}
       {badges.map(b => {
@@ -1783,7 +1801,7 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
         const w = Math.max(82, Math.round(b.l2.length * f2 * 0.62 + 14)), h = Math.max(36, Math.round(f1 * 1.3 + f2 * 1.5 + 8));
         const x = b.x > 180 ? 364 - w : b.x;
         return (
-          <g key={b.id} style={{ cursor: "pointer" }} onClick={() => setActiveProcess(b.id)}>
+          <g key={b.id} data-demo={`badge-${b.id}`} style={{ cursor: "pointer" }} onClick={() => setActiveProcess(b.id)}><title>{TIP[b.id]}</title>
             <rect x={x} y={b.y} width={w} height={h} rx={2} fill={on ? `${b.c}22` : K.card} stroke={b.c} strokeWidth={on ? 2.4 : 1.5} />
             <text x={x + w / 2} y={b.y + f1 * 1.25} fill={b.c} fontSize={f1} textAnchor="middle" fontFamily={FD}>{b.l1}</text>
             <text x={x + w / 2} y={b.y + h - f2 * 0.55} fill={b.c} fontSize={f2} textAnchor="middle" fontFamily={FM} fontWeight="500">{b.l2}</text>
@@ -1794,16 +1812,16 @@ function OttoSchematicDiagram({ cycle, dragPoint, textScale, units, animating, a
       <g transform={tr("qin")} {...dragProps("qin")}>
         {outline(14, 0, 118, 30)}
         <line x1={112} y1={14} x2={128} y2={26} stroke={K.heatIn} strokeWidth={1.8} markerEnd="url(#oO)" />
-        <text x={108} y={12} fill={K.heatIn} fontSize={sz(T("OttoSchematicDiagram.11"))} textAnchor="end" fontFamily={FM} fontWeight="700">Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
+        <text x={108} y={12} fill={K.heatIn} fontSize={sz(T("OttoSchematicDiagram.11"))} textAnchor="end" fontFamily={FM} fontWeight="700"><title>{TIP.qin}</title>Q_in = {fmt(cvtH(cycle.qIn, u))} {lblH(u)}</text>
       </g>
       <g transform={tr("qout")} {...dragProps("qout")}>
         {outline(4, 232, 128, 40)}
         <line x1={128} y1={238} x2={104} y2={252} stroke={K.heatOut} strokeWidth={1.8} markerEnd="url(#oB)" />
-        <text x={104} y={266} fill={K.heatOut} fontSize={sz(T("OttoSchematicDiagram.12"))} textAnchor="end" fontFamily={FM} fontWeight="700">Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
+        <text x={104} y={266} fill={K.heatOut} fontSize={sz(T("OttoSchematicDiagram.12"))} textAnchor="end" fontFamily={FM} fontWeight="700"><title>{TIP.qout}</title>Q_out = −{fmt(cvtH(cycle.qOut, u))} {lblH(u)}</text>
       </g>
-      {onIso && <text x={CYL.x + CYL.w + 6} y={262} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.13"))} textAnchor="start" fontFamily={FM} fontStyle="italic">{phase41 < 0.5 ? "exhaust stroke ↑" : "intake stroke ↓"}</text>}
-      {/* Live state readout */}
+      {/* Live state readout, with the stroke caption beneath it */}
       <text x={180} y={340} fill={K.inkMed} fontSize={sz(T("OttoSchematicDiagram.14"))} textAnchor="middle" fontFamily={FM}>r = {cycle.r.toFixed(1)} · v = {dragPoint.v.toFixed(3)} m³/kg · T = {fmtT(dragPoint.T, u, 0)} · P = {fmtP(dragPoint.P, u)}</text>
+      {onIso && <text x={180} y={354} fill={K.inkLight} fontSize={sz(T("OttoSchematicDiagram.13"))} textAnchor="middle" fontFamily={FM} fontStyle="italic">{phase41 < 0.5 ? "exhaust stroke ↑" : "intake stroke ↓"}</text>}
     </svg>
     <OttoProcessModal process={activeProcess} cycle={cycle} onClose={() => setActiveProcess(null)} units={u} />
   </>);
@@ -2265,10 +2283,10 @@ function OttoEquationsModal({ open, onClose, cycle, initialTopic, units }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(26,26,46,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "20px 10px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 820 : 420, width: "100%", padding: isWide ? "36px 40px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
+      <div data-tour-window="1" style={{ background: K.card, border: `1.5px solid ${K.border}`, maxWidth: isWide ? 820 : 420, width: "100%", padding: isWide ? "36px 40px" : "20px 16px", color: K.ink, fontFamily: FM, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", marginTop: isWide ? 60 : 0 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isWide ? 22 : 14, borderBottom: `2px solid ${K.ink}`, paddingBottom: 12 }}>
           <h2 style={{ margin: 0, fontSize: isWide ? TX["OttoEquationsModal.6.desktop"] : TX["OttoEquationsModal.6.mobile"], fontFamily: FD, color: K.ink }}>Solve: <span style={{ color: selColor }}>{sel.title}</span></h2>
-          <button onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? TX["OttoEquationsModal.7.desktop"] : TX["OttoEquationsModal.7.mobile"], cursor: "pointer", padding: isWide ? "6px 20px" : "3px 12px", fontFamily: FM }}>Close</button>
+          <button data-tour-close="1" onClick={onClose} style={{ background: "none", border: `1px solid ${K.border}`, color: K.inkMed, fontSize: isWide ? TX["OttoEquationsModal.7.desktop"] : TX["OttoEquationsModal.7.mobile"], cursor: "pointer", padding: isWide ? "6px 20px" : "3px 12px", fontFamily: FM }}>Close</button>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: isWide ? 8 : 5, marginBottom: isWide ? 22 : 14 }}>
           {OTTO_EQ_TOPICS.map(t => {
@@ -2494,11 +2512,11 @@ export default function OttoPage({ onBack }) {
       {/* Performance */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         {[
-          { l: "η thermal", v: `${(cycle.eta * 100).toFixed(1)}%`, c: K.accent },
-          { l: "W net", v: fmt(cvtH(cycle.wNet, units)), c: K.workOut, s: lblH(units) },
-          { l: "MEP", v: fmt(cvtP(cycle.mep, units)), c: K.workIn, s: lblP(units) },
+          { l: "η thermal", v: `${(cycle.eta * 100).toFixed(1)}%`, c: K.accent, t: "Thermal efficiency η = w_net / q_in = 1 − r^(1−k). Depends only on the compression ratio and the gas." },
+          { l: "W net", v: fmt(cvtH(cycle.wNet, units)), c: K.workOut, s: lblH(units), t: "Net work per kilogram of charge: expansion work minus compression work." },
+          { l: "MEP", v: fmt(cvtP(cycle.mep, units)), c: K.workIn, s: lblP(units), t: "Mean effective pressure: the constant pressure that, acting over one full stroke, would produce the same net work. MEP = w_net / (v₁ − v₂)." },
         ].map((m, i) => (
-          <div key={i} style={{ textAlign: "center", padding: desktop ? "8px 0" : "4px 0" }}>
+          <div key={i} title={m.t} style={{ textAlign: "center", padding: desktop ? "8px 0" : "4px 0" }}>
             <div style={{ fontSize: sz(desktop ? TX["OttoPage.11.desktop"] : TX["OttoPage.11.mobile"]), color: K.inkLight, fontFamily: FM, letterSpacing: 1, marginBottom: 3, textTransform: "uppercase", fontStyle: "italic" }}>{m.l}</div>
             <div style={{ fontSize: sz(desktop ? TX["OttoPage.12.desktop"] : TX["OttoPage.12.mobile"]), fontFamily: FD, color: m.c, lineHeight: 1.2 }}>{m.v}</div>
             {m.s && <div style={{ fontSize: sz(desktop ? TX["OttoPage.13.desktop"] : TX["OttoPage.13.mobile"]), color: K.inkLight, fontFamily: FM }}>{m.s}</div>}
@@ -2592,16 +2610,16 @@ export default function OttoPage({ onBack }) {
       <div style={desktop ? { display: "grid", gridTemplateColumns: "1fr 1fr", margin: `${gap}px ${gap}px 0`, gap } : {}}>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : { ...card, padding: "16px" }}>
           <h3 style={sec}>Cycle Parameters</h3>
-          <ParamSlider sizes={sliderSizes} label="Compression Ratio (r = v₁/v₂)" unit="" color={K.workOut} value={r} min={R_MIN} max={R_MAX} step={0.5} onChange={v => setR(clampR(v))} textScale={textScale} />
-          <ParamSlider sizes={sliderSizes} label="Peak Temperature (T₃)" kind="T" color={K.workOut} value={adjustedT3} min={minT3} max={T3_MAX} step={10} onChange={setT3} textScale={textScale} units={units} />
-          <ParamSlider sizes={sliderSizes} label="Intake Temperature (T₁)" kind="T" color={K.workIn} value={t1} min={T1_MIN} max={T1_MAX} step={1} onChange={setT1} textScale={textScale} units={units} />
-          <ParamSlider sizes={sliderSizes} label="Intake Pressure (P₁)" kind="P" color={K.heatOut} value={p1} min={P1_MIN} max={P1_MAX} step={5} onChange={setP1} textScale={textScale} units={units} />
+          <ParamSlider sizes={sliderSizes} title="Cylinder volume at BDC over clearance volume at TDC. Efficiency rises with r; real petrol engines stop around 8–12 because of knock." label="Compression Ratio (r = v₁/v₂)" unit="" color={K.workOut} value={r} min={R_MIN} max={R_MAX} step={0.5} onChange={v => setR(clampR(v))} textScale={textScale} />
+          <ParamSlider sizes={sliderSizes} title="Temperature right after the burn (state 3). Sets the heat added: q_in = c_v (T₃ − T₂)." label="Peak Temperature (T₃)" kind="T" color={K.workOut} value={adjustedT3} min={minT3} max={T3_MAX} step={10} onChange={setT3} textScale={textScale} units={units} />
+          <ParamSlider sizes={sliderSizes} title="Charge temperature at the start of compression (state 1, BDC)." label="Intake Temperature (T₁)" kind="T" color={K.workIn} value={t1} min={T1_MIN} max={T1_MAX} step={1} onChange={setT1} textScale={textScale} units={units} />
+          <ParamSlider sizes={sliderSizes} title="Cylinder pressure at the start of compression (state 1). About 100 kPa naturally aspirated; higher with a turbo or supercharger." label="Intake Pressure (P₁)" kind="P" color={K.heatOut} value={p1} min={P1_MIN} max={P1_MAX} step={5} onChange={setP1} textScale={textScale} units={units} />
           <div style={{ marginTop: 6, fontSize: sz(desktop ? TX["OttoPage.28.desktop"] : TX["OttoPage.28.mobile"]), color: K.inkLight, borderTop: `1px solid ${K.gridFine}`, paddingTop: 6, fontStyle: "italic", textAlign: "center" }}>
             T₂ = {fmtT(cycle.T2, units)} &nbsp;|&nbsp; T₄ = {fmtT(cycle.T4, units)} &nbsp;|&nbsp; P₂ = {fmtP(cycle.p2, units)} &nbsp;|&nbsp; P₃ = {fmtP(cycle.p3, units)}
           </div>
         </div>
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
-          <h3 style={sec}>State Point Properties <span style={{ fontFamily: FM, fontSize: desktop ? TX["OttoPage.29.desktop"] : TX["OttoPage.29.mobile"], color: K.inkLight, fontStyle: "italic" }}>— Table 1</span></h3>
+          <h3 style={sec}>State Point Properties</h3>
           <OttoStateTable cycle={cycle} onSelectState={handleDrag} textScale={textScale} units={units} />
         </div>
       </div>
@@ -2617,7 +2635,7 @@ export default function OttoPage({ onBack }) {
                 { l: "Q in (Combustion)", v: fmt(cvtH(cycle.qIn, units)), u: lblH(units), c: K.heatIn, topic: "qin" },
                 { l: "Q out (Exhaust)", v: "−" + fmt(cvtH(cycle.qOut, units)), u: lblH(units), c: K.heatOut, topic: "qout" },
               ].map((e, i) => (
-                <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
+                <div key={i} data-demo={`energy-${e.topic}`} title="Click to open this term's equation" onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
                   <div style={{ fontSize: sz(desktop ? TX["OttoPage.31.desktop"] : TX["OttoPage.31.mobile"]), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
                   <div style={{ fontSize: sz(desktop ? TX["OttoPage.32.desktop"] : TX["OttoPage.32.mobile"]), fontFamily: FD, color: e.c }}>{e.v}</div>
                   <div style={{ fontSize: sz(desktop ? TX["OttoPage.33.desktop"] : TX["OttoPage.33.mobile"]), color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
@@ -2632,7 +2650,7 @@ export default function OttoPage({ onBack }) {
                 { l: "W expansion", v: fmt(cvtH(cycle.wExp, units)), u: lblH(units), c: K.workOut, topic: "wexp" },
                 { l: "W compression", v: "−" + fmt(cvtH(cycle.wComp, units)), u: lblH(units), c: K.workIn, topic: "wcomp" },
               ].map((e, i) => (
-                <div key={i} onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
+                <div key={i} data-demo={`energy-${e.topic}`} title="Click to open this term's equation" onClick={() => { setEqTopic(e.topic); setShowEqs(true); }} style={{ background: K.cardAlt, border: `1px solid ${K.border}`, padding: desktop ? "16px 18px" : "8px 10px", textAlign: "center", cursor: "pointer" }}>
                   <div style={{ fontSize: sz(desktop ? TX["OttoPage.35.desktop"] : TX["OttoPage.35.mobile"]), color: K.inkLight, marginBottom: 4, fontStyle: "italic", letterSpacing: 1, textTransform: "uppercase" }}>{e.l}</div>
                   <div style={{ fontSize: sz(desktop ? TX["OttoPage.36.desktop"] : TX["OttoPage.36.mobile"]), fontFamily: FD, color: e.c }}>{e.v}</div>
                   <div style={{ fontSize: sz(desktop ? TX["OttoPage.37.desktop"] : TX["OttoPage.37.mobile"]), color: K.inkLight, fontFamily: FM, marginTop: 2 }}>{e.u}</div>
