@@ -898,8 +898,19 @@ function OttoEtaCurve({ cycle, onRChange, textScale }) {
       <line x1={ETA_PLOT.x} y1={mapE(e0)} x2={mapR(r0)} y2={mapE(e0)} stroke={K.workOut} strokeWidth={1} strokeDasharray="3 3" />
       <circle cx={mapR(r0)} cy={mapE(e0)} r={5} fill={K.card} stroke={K.workOut} strokeWidth={2.2} />
       {/* The curve rises to the right, so the label sits below-right of the marker (or above-left near the right edge) to stay clear of it */}
-      <text x={mapR(r0) + (labelRight ? -10 : 10)} y={mapE(e0) + (labelRight ? -20 : 16)} fill={K.workOut} fontSize={sz(9)} textAnchor={labelRight ? "end" : "start"} fontFamily={FD}>η = {(e0 * 100).toFixed(1)}%</text>
-      <text x={mapR(r0) + (labelRight ? -10 : 10)} y={mapE(e0) + (labelRight ? -9 : 27)} fill={K.inkMed} fontSize={sz(7)} textAnchor={labelRight ? "end" : "start"} fontFamily={FM}>{g0.name} · k = {g0.k.toFixed(3)} · r = {r0.toFixed(1)}</text>
+      {(() => { // label block with card-coloured boxes behind each line, as on the T–s and P–v diagrams
+        const tx = mapR(r0) + (labelRight ? -10 : 10), anchor = labelRight ? "end" : "start";
+        const l1 = `η = ${(e0 * 100).toFixed(1)}%`, l2 = `${g0.name} · k = ${g0.k.toFixed(3)} · r = ${r0.toFixed(1)}`;
+        const y1 = mapE(e0) + (labelRight ? -20 : 16), y2 = mapE(e0) + (labelRight ? -9 : 27);
+        const w1 = sz(5.2 * l1.length + 8), w2 = sz(4.3 * l2.length + 8);
+        const bx = (w) => labelRight ? tx - w + sz(4) : tx - sz(4);
+        return (<g>
+          <rect x={bx(w1)} y={y1 - sz(9)} width={w1} height={sz(12)} rx={2} fill={K.card} />
+          <rect x={bx(w2)} y={y2 - sz(7.5)} width={w2} height={sz(10)} rx={2} fill={K.card} />
+          <text x={tx} y={y1} fill={K.workOut} fontSize={sz(9)} textAnchor={anchor} fontFamily={FD}>{l1}</text>
+          <text x={tx} y={y2} fill={K.inkMed} fontSize={sz(7)} textAnchor={anchor} fontFamily={FM}>{l2}</text>
+        </g>);
+      })()}
       <text x={ETA_PLOT.x + ETA_PLOT.w - 4} y={ETA_PLOT.y + ETA_PLOT.h - 6} fill={K.inkLight} fontSize={sz(6.5)} textAnchor="end" fontFamily={FM} fontStyle="italic">η = 1 − r^(1−k) · tap or drag to set r</text>
     </svg>
   );
