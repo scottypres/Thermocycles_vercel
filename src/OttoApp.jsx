@@ -1408,16 +1408,15 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
       })}
       {!showPvAreas && <>
         {(() => {
-          // below-left of the 1→2 isentrope, well up the curve so it stays clear of the Heat Rejection label at state 1
-          const mid = cycle.compPvPath[15];
-          const x = mapV(mid.v) - sz(6), y = mapP(mid.P) + sz(12);
+          // below-left of the 1→2 isentrope at its on-screen midpoint (the isentropes are straight on log axes, so the path's v-samples are not evenly spaced)
+          const x = (mapV(st[0].v) + mapV(st[1].v)) / 2 - sz(6), y = (mapP(st[0].P) + mapP(st[1].P)) / 2 + sz(12);
           return <>{labelBox(x, y, "end", T("OttoPvDiagram.7"), "Compression")}<text x={x} y={y} fill={K.workIn} fontSize={sz(T("OttoPvDiagram.7"))} fontFamily={FM} fontWeight="500" textAnchor="end">Compression</text></>;
         })()}
         {labelBox(combTextX, combTextY, "middle", T("OttoPvDiagram.8"), "Combustion")}
         <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(T("OttoPvDiagram.8"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ew-resize" }}>Combustion</text>
         {(() => {
-          const mid = cycle.expPvPath[10];
-          const x = mapV(mid.v) + sz(8), y = mapP(mid.P) - sz(3);
+          // above-right of the 3→4 isentrope at its on-screen midpoint
+          const x = (mapV(st[2].v) + mapV(st[3].v)) / 2 + sz(8), y = (mapP(st[2].P) + mapP(st[3].P)) / 2 - sz(3);
           return <>{labelBox(x, y, "start", T("OttoPvDiagram.9"), "Expansion")}<text x={x} y={y} fill={K.workOut} fontSize={sz(T("OttoPvDiagram.9"))} fontFamily={FM} fontWeight="500">Expansion</text></>;
         })()}
         {labelBox(rejTextX, rejTextY, "middle", T("OttoPvDiagram.10"), "Heat Rejection")}
