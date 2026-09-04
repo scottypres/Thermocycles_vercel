@@ -1619,6 +1619,7 @@ export default function RefrigerationPage({ onBack }) {
 
   // Sync drag from T-s
   const handleTsDrag = useCallback((pt) => {
+    setAnimating(false);
     // Convert T,s to h,P for P-h sync
     const P_est = interpRefrigerant(table, Math.max(table[0].P, Math.min(table[table.length-1].P, pt.P || effectivePLow)), "T") === pt.T ? (pt.P || effectivePLow) : effectivePLow;
     // Find pressure from temperature
@@ -1647,11 +1648,12 @@ export default function RefrigerationPage({ onBack }) {
 
   // Sync drag from P-h
   const handlePhDrag = useCallback((pt) => {
+    setAnimating(false);
     setDragPoint({ s: pt.s, T: pt.T, h: pt.h, P: pt.P });
   }, []);
 
   return (
-    <div onClickCapture={stopAnim} onInputCapture={stopAnim} onPointerDownCapture={e => { if (e.target.closest && e.target.closest("svg")) stopAnim(e); }} style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
+    <div onClickCapture={stopAnim} onInputCapture={stopAnim} onPointerDownCapture={e => { if (e.pointerType !== "touch" && e.target.closest && e.target.closest("svg")) stopAnim(e); }} style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1767,7 +1769,7 @@ export default function RefrigerationPage({ onBack }) {
           </div>
           <RefTsDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handleTsDrag} lockS={lockS} lockT={lockT} showAreas={showTsAreas}
             onPHighChange={setPHigh} onPLowChange={setPLow}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
         {/* P-h Diagram */}
@@ -1797,7 +1799,7 @@ export default function RefrigerationPage({ onBack }) {
           </div>
           <RefPhDiagram cycle={cycle} refData={refData} dragPoint={dragPoint} onDrag={handlePhDrag} lockP={lockP} lockH={lockH} showAreas={showPhAreas}
             onPHighChange={setPHigh} onPLowChange={setPLow}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>
       <RefEquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} units={units} />

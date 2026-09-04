@@ -1305,7 +1305,7 @@ export default function BraytonPage({ onBack }) {
   const fmt = v => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
 
   const [dragPoint, setDragPoint] = useState(() => ({ ...cycle.states[0] }));
-  const handleDrag = useCallback((pt) => setDragPoint({ s: pt.s, T: pt.T, P: pt.P, v: pt.v, h: pt.h }), []);
+  const handleDrag = useCallback((pt) => { setAnimating(false); setDragPoint({ s: pt.s, T: pt.T, P: pt.P, v: pt.v, h: pt.h }); }, []);
   // Dragging the low-pressure isobar sets P₁ but keeps P₂ where it is (like Rankine's condenser drag)
   const handleP1Drag = useCallback((p) => { const P2 = rp * p1; setP1(p); setRp(clampRp(P2 / p)); }, [rp, p1]);
 
@@ -1340,7 +1340,7 @@ export default function BraytonPage({ onBack }) {
   const sec = { margin: "0 0 14px 0", fontSize: sz(desktop ? 22.50 : 12), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   return (
-    <div onClickCapture={stopAnim} onInputCapture={stopAnim} onPointerDownCapture={e => { if (e.target.closest && e.target.closest("svg")) stopAnim(e); }} style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
+    <div onClickCapture={stopAnim} onInputCapture={stopAnim} onPointerDownCapture={e => { if (e.pointerType !== "touch" && e.target.closest && e.target.closest("svg")) stopAnim(e); }} style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1450,7 +1450,7 @@ export default function BraytonPage({ onBack }) {
             </button>
           </div>
           <BryTsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onRpChange={setRp} onP1Drag={handleP1Drag}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
         <div style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}` } : card}>
@@ -1478,7 +1478,7 @@ export default function BraytonPage({ onBack }) {
             </button>
           </div>
           <BryPvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} showPvAreas={showPvAreas} onRpChange={setRp} onP1Drag={handleP1Drag}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>
       <BryEquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} units={units} />

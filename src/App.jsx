@@ -1777,6 +1777,7 @@ function RankinePage({ onBack }) {
   const [showSettings, setShowSettings] = useState(false);
   const handleUnitsChange = useCallback((u) => { setUnits(u); saveUnits(u); }, []);
   const [animating, setAnimating] = useState(true); // the page opens mid-cycle; any click, drag or slider move pauses it
+  const handleDrag = useCallback((pt) => { setAnimating(false); setDragPoint(pt); }, []);
   const stopAnim = (e) => { if (!(e.target.closest && e.target.closest("[data-anim-keep]"))) setAnimating(false); };
   const [animProgress, setAnimProgress] = useState(0);
   const [animSpeed, setAnimSpeed] = useState(() => loadAnimSpeed());
@@ -1869,7 +1870,7 @@ function RankinePage({ onBack }) {
   const sec = { margin: "0 0 14px 0", fontSize: sz(desktop ? 22.50 : 12), fontFamily: FD, color: K.ink, borderBottom: `1px solid ${K.border}`, paddingBottom: 8 };
 
   return (
-    <div onClickCapture={stopAnim} onInputCapture={stopAnim} onPointerDownCapture={e => { if (e.target.closest && e.target.closest("svg")) stopAnim(e); }} style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
+    <div onClickCapture={stopAnim} onInputCapture={stopAnim} onPointerDownCapture={e => { if (e.pointerType !== "touch" && e.target.closest && e.target.closest("svg")) stopAnim(e); }} style={{ minHeight: "100vh", background: K.bg, color: K.ink, fontFamily: FM, maxWidth: desktop ? 1750 : 480, margin: "0 auto" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {
@@ -1965,8 +1966,8 @@ function RankinePage({ onBack }) {
               {lockT ? "🔒" : "🔓"} Lock T = {fmtT(dragPoint.T, units, 0)}
             </button>
           </div>
-          <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockS={lockS} lockT={lockT} showAreas={showAreas} onPHighChange={setPHigh} onPLowChange={setPLow}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
+          <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onPHighChange={setPHigh} onPLowChange={setPLow}
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
         {/* P-v Diagram */}
@@ -1994,8 +1995,8 @@ function RankinePage({ onBack }) {
               {lockV ? "🔒" : "🔓"} Lock v = {(dragPoint.v != null ? dragPoint.v : stToV(dragPoint.s, dragPoint.T)).toFixed(4)} m³/kg
             </button>
           </div>
-          <PvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={setDragPoint} lockP={lockP} lockV={lockV} onPHighChange={setPHigh} onPLowChange={setPLow} showPvAreas={showPvAreas}
-            lineDragInfo={lineDragInfo} onLineDragStart={(which) => setLineDragInfo({ which })} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
+          <PvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} onPHighChange={setPHigh} onPLowChange={setPLow} showPvAreas={showPvAreas}
+            lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>
       <EquationsModal open={showEqs} onClose={() => { setShowEqs(false); setEqTopic(null); }} cycle={cycle} initialTopic={eqTopic} units={units} />
