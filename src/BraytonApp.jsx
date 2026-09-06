@@ -205,12 +205,13 @@ const TS_W = 360, TS_H = 285;
 const TS_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const TS_PLOT = { x: TS_PAD.l, y: TS_PAD.t, w: TS_W - TS_PAD.l - TS_PAD.r, h: TS_H - TS_PAD.t - TS_PAD.b };
 
-function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpChange, onP1Drag, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
+function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpChange, onP1Drag, onT1Change, onT3Change, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
   const sz = px => px * (textScale || 1);
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
+  const axisRef = useRef(null); // s-axis as it was when a label drag started, and how far right of its isentrope the label was grabbed
   const [activeArea, setActiveArea] = useState("qIn");
 
   const sMin = cycle.sAxisMin, sMax = cycle.sAxisMax;
@@ -251,12 +252,27 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
   const hxMidS = st[0].s + 0.65 * (st[3].s - st[0].s); // biased toward state 4 so it clears the state-1 value box
   const hxMidT = (st[3].T + K2C) * Math.exp((hxMidS - st[3].s) / cp) - K2C;
   const hxTextX = mapS(hxMidS), hxTextY = mapT(hxMidT) + 13;
+  const compTextX = compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8), compTextY = (mapT(st[0].T) + mapT(st[1].T)) / 2;
+  const turbTextX = mapS(st[2].s) + sz(8), turbTextY = (mapT(st[2].T) + mapT(st[3].T)) / 2;
+  const overLabel = (r, x, y, w, anchorEnd) => Math.abs(r.py - y) < 10 && (anchorEnd ? r.px > x - w && r.px < x + 4 : r.px > x - 4 && r.px < x + w);
 
   const handleStart = useCallback((e) => {
     if (e.touches && e.touches.length === 0) return;
     if (e.preventDefault) e.preventDefault();
     const r = getSvgXY(e);
     if (r) {
+      if (overLabel(r, compTextX, compTextY, sz(52), compLeft)) {
+        axisRef.current = { sMin, sMax, off: r.px - mapS(st[0].s) };
+        lineDragRef.current = "compressor";
+        if (onLineDragStart) onLineDragStart("compressor");
+        return;
+      }
+      if (overLabel(r, turbTextX, turbTextY, sz(36), false)) {
+        axisRef.current = { sMin, sMax, off: r.px - mapS(st[2].s) };
+        lineDragRef.current = "turbine";
+        if (onLineDragStart) onLineDragStart("turbine");
+        return;
+      }
       if (Math.abs(r.px - combTextX) < 28 && Math.abs(r.py - combTextY) < 10) {
         lineDragRef.current = "combustor";
         if (onLineDragStart) onLineDragStart("combustor");
@@ -271,13 +287,28 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
     draggingRef.current = true;
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgXY, getSvgPoint, onDrag, combTextX, combTextY, hxTextX, hxTextY, onLineDragStart]);
+  }, [getSvgXY, getSvgPoint, onDrag, combTextX, combTextY, hxTextX, hxTextY, compTextX, compTextY, turbTextX, turbTextY, compLeft, sMin, sMax, onLineDragStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMove = useCallback((e) => {
     if (lineDragRef.current) {
       e.preventDefault();
       const r = getSvgXY(e);
       if (!r) return;
+      if (lineDragRef.current === "compressor" || lineDragRef.current === "turbine") {
+        // Sliding an isentrope sideways sets the entropy of its inlet state; at fixed pressure that is its temperature.
+        // The axis is read as it was at drag start so an axis re-scale mid-drag cannot chase the pointer, and the
+        // pointer's offset from the line at grab time is kept so the line follows the finger rather than jumping to it.
+        const a = axisRef.current || { sMin, sMax, off: 0 }, s = a.sMin + ((r.px - a.off - TS_PLOT.x) / TS_PLOT.w) * (a.sMax - a.sMin);
+        if (lineDragRef.current === "compressor") {
+          const T1 = (st[0].T + K2C) * Math.exp((s - st[0].s) / cp) - K2C;
+          if (onT1Change) onT1Change(Math.max(T1_MIN, Math.min(T1_MAX, Math.round(T1))));
+        } else {
+          const T3 = (st[2].T + K2C) * Math.exp((s - st[2].s) / cp) - K2C;
+          if (onT3Change) onT3Change(Math.max(300, Math.min(T3_MAX, Math.round(T3 / 10) * 10)));
+        }
+        if (onLineDragMove) onLineDragMove(lineDragRef.current);
+        return;
+      }
       const TK = Math.max(150, unmapT(r.py) + K2C);
       if (lineDragRef.current === "combustor") {
         const TKlower = (st[0].T + K2C) * Math.exp((combMidS - st[0].s) / cp);
@@ -296,7 +327,7 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
     e.preventDefault();
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgXY, getSvgPoint, onDrag, onRpChange, onP1Drag, onLineDragMove, st, combMidS, hxMidS, cp, cycle.gas]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getSvgXY, getSvgPoint, onDrag, onRpChange, onP1Drag, onT1Change, onT3Change, onLineDragMove, st, combMidS, hxMidS, cp, cycle.gas, sMin, sMax]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleEnd = useCallback(() => {
     draggingRef.current = false;
@@ -340,9 +371,10 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
       <line x1={mapS(st[2].s)} y1={mapT(st[2].T)} x2={mapS(st[3].s)} y2={mapT(st[3].T)} stroke={K.workOut} strokeWidth={2.2} strokeLinecap="round" />
       <path d={exhD} fill="none" stroke={K.heatOut} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
       {lineDragInfo && (() => {
-        const isComb = lineDragInfo.which === "combustor";
-        const color = isComb ? K.heatIn : K.heatOut;
-        const valueText = isComb ? `r_p = P₂/P₁ = ${cycle.rp.toFixed(1)}` : `P₁ = ${fmtP(cycle.p1, u)}`;
+        const w = lineDragInfo.which;
+        const color = w === "combustor" ? K.heatIn : w === "hx" ? K.heatOut : w === "compressor" ? K.workIn : K.workOut;
+        const valueText = w === "combustor" ? `r_p = P₂/P₁ = ${cycle.rp.toFixed(1)}` : w === "hx" ? `P₁ = ${fmtP(cycle.p1, u)}`
+          : w === "compressor" ? `T₁ = ${fmtT(st[0].T, u, 0)}` : `T₃ = ${fmtT(st[2].T, u, 0)}`;
         const boxW = Math.max(sz(104), valueText.length * sz(5.7) + sz(16));
         const boxY = TS_PLOT.y + 2;
         return (<>
@@ -371,11 +403,11 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
       })}
       {!showAreas && <>
         <rect x={compLeft ? mapS(st[0].s) - sz(58) : mapS(st[0].s) + sz(6)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2 - sz(8)} width={sz(52)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor={compLeft ? "end" : "start"}>Compressor</text>
+        <text x={compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor={compLeft ? "end" : "start"} style={{ cursor: "ew-resize" }}>Compressor</text>
         <rect x={combTextX - sz(24)} y={combTextY - sz(8)} width={sz(48)} height={sz(11)} rx={2} fill={K.card} />
         <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Combustor</text>
         <rect x={mapS(st[2].s) + sz(6)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2 - sz(8)} width={sz(36)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={mapS(st[2].s) + sz(8)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Turbine</text>
+        <text x={turbTextX} y={turbTextY} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500" style={{ cursor: "ew-resize" }}>Turbine</text>
         <rect x={hxTextX - sz(36)} y={hxTextY - sz(8)} width={sz(72)} height={sz(11)} rx={2} fill={K.card} />
         <text x={hxTextX} y={hxTextY} fill={K.heatOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Heat Exchanger</text>
         <circle cx={dpx} cy={dpy} r={9} fill={`${K.accent}25`} stroke={K.accent} strokeWidth={2} />
@@ -552,14 +584,15 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
       <path d={turbD} fill="none" stroke={K.workOut} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
       <line x1={mapV(st[3].v)} y1={mapP(st[3].P)} x2={mapV(st[0].v)} y2={mapP(st[0].P)} stroke={K.heatOut} strokeWidth={2.2} strokeLinecap="round" />
       {lineDragInfo && (() => {
-        const isComb = lineDragInfo.which === "combustor";
+        const w = lineDragInfo.which, isComb = w === "combustor", isP = isComb || w === "hx", st0 = cycle.states;
         const lineY = isComb ? mapP(cycle.p2) : mapP(cycle.p1);
-        const color = isComb ? K.heatIn : K.heatOut;
-        const valueText = isComb ? `P₂ = ${fmtP(cycle.p2, u)} (r_p = ${cycle.rp.toFixed(1)})` : `P₁ = ${fmtP(cycle.p1, u)}`;
+        const color = isComb ? K.heatIn : w === "hx" ? K.heatOut : w === "compressor" ? K.workIn : K.workOut;
+        const valueText = isComb ? `P₂ = ${fmtP(cycle.p2, u)} (r_p = ${cycle.rp.toFixed(1)})` : w === "hx" ? `P₁ = ${fmtP(cycle.p1, u)}`
+          : w === "compressor" ? `T₁ = ${fmtT(st0[0].T, u, 0)}` : `T₃ = ${fmtT(st0[2].T, u, 0)}`;
         const boxW = Math.max(sz(96), valueText.length * sz(5.7) + sz(16));
         const boxY = PV_PLOT.y + 2;
         return (<>
-          <line x1={PV_PLOT.x} y1={lineY} x2={PV_PLOT.x + PV_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+          {isP && <line x1={PV_PLOT.x} y1={lineY} x2={PV_PLOT.x + PV_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />}
           <rect x={PV_PLOT.x + PV_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={sz(18)} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
           <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(9)} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
@@ -1449,7 +1482,7 @@ export default function BraytonPage({ onBack }) {
               {lockT ? "🔒" : "🔓"} Lock T = {fmtT(dragPoint.T, units, 0)}
             </button>
           </div>
-          <BryTsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onRpChange={setRp} onP1Drag={handleP1Drag}
+          <BryTsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onRpChange={setRp} onP1Drag={handleP1Drag} onT1Change={setT1} onT3Change={setT3}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
@@ -1477,7 +1510,7 @@ export default function BraytonPage({ onBack }) {
               {lockV ? "🔒" : "🔓"} Lock v = {dragPoint.v.toFixed(4)} m³/kg
             </button>
           </div>
-          <BryPvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} showPvAreas={showPvAreas} onRpChange={setRp} onP1Drag={handleP1Drag}
+          <BryPvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} showPvAreas={showPvAreas} onRpChange={setRp} onP1Drag={handleP1Drag} onT1Change={setT1} onT3Change={setT3}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>

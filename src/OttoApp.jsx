@@ -1011,7 +1011,7 @@ const TS_W = 360, TS_H = 285;
 const TS_PAD = { l: 38, r: 6, t: 14, b: 28 };
 const TS_PLOT = { x: TS_PAD.l, y: TS_PAD.t, w: TS_W - TS_PAD.l - TS_PAD.r, h: TS_H - TS_PAD.t - TS_PAD.b };
 
-function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRChange, onP1Change, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
+function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRChange, onP1Change, onT1Change, onT3Change, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
   const sz = px => px * (textScale || 1);
   const desktop = useIsDesktop();
   const T = (k) => TX[k + (desktop ? ".desktop" : ".mobile")]; // sizes are tuned separately for phones
@@ -1052,6 +1052,7 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
 
   const st = cycle.states;
   const cv = cvOf(cycle.gas);
+  const axisRef = useRef(null); // s-axis as it was when a label drag started, and how far right of its isentrope the label was grabbed
   const combMidS = (st[1].s + st[2].s) / 2;
   const combMidT = (st[1].T + K2C) * Math.exp((combMidS - st[1].s) / cv) - K2C;
   const combShort = Math.abs(mapS(st[2].s) - mapS(st[1].s)) < sz(64); // 2→3 shorter than the label: lift it above the state digits
@@ -1062,6 +1063,9 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
   const rejMidS = st[0].s + (rejShort ? 0.5 : 0.65) * (st[3].s - st[0].s); // otherwise biased toward state 4 so it clears the state-1 value box
   const rejMidT = (st[3].T + K2C) * Math.exp((rejMidS - st[3].s) / cv) - K2C;
   const rejTextX = mapS(rejMidS), rejTextY = mapT(rejMidT) + (rejShort ? 24 : 13);
+  const compTextX = compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8), compTextY = (mapT(st[0].T) + mapT(st[1].T)) / 2;
+  const expTextX = expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8), expTextY = (mapT(st[2].T) + mapT(st[3].T)) / 2;
+  const overLabel = (r, x, y, w, anchorEnd) => Math.abs(r.py - y) < 10 && (anchorEnd ? r.px > x - w && r.px < x + 4 : r.px > x - 4 && r.px < x + w);
   const hintClear = !(mapS(st[2].s) + sz(17) > TS_W - sz(62) && mapT(st[2].T) - sz(8) < TS_PLOT.y + sz(32)); // state 3 in the top-right corner (low r, hot intake) would sit on the "tap & drag" hint
 
   const handleStart = useCallback((e) => {
@@ -1069,6 +1073,18 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
     if (e.preventDefault) e.preventDefault();
     const r = getSvgXY(e);
     if (r) {
+      if (overLabel(r, compTextX, compTextY, sz(60), compLeft)) {
+        axisRef.current = { sMin, sMax, off: r.px - mapS(st[0].s) };
+        lineDragRef.current = "compression";
+        if (onLineDragStart) onLineDragStart("compression");
+        return;
+      }
+      if (overLabel(r, expTextX, expTextY, sz(50), expLeft)) {
+        axisRef.current = { sMin, sMax, off: r.px - mapS(st[2].s) };
+        lineDragRef.current = "expansion";
+        if (onLineDragStart) onLineDragStart("expansion");
+        return;
+      }
       if (Math.abs(r.px - combTextX) < 30 && Math.abs(r.py - combTextY) < 10) {
         lineDragRef.current = "combustion";
         if (onLineDragStart) onLineDragStart("combustion");
@@ -1083,13 +1099,29 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
     draggingRef.current = true;
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgXY, getSvgPoint, onDrag, combTextX, combTextY, rejTextX, rejTextY, onLineDragStart]);
+  }, [getSvgXY, getSvgPoint, onDrag, combTextX, combTextY, rejTextX, rejTextY, compTextX, compTextY, expTextX, expTextY, compLeft, expLeft, sMin, sMax, onLineDragStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMove = useCallback((e) => {
     if (lineDragRef.current) {
       e.preventDefault();
       const r = getSvgXY(e);
       if (!r) return;
+      if (lineDragRef.current === "compression" || lineDragRef.current === "expansion") {
+        // Sliding an isentrope sideways sets the entropy of its start state: state 1 at fixed P₁ (so c_p) gives the
+        // intake temperature, state 3 at fixed v₂ (so c_v) gives the peak temperature.
+        // The axis is read as it was at drag start so an axis re-scale mid-drag cannot chase the pointer, and the
+        // pointer's offset from the line at grab time is kept so the line follows the finger rather than jumping to it.
+        const a = axisRef.current || { sMin, sMax, off: 0 }, s = a.sMin + ((r.px - a.off - TS_PLOT.x) / TS_PLOT.w) * (a.sMax - a.sMin);
+        if (lineDragRef.current === "compression") {
+          const T1 = (st[0].T + K2C) * Math.exp((s - st[0].s) / cycle.gas.cp) - K2C;
+          if (onT1Change) onT1Change(Math.max(T1_MIN, Math.min(T1_MAX, Math.round(T1))));
+        } else {
+          const T3 = (st[2].T + K2C) * Math.exp((s - st[2].s) / cv) - K2C;
+          if (onT3Change) onT3Change(Math.max(300, Math.min(T3_MAX, Math.round(T3 / 10) * 10)));
+        }
+        if (onLineDragMove) onLineDragMove(lineDragRef.current);
+        return;
+      }
       const TK = Math.max(150, unmapT(r.py) + K2C);
       if (lineDragRef.current === "combustion") {
         // Moving the 2→3 isochore up means a smaller v₂ at the same entropy, i.e. a larger compression ratio
@@ -1109,7 +1141,7 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
     e.preventDefault();
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgXY, getSvgPoint, onDrag, onRChange, onP1Change, onLineDragMove, combMidS, rejMidS, cycle.gas, cycle.v1, cycle.T1]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getSvgXY, getSvgPoint, onDrag, onRChange, onP1Change, onT1Change, onT3Change, onLineDragMove, combMidS, rejMidS, cycle.gas, cycle.v1, cycle.T1, st, cv, sMin, sMax]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleEnd = useCallback(() => {
     draggingRef.current = false;
@@ -1153,9 +1185,10 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
       <line x1={mapS(st[2].s)} y1={mapT(st[2].T)} x2={mapS(st[3].s)} y2={mapT(st[3].T)} stroke={K.workOut} strokeWidth={2.2} strokeLinecap="round" />
       <path d={rejD} fill="none" stroke={K.heatOut} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
       {lineDragInfo && (() => {
-        const isComb = lineDragInfo.which === "combustion";
-        const color = isComb ? K.heatIn : K.heatOut;
-        const valueText = isComb ? `r = v₁/v₂ = ${cycle.r.toFixed(1)}` : `P₁ = ${fmtP(cycle.p1, u)}`;
+        const w = lineDragInfo.which;
+        const color = w === "combustion" ? K.heatIn : w === "rejection" ? K.heatOut : w === "compression" ? K.workIn : K.workOut;
+        const valueText = w === "combustion" ? `r = v₁/v₂ = ${cycle.r.toFixed(1)}` : w === "rejection" ? `P₁ = ${fmtP(cycle.p1, u)}`
+          : w === "compression" ? `T₁ = ${fmtT(st[0].T, u, 0)}` : `T₃ = ${fmtT(st[2].T, u, 0)}`;
         const boxW = Math.max(sz(104), valueText.length * sz(T("OttoTsDiagram.5") * 0.64) + sz(16));
         const boxY = TS_PLOT.y + 2;
         return (<>
@@ -1185,12 +1218,12 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
       })}
       {!showAreas && <>
         {labelBox(compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8), (mapT(st[0].T) + mapT(st[1].T)) / 2, compLeft ? "end" : "start", T("OttoTsDiagram.7"), "Compression")}
-        <text x={compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(T("OttoTsDiagram.7"))} fontFamily={FM} fontWeight="500" textAnchor={compLeft ? "end" : "start"}>Compression</text>
+        <text x={compLeft ? mapS(st[0].s) - sz(8) : mapS(st[0].s) + sz(8)} y={(mapT(st[0].T) + mapT(st[1].T)) / 2} fill={K.workIn} fontSize={sz(T("OttoTsDiagram.7"))} fontFamily={FM} fontWeight="500" textAnchor={compLeft ? "end" : "start"} style={{ cursor: "ew-resize" }}>Compression</text>
         {labelBox(combTextX, combTextY, "middle", T("OttoTsDiagram.8"), "Combustion")}
         <text x={combTextX} y={combTextY} fill={K.heatIn} fontSize={sz(T("OttoTsDiagram.8"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }} data-demo="ts-combustion">Combustion</text>
         <circle data-demo="ts-combustion-anchor" cx={combTextX} cy={mapT(combMidT)} r={0.5} fill="none" pointerEvents="none" />{/* tour demo: the drag comes to rest here so r returns to its starting value */}
         {labelBox(expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8), (mapT(st[2].T) + mapT(st[3].T)) / 2, expLeft ? "end" : "start", T("OttoTsDiagram.9"), "Expansion")}
-        <text x={expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.workOut} fontSize={sz(T("OttoTsDiagram.9"))} fontFamily={FM} fontWeight="500" textAnchor={expLeft ? "end" : "start"}>Expansion</text>
+        <text x={expLeft ? mapS(st[2].s) - sz(8) : mapS(st[2].s) + sz(8)} y={(mapT(st[2].T) + mapT(st[3].T)) / 2} fill={K.workOut} fontSize={sz(T("OttoTsDiagram.9"))} fontFamily={FM} fontWeight="500" textAnchor={expLeft ? "end" : "start"} style={{ cursor: "ew-resize" }}>Expansion</text>
         {labelBox(rejTextX, rejTextY, "middle", T("OttoTsDiagram.10"), "Heat Rejection")}
         <text x={rejTextX} y={rejTextY} fill={K.heatOut} fontSize={sz(T("OttoTsDiagram.10"))} fontFamily={FM} fontWeight="500" textAnchor="middle" style={{ cursor: "ns-resize" }}>Heat Rejection</text>
         <g className="ts-drag-point">{/* the tour hides this group while it demonstrates label dragging */}
@@ -1374,14 +1407,15 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
       <path d={expD} fill="none" stroke={K.workOut} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
       <line x1={mapV(st[3].v)} y1={mapP(st[3].P)} x2={mapV(st[0].v)} y2={mapP(st[0].P)} stroke={K.heatOut} strokeWidth={2.2} strokeLinecap="round" />
       {lineDragInfo && (() => {
-        const isComb = lineDragInfo.which === "combustion";
+        const w = lineDragInfo.which, isComb = w === "combustion", isV = isComb || w === "rejection", st0 = cycle.states;
         const lineX = isComb ? mapV(cycle.v2) : mapV(cycle.v1);
-        const color = isComb ? K.heatIn : K.heatOut;
-        const valueText = isComb ? `r = v₁/v₂ = ${cycle.r.toFixed(1)} (v₂ = ${cycle.v2.toFixed(3)} m³/kg)` : `P₁ = ${fmtP(cycle.p1, u)} (v₁ = ${cycle.v1.toFixed(3)} m³/kg)`;
+        const color = isComb ? K.heatIn : w === "rejection" ? K.heatOut : w === "compression" ? K.workIn : K.workOut;
+        const valueText = isComb ? `r = v₁/v₂ = ${cycle.r.toFixed(1)} (v₂ = ${cycle.v2.toFixed(3)} m³/kg)` : w === "rejection" ? `P₁ = ${fmtP(cycle.p1, u)} (v₁ = ${cycle.v1.toFixed(3)} m³/kg)`
+          : w === "compression" ? `T₁ = ${fmtT(st0[0].T, u, 0)}` : `T₃ = ${fmtT(st0[2].T, u, 0)}`;
         const boxW = Math.max(sz(96), valueText.length * sz(T("OttoPvDiagram.5") * 0.64) + sz(16));
         const boxY = PV_PLOT.y + 2;
         return (<>
-          <line x1={lineX} y1={PV_PLOT.y} x2={lineX} y2={axisY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+          {isV && <line x1={lineX} y1={PV_PLOT.y} x2={lineX} y2={axisY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />}
           <rect x={PV_PLOT.x + PV_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={sz(18)} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
           <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(T("OttoPvDiagram.5"))} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
@@ -2573,7 +2607,7 @@ export default function OttoPage({ onBack }) {
               {lockT ? "🔒" : "🔓"} Lock T = {fmtT(dragPoint.T, units, 0)}
             </button>
           </div>
-          <OttoTsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onRChange={setR} onP1Change={setP1}
+          <OttoTsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onRChange={setR} onP1Change={setP1} onT1Change={setT1} onT3Change={setT3}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
@@ -2601,7 +2635,7 @@ export default function OttoPage({ onBack }) {
               {lockV ? "🔒" : "🔓"} Lock v = {dragPoint.v.toFixed(4)} m³/kg
             </button>
           </div>
-          <OttoPvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} showPvAreas={showPvAreas} onRChange={setR} onP1Change={setP1}
+          <OttoPvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} showPvAreas={showPvAreas} onRChange={setR} onP1Change={setP1} onT1Change={setT1} onT3Change={setT3}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>

@@ -409,12 +409,13 @@ function ParticleVisualizer({ phaseInfo, temperature, fillHeight, textScale, uni
 }
 
 /* ───────── Interactive T-s Diagram ───────── */
-function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
+function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighChange, onPLowChange, onTSupChange, lineDragInfo, onLineDragStart, onLineDragMove, onLineDragEnd, textScale, units }) {
   const u = units || { T: "C", P: "kPa", h: "kJ/kg", s: "kJ/kg·K" };
   const sz = px => px * (textScale || 1);
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
-  const lineDragRef = useRef(null); // "boiler" | "condenser" | null
+  const lineDragRef = useRef(null); // "boiler" | "condenser" | "turbine" | null
+  const turbOffRef = useRef(0);     // how far right of the 3→4 isentrope the Turbine label was grabbed
   const [activeArea, setActiveArea] = useState("qIn");
 
   const domePathD = domeCurve.map((p, i) => `${i === 0 ? "M" : "L"}${mapS(p.s).toFixed(1)},${mapT(p.T).toFixed(1)}`).join(" ") + " Z";
@@ -454,6 +455,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
   const boilerTextY = mapT(cycle.Tsat_high) - 8;
   const condTextX = mapS((st[0].s + st[3].s) / 2);
   const condTextY = mapT(st[0].T) + 13;
+  const turbTextX = mapS(st[2].s) + sz(16), turbTextY = mapT((st[2].T + st[3].T) / 2); // "Turbine" sits right of the 3→4 isentrope
 
   const handleStart = useCallback((e) => {
     if (e.touches && e.touches.length === 0) return;
@@ -471,15 +473,30 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         if (onLineDragStart) onLineDragStart("condenser");
         return;
       }
+      if (r.px > turbTextX - 4 && r.px < turbTextX + sz(34) && Math.abs(r.py - turbTextY) < 10) {
+        turbOffRef.current = r.px - mapS(st[2].s);
+        lineDragRef.current = "turbine";
+        if (onLineDragStart) onLineDragStart("turbine");
+        return;
+      }
     }
     draggingRef.current = true;
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgXY, getSvgPoint, onDrag, boilerTextX, boilerTextY, condTextX, condTextY, onLineDragStart]);
+  }, [getSvgXY, getSvgPoint, onDrag, boilerTextX, boilerTextY, condTextX, condTextY, turbTextX, turbTextY, onLineDragStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMove = useCallback((e) => {
     if (lineDragRef.current) {
       e.preventDefault();
+      if (lineDragRef.current === "turbine") {
+        // Sliding the isentrope sideways sets s₃; at fixed boiler pressure that is the superheat temperature T₃
+        const r = getSvgXY(e);
+        if (!r) return;
+        const T3 = (st[2].T + 273.15) * Math.exp((unmapS(r.px - turbOffRef.current) - st[2].s) / CP_STEAM) - 273.15; // the line follows the pointer from where it was grabbed
+        if (onTSupChange) onTSupChange(Math.max(0, Math.min(600, Math.round(T3 / 5) * 5)));
+        if (onLineDragMove) onLineDragMove("turbine");
+        return;
+      }
       const py = getSvgY(e);
       if (py == null) return;
       const T = Math.max(5, Math.min(370, unmapT(py)));
@@ -501,7 +518,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
     e.preventDefault();
     const pt = getSvgPoint(e);
     if (pt) onDrag(pt);
-  }, [getSvgPoint, getSvgY, onDrag, onPHighChange, onPLowChange, onLineDragMove]);
+  }, [getSvgXY, getSvgPoint, getSvgY, onDrag, onPHighChange, onPLowChange, onTSupChange, onLineDragMove, st]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleEnd = useCallback(() => {
     draggingRef.current = false;
@@ -583,16 +600,17 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
       <line x1={mapS(st[3].s)} y1={mapT(st[3].T)} x2={mapS(st[0].s)} y2={mapT(st[0].T)} stroke={K.heatOut} strokeWidth={2.2} strokeLinecap="round" />
       {/* Value display at top of graph while dragging (T-s shows temperature) */}
       {lineDragInfo && (() => {
-        const isBoiler = lineDragInfo.which === "boiler";
-        const lineY = isBoiler ? mapT(cycle.Tsat_high) : mapT(cycle.Tsat_low);
-        const color = isBoiler ? K.heatIn : K.heatOut;
-        const T = isBoiler ? cycle.Tsat_high : cycle.Tsat_low;
-        const label = isBoiler ? "T_sat(high)" : "T_sat(low)";
-        const valueText = `${label} = ${fmtT(T, u, 1)}`;
+        const isTurb = lineDragInfo.which === "turbine", isBoiler = lineDragInfo.which === "boiler";
+        const color = isTurb ? K.workOut : isBoiler ? K.heatIn : K.heatOut;
+        const T = isTurb ? st[2].T : isBoiler ? cycle.Tsat_high : cycle.Tsat_low;
+        const label = isTurb ? "T₃" : isBoiler ? "T_sat(high)" : "T_sat(low)";
+        const valueText = `${label} = ${fmtT(T, u, isTurb ? 0 : 1)}`;
         const boxW = Math.max(sz(104), valueText.length * sz(5.7) + sz(16));
         const boxY = TS_PLOT.y + 2;
         return (<>
-          <line x1={TS_PLOT.x} y1={lineY} x2={TS_PLOT.x + TS_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+          {isTurb
+            ? <line x1={mapS(st[2].s)} y1={TS_PLOT.y} x2={mapS(st[2].s)} y2={TS_PLOT.y + TS_PLOT.h} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+            : <line x1={TS_PLOT.x} y1={mapT(T)} x2={TS_PLOT.x + TS_PLOT.w} y2={mapT(T)} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />}
           <rect x={TS_PLOT.x + TS_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={sz(18)} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
           <text x={TS_PLOT.x + TS_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(9)} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
@@ -622,7 +640,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
         {/* Draggable point — rendered last for top z-order */}
         {/* Labels — Boiler and Condenser are draggable (hitbox around text) */}
         <rect x={mapS((st[2].s + st[3].s) / 2) + sz(14)} y={mapT((st[2].T + st[3].T) / 2) - sz(8)} width={sz(34)} height={sz(11)} rx={2} fill={K.card} />
-        <text x={mapS((st[2].s + st[3].s) / 2) + sz(16)} y={mapT((st[2].T + st[3].T) / 2)} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500">Turbine</text>
+        <text x={turbTextX} y={turbTextY} fill={K.workOut} fontSize={sz(7)} fontFamily={FM} fontWeight="500" style={{ cursor: "ew-resize" }}>Turbine</text>
         <rect x={condTextX - sz(24)} y={condTextY - sz(8)} width={sz(48)} height={sz(11)} rx={2} fill={K.card} />
         <text x={condTextX} y={condTextY} fill={K.heatOut} fontSize={sz(7)} fontFamily={FM} textAnchor="middle" fontWeight="500" style={{ cursor: "ns-resize" }}>Condenser</text>
         <rect x={mapS(st[0].s) - sz(40)} y={mapT((st[0].T + st[1].T) / 2) - sz(8)} width={sz(30)} height={sz(11)} rx={2} fill={K.card} />
@@ -974,16 +992,14 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
       <line x1={mapV(stateV[3])} y1={mapP(stateP[3])} x2={mapV(stateV[0])} y2={mapP(stateP[0])} stroke={K.heatOut} strokeWidth={2.2} strokeLinecap="round" />
       {/* Value display at top of graph while dragging (P-v shows pressure) */}
       {lineDragInfo && (() => {
-        const isBoiler = lineDragInfo.which === "boiler";
+        const isTurb = lineDragInfo.which === "turbine", isBoiler = lineDragInfo.which === "boiler";
         const lineY = isBoiler ? mapP(cycle.pHigh) : mapP(cycle.pLow);
-        const color = isBoiler ? K.heatIn : K.heatOut;
-        const label = isBoiler ? "P_high" : "P_low";
-        const P = isBoiler ? cycle.pHigh : cycle.pLow;
-        const valueText = `${label} = ${fmtP(P, u)}`;
+        const color = isTurb ? K.workOut : isBoiler ? K.heatIn : K.heatOut;
+        const valueText = isTurb ? `T₃ = ${fmtT(cycle.states[2].T, u, 0)}` : `${isBoiler ? "P_high" : "P_low"} = ${fmtP(isBoiler ? cycle.pHigh : cycle.pLow, u)}`;
         const boxW = Math.max(sz(96), valueText.length * sz(5.7) + sz(16));
         const boxY = PV_PLOT.y + 2;
         return (<>
-          <line x1={PV_PLOT.x} y1={lineY} x2={PV_PLOT.x + PV_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+          {!isTurb && <line x1={PV_PLOT.x} y1={lineY} x2={PV_PLOT.x + PV_PLOT.w} y2={lineY} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />}
           <rect x={PV_PLOT.x + PV_PLOT.w / 2 - boxW / 2} y={boxY} width={boxW} height={sz(18)} rx={2} fill={K.card} stroke={color} strokeWidth={0.8} />
           <text x={PV_PLOT.x + PV_PLOT.w / 2} y={boxY + sz(13)} fill={color} fontSize={sz(9)} fontFamily={FM} textAnchor="middle" fontWeight="600">{valueText}</text>
         </>);
@@ -1966,7 +1982,7 @@ function RankinePage({ onBack }) {
               {lockT ? "🔒" : "🔓"} Lock T = {fmtT(dragPoint.T, units, 0)}
             </button>
           </div>
-          <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onPHighChange={setPHigh} onPLowChange={setPLow}
+          <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onPHighChange={setPHigh} onPLowChange={setPLow} onTSupChange={setTSup}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
