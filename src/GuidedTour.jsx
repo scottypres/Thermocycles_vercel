@@ -86,6 +86,15 @@ export function WelcomePopup({ open, onStart, onDismiss, K, textScale, onScaleCh
 
 /* ───────── Bottom sheet height (fraction of viewport) ───────── */
 const SHEET_HEIGHT_VH = 45; // sheet takes up to ~45% of the viewport; its text scrolls, its buttons stay put
+const SIDE_SHEET_W = 360;   // width of the sheet when it docks beside an element too tall to fit above or below it
+
+/* The part of the layout viewport actually on screen. Position: fixed pins to the layout viewport, and on iPad
+   Safari a programmatic scroll can leave the screen panned inside a taller layout viewport until the user drags,
+   so the sheet is pinned to this frame instead. */
+const readViewport = () => {
+  const v = typeof window !== "undefined" && window.visualViewport;
+  return v ? { top: v.offsetTop, left: v.offsetLeft, w: v.width, h: v.height } : { top: 0, left: 0, w: "100%", h: "100%" };
+};
 
 /* ───────── Guided Tour ───────── */
 export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange, forced }) {
@@ -93,9 +102,21 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
   const [rect, setRect] = useState(null);
   const [cursor, setCursor] = useState(null); // demo pointer {x, y, down, fast}
   const [hl, setHl] = useState(null);         // grey box over the element the demo is about to click
+  const [dock, setDock] = useState("bottom"); // where the sheet sits for this step: bottom | top | left | right
+  const [vv, setVv] = useState(readViewport);
   const measureRef = useRef(null);
+  const sheetRef = useRef(null);
 
   useEffect(() => { if (isOpen) setStepIdx(0); }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const v = window.visualViewport, f = () => setVv(readViewport());
+    f();
+    v?.addEventListener("resize", f); v?.addEventListener("scroll", f);
+    window.addEventListener("resize", f); window.addEventListener("scroll", f);
+    return () => { v?.removeEventListener("resize", f); v?.removeEventListener("scroll", f); window.removeEventListener("resize", f); window.removeEventListener("scroll", f); };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || !steps[stepIdx]) return;
@@ -106,25 +127,35 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
     const el = document.querySelector(`[data-tour="${step.target}"]`);
     if (!el) { setRect(null); return; }
 
-    // Scroll so the highlighted element sits in the visible portion of the viewport
-    // (away from the sheet which occupies ~35%)
-    const vh = window.innerHeight;
-    const sheetH = vh * SHEET_HEIGHT_VH / 100;
+    // Scroll so the highlighted element sits in the visible portion of the viewport, away from the sheet
+    const v = window.visualViewport;
+    const vh = v ? v.height : window.innerHeight, vw = v ? v.width : window.innerWidth;
+    const sheetH = sheetRef.current ? sheetRef.current.offsetHeight + 42 : vh * SHEET_HEIGHT_VH / 100; // content + padding: the sheet is content-sized
     const elRect = el.getBoundingClientRect();
-    const absTop = elRect.top + window.scrollY;
-    const isTop = step.sheet === "top";
+    const absTop = elRect.top + window.scrollY - (v ? v.offsetTop : 0); // relative to the top of the screen, not the layout viewport
+    let side = step.sheet === "top" ? "top" : "bottom";
+    if (elRect.height > vh - sheetH - 40 && vw >= 900) {
+      // Too tall to share the screen with a top or bottom sheet (landscape tablet, large display size):
+      // dock the sheet beside the element instead, on whichever side has more room
+      const freeL = elRect.left, freeR = vw - elRect.right;
+      if (Math.max(freeL, freeR) >= SIDE_SHEET_W - 20) side = freeR >= freeL ? "right" : "left";
+    }
+    setDock(side);
 
-    if (isTop) {
+    if (side === "top") {
       // Sheet is at top — element should be in the lower portion
       const safeTop = sheetH + 20; // below the top sheet
       const targetScroll = Math.max(0, absTop - safeTop - Math.max(20, (vh - sheetH - 20 - elRect.height) / 3));
       window.scrollTo({ top: targetScroll, behavior: "smooth" });
-    } else {
+    } else if (side === "bottom") {
       // Sheet is at bottom — element should be in the upper portion
       const safeZone = vh - sheetH - 20;
       const topMargin = Math.max(20, (safeZone - elRect.height) / 3);
       const targetScroll = Math.max(0, absTop - topMargin);
       window.scrollTo({ top: targetScroll, behavior: "smooth" });
+    } else {
+      // Sheet is beside the element — the whole viewport height is free, so centre it
+      window.scrollTo({ top: Math.max(0, absTop - Math.max(20, (vh - elRect.height) / 2)), behavior: "smooth" });
     }
 
     const measure = () => {
@@ -305,18 +336,24 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         }}><path d="M3 2 L3 22 L8.5 17 L12 25 L15.5 23.5 L12 15.5 L19 15.5 Z" fill="#fff" stroke="#111" strokeWidth="1.5" strokeLinejoin="round" /></svg>}
       </div>
 
-      {/* ── Fixed sheet (top or bottom) ── */}
-      <div data-anim-keep="1" onClick={e => e.stopPropagation()} style={{
-        position: "fixed", zIndex: 10000,
-        left: 0, right: 0,
-        ...(step.sheet === "top" && !rect?.win
-          ? { top: 0, borderBottom: `2px solid ${accent}`, boxShadow: "0 4px 24px rgba(0,0,0,0.25)", padding: "24px 20px 18px" }
-          : { bottom: 0, borderTop: `2px solid ${accent}`, boxShadow: "0 -4px 24px rgba(0,0,0,0.25)", padding: "18px 20px 24px" }),
-        background: K.card,
-        maxHeight: `${SHEET_HEIGHT_VH}vh`, boxSizing: "border-box",
+      {/* ── Sheet, pinned to an edge of the on-screen frame ── */}
+      {(() => { const side = rect?.win ? "bottom" : dock, vertical = side === "top" || side === "bottom"; return (
+      <div data-anim-keep="1" style={{
+        position: "fixed", zIndex: 10000, pointerEvents: "none",
+        top: vv.top, left: vv.left, width: vv.w, height: vv.h,
+        display: "flex", flexDirection: vertical ? "column" : "row", justifyContent: side === "bottom" || side === "right" ? "flex-end" : "flex-start",
+      }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        pointerEvents: "auto",
+        ...(side === "bottom"
+          ? { width: "100%", maxHeight: `${SHEET_HEIGHT_VH}%`, borderTop: `2px solid ${accent}`, boxShadow: "0 -4px 24px rgba(0,0,0,0.25)", padding: "18px 20px 24px" }
+          : side === "top"
+          ? { width: "100%", maxHeight: `${SHEET_HEIGHT_VH}%`, borderBottom: `2px solid ${accent}`, boxShadow: "0 4px 24px rgba(0,0,0,0.25)", padding: "24px 20px 18px" }
+          : { width: SIDE_SHEET_W, height: "100%", justifyContent: "center", [side === "left" ? "borderRight" : "borderLeft"]: `2px solid ${accent}`, boxShadow: "0 0 24px rgba(0,0,0,0.25)", padding: "24px 20px" }),
+        background: K.card, boxSizing: "border-box",
         display: "flex", flexDirection: "column",
       }}>
-        <div style={{ maxWidth: 480, margin: "0 auto", width: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <div ref={sheetRef} style={{ maxWidth: 480, margin: "0 auto", width: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
           <div style={{ overflowY: "auto", minHeight: 0, marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontFamily: FM, color: K.inkLight, marginBottom: 4 }}>
               Step {stepIdx + 1} of {steps.length}
@@ -354,6 +391,8 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
           </div>
         </div>
       </div>
+      </div>
+      ); })()}
     </>
   );
 }
