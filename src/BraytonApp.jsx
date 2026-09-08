@@ -1450,7 +1450,7 @@ export default function BraytonPage({ onBack }) {
           <div data-tour="bry-schematic"><BrySchematicDiagram cycle={cycle} textScale={textScale} units={units} animating={animating} animProgress={animProgress} /></div>
         </div>
         <div data-tour="bry-visualizer" style={desktop ? { padding: "24px", background: K.card, border: `1px solid ${K.border}`, display: "flex", flexDirection: "column" } : card}>
-          <h3 style={sec}>Specific Volume Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 9, color: K.inkLight, fontStyle: "italic" }}>— drag a point on the diagrams below</span></h3>
+          <h3 style={sec}>Specific Volume Visualizer <span style={{ fontFamily: FM, fontSize: desktop ? 15 : 7.5, color: K.inkLight, fontStyle: "italic" }}>— drag a point {desktop ? "on the diagrams " : ""}below</span></h3>
           <VolumeBoxVisualizer K={K} T={dragPoint.T} P={dragPoint.P} v={dragPoint.v} vMin={cycle.vMin} vMax={cycle.vMax} tLow={cycle.T1} tHigh={cycle.T3} fillHeight={desktop} textScale={textScale} units={units} smooth={!animating} />
         </div>
       </div>

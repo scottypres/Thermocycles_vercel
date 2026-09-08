@@ -2160,6 +2160,8 @@ export default function App() {
     return () => window.removeEventListener("popstate", sync);
   }, []);
 
+  useEffect(() => { window.scrollTo(0, 0); }, [page]); // a cycle page opens at its top, not where the landing page was scrolled
+
   const navigate = (next) => {
     if (next === page) return;
     const url = next === "landing"
