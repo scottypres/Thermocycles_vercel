@@ -222,6 +222,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
           const q = Math.min(1, (performance.now() - t0) / D), yy = y0 - A * Math.sin(q * 2 * Math.PI);
           setCursor({ x, y: yy, down: true, fast: true }); mouse("mousemove", el, x, yy, { buttons: 1 });
           q < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+        if (!alive) return;
         mouse("mouseup", el, x, y0);
         setCursor({ x, y: y0, fast: true });
         await wait(350);

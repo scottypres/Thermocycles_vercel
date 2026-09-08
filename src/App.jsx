@@ -415,6 +415,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null); // "boiler" | "condenser" | "turbine" | null
+  const grabOff = useRef(0); // pointer offset from the line at grab time, so the line follows the finger instead of jumping to it
   const turbOffRef = useRef(0);     // how far right of the 3→4 isentrope the Turbine label was grabbed
   const [activeArea, setActiveArea] = useState("qIn");
 
@@ -464,11 +465,13 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
     if (r) {
       // Check if click is near "Boiler" or "Condenser" text labels
       if (Math.abs(r.px - boilerTextX) < 25 && Math.abs(r.py - boilerTextY) < 10) {
+        grabOff.current = r.py - mapT(cycle.Tsat_high);
         lineDragRef.current = "boiler";
         if (onLineDragStart) onLineDragStart("boiler");
         return;
       }
       if (Math.abs(r.px - condTextX) < 30 && Math.abs(r.py - condTextY) < 10) {
+        grabOff.current = r.py - mapT(st[0].T);
         lineDragRef.current = "condenser";
         if (onLineDragStart) onLineDragStart("condenser");
         return;
@@ -499,7 +502,7 @@ function TsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onPHighC
       }
       const py = getSvgY(e);
       if (py == null) return;
-      const T = Math.max(5, Math.min(370, unmapT(py)));
+      const T = Math.max(5, Math.min(370, unmapT(py - grabOff.current)));
       const P = satTempToPressure(T);
       if (lineDragRef.current === "boiler") {
         const clamped = Math.max(500, Math.min(25000, Math.round(P / 100) * 100));
@@ -797,6 +800,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
   const lockedVRef = useRef(null);
   const lockedPRef = useRef(null);
   const lineDragRef = useRef(null);
+  const grabOff = useRef(0); // pointer offset from the line at grab time, so the line follows the finger instead of jumping to it
   const [activeArea, setActiveArea] = useState("wTurbine");
 
   // Capture exact lock values when locks activate
@@ -856,11 +860,13 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
     const r = getSvgXY(e);
     if (r) {
       if (Math.abs(r.px - boilerTextX) < 25 && Math.abs(r.py - boilerTextY) < 10) {
+        grabOff.current = r.py - mapP(stateP[1]);
         lineDragRef.current = "boiler";
         if (onLineDragStart) onLineDragStart("boiler");
         return;
       }
       if (Math.abs(r.px - condTextX) < 30 && Math.abs(r.py - condTextY) < 10) {
+        grabOff.current = r.py - mapP(stateP[0]);
         lineDragRef.current = "condenser";
         if (onLineDragStart) onLineDragStart("condenser");
         return;
@@ -876,7 +882,7 @@ function PvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, onPHighChange, onPL
       e.preventDefault();
       const py = getSvgY(e);
       if (py == null) return;
-      const P = unmapP(py);
+      const P = unmapP(py - grabOff.current);
       if (lineDragRef.current === "boiler") {
         const clamped = Math.max(500, Math.min(25000, Math.round(P / 100) * 100));
         if (onPHighChange) onPHighChange(clamped);
@@ -1907,7 +1913,7 @@ function RankinePage({ onBack }) {
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <button data-tour="theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
-          <button data-tour="settings" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
+          <button data-tour="settings" data-anim-keep="1" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
           <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
         </div>
       </div>
@@ -1978,7 +1984,7 @@ function RankinePage({ onBack }) {
               {lockT ? "🔒" : "🔓"} Lock T = {fmtT(dragPoint.T, units, 0)}
             </button>
           </div>
-          <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onPHighChange={setPHigh} onPLowChange={setPLow} onTSupChange={setTSup}
+          <TsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onPHighChange={setPHigh} onPLowChange={setPLow} onTSupChange={v => setTSup(Math.max(minTSup, v))}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 

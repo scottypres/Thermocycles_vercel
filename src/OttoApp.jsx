@@ -198,11 +198,11 @@ const TX_DEFAULTS = {
   "OttoEquationsModal.9.mobile": 12,
   "OttoStateTable.1.desktop": 16,
   "OttoStateTable.1.mobile": 10,
-  "OttoStateTable.2.desktop": 14,
+  "OttoStateTable.2.desktop": 16,
   "OttoStateTable.2.mobile": 9,
-  "OttoStateTable.3.desktop": 20,
+  "OttoStateTable.3.desktop": 25,
   "OttoStateTable.3.mobile": 13,
-  "OttoStateTable.4.desktop": 12,
+  "OttoStateTable.4.desktop": 15.5,
   "OttoStateTable.4.mobile": 8,
   "OttoStateTable.5.desktop": 14,
   "OttoStateTable.5.mobile": 9,
@@ -1020,6 +1020,7 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
+  const grabOff = useRef(0); // pointer offset from the line at grab time, so the line follows the finger instead of jumping to it
   const [activeArea, setActiveArea] = useState("qIn");
 
   const sMin = cycle.sAxisMin, sMax = cycle.sAxisMax;
@@ -1086,11 +1087,13 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
         return;
       }
       if (Math.abs(r.px - combTextX) < 30 && Math.abs(r.py - combTextY) < 10) {
+        grabOff.current = r.py - mapT(combMidT);
         lineDragRef.current = "combustion";
         if (onLineDragStart) onLineDragStart("combustion");
         return;
       }
       if (Math.abs(r.px - rejTextX) < 40 && Math.abs(r.py - rejTextY) < 10) {
+        grabOff.current = r.py - mapT(rejMidT);
         lineDragRef.current = "rejection";
         if (onLineDragStart) onLineDragStart("rejection");
         return;
@@ -1122,7 +1125,7 @@ function OttoTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRC
         if (onLineDragMove) onLineDragMove(lineDragRef.current);
         return;
       }
-      const TK = Math.max(150, unmapT(r.py) + K2C);
+      const TK = Math.max(150, unmapT(r.py - grabOff.current) + K2C);
       if (lineDragRef.current === "combustion") {
         // Moving the 2→3 isochore up means a smaller v₂ at the same entropy, i.e. a larger compression ratio
         const v = vFromST(cycle.gas, TK, combMidS);
@@ -1283,6 +1286,7 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
+  const grabOff = useRef(0); // pointer offset from the line at grab time, so the line follows the finger instead of jumping to it
   const [activeArea, setActiveArea] = useState("wExp");
 
   const st = cycle.states;
@@ -1329,11 +1333,13 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
     const r = getSvgXY(e);
     if (r) {
       if (Math.abs(r.px - combTextX) < 30 && Math.abs(r.py - combTextY) < 10) {
+        grabOff.current = r.px - mapV(cycle.v2);
         lineDragRef.current = "combustion";
         if (onLineDragStart) onLineDragStart("combustion");
         return;
       }
       if (Math.abs(r.px - rejTextX) < 40 && Math.abs(r.py - rejTextY) < 10) {
+        grabOff.current = r.px - mapV(cycle.v1);
         lineDragRef.current = "rejection";
         if (onLineDragStart) onLineDragStart("rejection");
         return;
@@ -1349,7 +1355,7 @@ function OttoPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, on
       e.preventDefault();
       const r = getSvgXY(e);
       if (!r) return;
-      const v = unmapV(r.px);
+      const v = unmapV(r.px - grabOff.current);
       if (lineDragRef.current === "combustion") {
         if (onRChange) onRChange(clampR(cycle.v1 / v));
         if (onLineDragMove) onLineDragMove("combustion");
@@ -2520,7 +2526,7 @@ export default function OttoPage({ onBack }) {
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <button data-tour="otto-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? TX["OttoPage.6.desktop"] : TX["OttoPage.6.mobile"]), cursor: "pointer", fontFamily: FD }}>Theory</button>
             <button data-tour="otto-gases" onClick={() => setShowGasInfo(true)} style={{ background: K.workOut, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? TX["OttoPage.7.desktop"] : TX["OttoPage.7.mobile"]), cursor: "pointer", fontFamily: FD }}>Gases</button>
-            <button data-tour="otto-settings" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? TX["OttoPage.8.desktop"] : TX["OttoPage.8.mobile"]), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
+            <button data-tour="otto-settings" data-anim-keep="1" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? TX["OttoPage.8.desktop"] : TX["OttoPage.8.mobile"]), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
             <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? TX["OttoPage.9.desktop"] : TX["OttoPage.9.mobile"]), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
@@ -2608,7 +2614,7 @@ export default function OttoPage({ onBack }) {
               {lockT ? "🔒" : "🔓"} Lock T = {fmtT(dragPoint.T, units, 0)}
             </button>
           </div>
-          <OttoTsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onRChange={setR} onP1Change={setP1} onT1Change={setT1} onT3Change={setT3}
+          <OttoTsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onRChange={setR} onP1Change={setP1} onT1Change={setT1} onT3Change={v => setT3(Math.max(minT3, v))}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
@@ -2636,7 +2642,7 @@ export default function OttoPage({ onBack }) {
               {lockV ? "🔒" : "🔓"} Lock v = {dragPoint.v.toFixed(4)} m³/kg
             </button>
           </div>
-          <OttoPvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} showPvAreas={showPvAreas} onRChange={setR} onP1Change={setP1} onT1Change={setT1} onT3Change={setT3}
+          <OttoPvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} showPvAreas={showPvAreas} onRChange={setR} onP1Change={setP1} onT1Change={setT1} onT3Change={v => setT3(Math.max(minT3, v))}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>

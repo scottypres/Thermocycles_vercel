@@ -211,6 +211,7 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
+  const grabOff = useRef(0); // pointer offset from the line at grab time, so the line follows the finger instead of jumping to it
   const axisRef = useRef(null); // s-axis as it was when a label drag started, and how far right of its isentrope the label was grabbed
   const [activeArea, setActiveArea] = useState("qIn");
 
@@ -274,11 +275,13 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
         return;
       }
       if (Math.abs(r.px - combTextX) < 28 && Math.abs(r.py - combTextY) < 10) {
+        grabOff.current = r.py - mapT(combMidT);
         lineDragRef.current = "combustor";
         if (onLineDragStart) onLineDragStart("combustor");
         return;
       }
       if (Math.abs(r.px - hxTextX) < 38 && Math.abs(r.py - hxTextY) < 10) {
+        grabOff.current = r.py - mapT(hxMidT);
         lineDragRef.current = "hx";
         if (onLineDragStart) onLineDragStart("hx");
         return;
@@ -309,7 +312,7 @@ function BryTsDiagram({ cycle, dragPoint, onDrag, lockS, lockT, showAreas, onRpC
         if (onLineDragMove) onLineDragMove(lineDragRef.current);
         return;
       }
-      const TK = Math.max(150, unmapT(r.py) + K2C);
+      const TK = Math.max(150, unmapT(r.py - grabOff.current) + K2C);
       if (lineDragRef.current === "combustor") {
         const TKlower = (st[0].T + K2C) * Math.exp((combMidS - st[0].s) / cp);
         const rp = clampRp(Math.pow(TK / TKlower, cp / cycle.gas.R));
@@ -462,6 +465,7 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
+  const grabOff = useRef(0); // pointer offset from the line at grab time, so the line follows the finger instead of jumping to it
   const [activeArea, setActiveArea] = useState("wTurb");
 
   const st = cycle.states;
@@ -505,11 +509,13 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
     const r = getSvgXY(e);
     if (r) {
       if (Math.abs(r.px - combTextX) < 28 && Math.abs(r.py - combTextY) < 10) {
+        grabOff.current = r.py - mapP(cycle.p2);
         lineDragRef.current = "combustor";
         if (onLineDragStart) onLineDragStart("combustor");
         return;
       }
       if (Math.abs(r.px - hxTextX) < 38 && Math.abs(r.py - hxTextY) < 10) {
+        grabOff.current = r.py - mapP(cycle.p1);
         lineDragRef.current = "hx";
         if (onLineDragStart) onLineDragStart("hx");
         return;
@@ -525,7 +531,7 @@ function BryPvDiagram({ cycle, dragPoint, onDrag, lockP, lockV, showPvAreas, onR
       e.preventDefault();
       const r = getSvgXY(e);
       if (!r) return;
-      const P = unmapP(r.py);
+      const P = unmapP(r.py - grabOff.current);
       if (lineDragRef.current === "combustor") {
         if (onRpChange) onRpChange(clampRp(P / cycle.p1));
         if (onLineDragMove) onLineDragMove("combustor");
@@ -1400,7 +1406,7 @@ export default function BraytonPage({ onBack }) {
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <button data-tour="bry-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
             <button data-tour="bry-gases" onClick={() => setShowGasInfo(true)} style={{ background: K.workIn, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Gases</button>
-            <button data-tour="bry-settings" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
+            <button data-tour="bry-settings" data-anim-keep="1" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
             <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>
@@ -1482,7 +1488,7 @@ export default function BraytonPage({ onBack }) {
               {lockT ? "🔒" : "🔓"} Lock T = {fmtT(dragPoint.T, units, 0)}
             </button>
           </div>
-          <BryTsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onRpChange={setRp} onP1Drag={handleP1Drag} onT1Change={setT1} onT3Change={setT3}
+          <BryTsDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockS={lockS} lockT={lockT} showAreas={showAreas} onRpChange={setRp} onP1Drag={handleP1Drag} onT1Change={setT1} onT3Change={v => setT3(Math.max(minT3, v))}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
 
@@ -1510,7 +1516,7 @@ export default function BraytonPage({ onBack }) {
               {lockV ? "🔒" : "🔓"} Lock v = {dragPoint.v.toFixed(4)} m³/kg
             </button>
           </div>
-          <BryPvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} showPvAreas={showPvAreas} onRpChange={setRp} onP1Drag={handleP1Drag} onT1Change={setT1} onT3Change={setT3}
+          <BryPvDiagram cycle={cycle} dragPoint={dragPoint} onDrag={handleDrag} lockP={lockP} lockV={lockV} showPvAreas={showPvAreas} onRpChange={setRp} onP1Drag={handleP1Drag} onT1Change={setT1} onT3Change={v => setT3(Math.max(minT3, v))}
             lineDragInfo={lineDragInfo} onLineDragStart={(which) => { setAnimating(false); setLineDragInfo({ which }); }} onLineDragMove={(which) => setLineDragInfo({ which })} onLineDragEnd={() => setLineDragInfo(null)} textScale={textScale} units={units} />
         </div>
       </div>

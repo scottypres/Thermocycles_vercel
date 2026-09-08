@@ -259,6 +259,7 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
+  const grabOff = useRef(0); // pointer offset from the line at grab time, so the line follows the finger instead of jumping to it
   const [activeArea, setActiveArea] = useState("qEvap");
 
   // Auto-scale axes from refrigerant data
@@ -322,11 +323,13 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
     const r = getSvgXY(e);
     if (r) {
       if (Math.abs(r.px - condTextX) < 25 && Math.abs(r.py - condTextY) < 10) {
+        grabOff.current = r.py - mapT(cycle.Tsat_high);
         lineDragRef.current = "condenser";
         if (onLineDragStart) onLineDragStart("condenser");
         return;
       }
       if (Math.abs(r.px - evapTextX) < 30 && Math.abs(r.py - evapTextY) < 10) {
+        grabOff.current = r.py - mapT(cycle.states[0].T);
         lineDragRef.current = "evaporator";
         if (onLineDragStart) onLineDragStart("evaporator");
         return;
@@ -342,7 +345,7 @@ function RefTsDiagram({ cycle, refData, dragPoint, onDrag, lockS, lockT, showAre
       e.preventDefault();
       const py = getSvgY(e);
       if (py == null) return;
-      const T = unmapT(py);
+      const T = unmapT(py - grabOff.current);
       const P = satTempToP(T);
       const pMin = table[0].P;
       const pMax = table[table.length - 2].P;
@@ -553,6 +556,7 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
   const svgRef = useRef(null);
   const draggingRef = useRef(false);
   const lineDragRef = useRef(null);
+  const grabOff = useRef(0); // pointer offset from the line at grab time, so the line follows the finger instead of jumping to it
   const [activeArea, setActiveArea] = useState("qEvap");
 
   const table = refData.table;
@@ -627,11 +631,13 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
     const r = getSvgXY(e);
     if (r) {
       if (Math.abs(r.px - condTextX) < 25 && Math.abs(r.py - condTextY) < 10) {
+        grabOff.current = r.py - mapP(cycle.states[1].P);
         lineDragRef.current = "condenser";
         if (onLineDragStart) onLineDragStart("condenser");
         return;
       }
       if (Math.abs(r.px - evapTextX) < 30 && Math.abs(r.py - evapTextY) < 10) {
+        grabOff.current = r.py - mapP(cycle.states[0].P);
         lineDragRef.current = "evaporator";
         if (onLineDragStart) onLineDragStart("evaporator");
         return;
@@ -647,7 +653,7 @@ function RefPhDiagram({ cycle, refData, dragPoint, onDrag, lockP, lockH, showAre
       e.preventDefault();
       const py = getSvgY(e);
       if (py == null) return;
-      const P = unmapP(py);
+      const P = unmapP(py - grabOff.current);
       const pMin = table[0].P;
       const pMax = table[table.length - 2].P;
       if (lineDragRef.current === "condenser") {
@@ -1676,7 +1682,7 @@ export default function RefrigerationPage({ onBack }) {
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <button data-tour="ref-theory" onClick={() => setShowInfo(true)} style={{ background: K.accent, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Theory</button>
             <button data-tour="ref-refrigerants" onClick={() => setShowRefInfo(true)} style={{ background: K.heatOut, border: "none", padding: desktop ? "10px 20px" : "7px 14px", color: "#fff", fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Refrigerants</button>
-            <button data-tour="ref-settings" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
+            <button data-tour="ref-settings" data-anim-keep="1" onClick={() => setShowSettings(true)} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>⚙ Settings</button>
             <button onClick={() => { setForcedTour(false); setShowTour(true); }} style={{ background: "none", border: `1px solid ${K.border}`, padding: desktop ? "10px 20px" : "7px 14px", color: K.inkMed, fontSize: sz(desktop ? 17.50 : 11), cursor: "pointer", fontFamily: FD }}>Instructions</button>
           </div>
         </div>

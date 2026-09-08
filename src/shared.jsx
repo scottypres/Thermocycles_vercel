@@ -169,7 +169,7 @@ export function SettingsModal({ open, onClose, K, FD, FM,
   if (!open) return null;
   const ts = Math.max(0.6, Math.min(2, textScale || 1));
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 10px", overflowY: "auto" }}>
+    <div data-anim-keep="1" onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 10px", overflowY: "auto" }}>
       <style>{`
         input[type="range"].settings-slider::-webkit-slider-runnable-track { height: 6px; background: transparent; border-radius: 0; }
         input[type="range"].settings-slider::-moz-range-track { height: 6px; background: transparent; border-radius: 0; }
