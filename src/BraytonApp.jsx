@@ -815,7 +815,7 @@ function BrySchematicDiagram({ cycle, textScale, units, animating, animProgress 
   const fmt = (v) => Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(1);
   const [activeComponent, setActiveComponent] = useState(null);
   const SEGMENTS = [
-    [{ x: 85, y: 273 }, { x: 85, y: 200 }, { x: 85, y: 144 }, { x: 85, y: 82 }],
+    [{ x: 85, y: 273 }, { x: 85, y: 207 }, { x: 85, y: 137 }, { x: 85, y: 82 }],
     [{ x: 85, y: 82 }, { x: 110, y: 57 }, { x: 250, y: 57 }, { x: 290, y: 57 }],
     [{ x: 290, y: 57 }, { x: 290, y: 127 }, { x: 290, y: 219 }, { x: 290, y: 273 }],
     [{ x: 290, y: 273 }, { x: 250, y: 273 }, { x: 110, y: 273 }, { x: 85, y: 273 }],
@@ -841,7 +841,7 @@ function BrySchematicDiagram({ cycle, textScale, units, animating, animProgress 
         <circle key={`${i}-${j}`} cx={i * 20 - 10} cy={j * 20} r={0.6} fill={K.gridMajor} />
       )))}
       {/* Shaft between compressor and turbine */}
-      <line x1={113} y1={172} x2={267} y2={172} stroke={K.inkLight} strokeWidth={2.5} strokeDasharray="6 4" opacity={0.55} />
+      <line x1={120} y1={172} x2={267} y2={172} stroke={K.inkLight} strokeWidth={2.5} strokeDasharray="6 4" opacity={0.55} />
       <rect x={190 - sz(16)} y={166 - sz(8)} width={sz(32)} height={sz(11)} fill={K.card} />
       <text x={190} y={166} fill={K.inkLight} fontSize={sz(6.5)} textAnchor="middle" fontFamily={FM} fontStyle="italic">shaft</text>
       {/* COMBUSTOR */}
@@ -878,21 +878,18 @@ function BrySchematicDiagram({ cycle, textScale, units, animating, animProgress 
       </g>
       {/* COMPRESSOR */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("compressor")}>
-        <path d="M57,127 L113,144 L113,200 L57,217 Z" fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} strokeLinejoin="round" />
-        {[139, 152, 165, 178, 191, 205].map(y => {
-          const xl = y < 144 ? 113 - (y - 127) / 17 * 56 : y > 200 ? 57 + (y - 200) / 17 * 56 : 57;
-          return <line key={y} x1={xl + 4} y1={y} x2={109} y2={y} stroke={K.workIn} strokeWidth={0.3} />;
-        })}
+        <circle cx={85} cy={172} r={35} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
+        <path d="M56,189 L85,139 L114,189 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
         <rect x={85 - sz(30)} y={170 - sz(11)} width={sz(60)} height={sz(14)} fill={K.card} />
         <text x={85} y={170} fill={K.workIn} fontSize={sz(9.5)} textAnchor="middle" fontFamily={FD}>Compressor</text>
         <rect x={85 - sz(20)} y={181 - sz(8)} width={sz(40)} height={sz(12)} fill={K.card} />
         <text x={85} y={181} fill={K.inkLight} fontSize={sz(6)} textAnchor="middle" fontFamily={FM} fontStyle="italic">isentropic</text>
       </g>
       {/* Pipes */}
-      <polyline points="85,127 85,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#bK)" />
+      <polyline points="85,137 85,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#bK)" />
       <polyline points="250,57 290,57 290,127" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#bK)" />
       <polyline points="290,219 290,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#bK)" />
-      <polyline points="110,273 85,273 85,217" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#bK)" />
+      <polyline points="110,273 85,273 85,207" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#bK)" />
       {[{ n: "2", x: 85, y: 82 }, { n: "3", x: 290, y: 57 }, { n: "4", x: 290, y: 273 }, { n: "1", x: 85, y: 273 }].map((p, i) => (
         <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y + 4} fill={K.accent} fontSize={sz(12)} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
       ))}
