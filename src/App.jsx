@@ -1269,7 +1269,7 @@ function SchematicDiagram({ cycle, textScale, units, animating, animProgress }) 
   // its component (not corner-to-corner). The four segments correspond to
   // 1→pump→2, 2→boiler→3, 3→turbine→4, 4→condenser→1.
   const SEGMENTS = [
-    [{x:85,y:273}, {x:85,y:200}, {x:85,y:144}, {x:85,y:82}],
+    [{x:85,y:273}, {x:85,y:207}, {x:85,y:137}, {x:85,y:82}],
     [{x:85,y:82}, {x:110,y:57}, {x:250,y:57}, {x:290,y:57}],
     [{x:290,y:57}, {x:290,y:127}, {x:290,y:219}, {x:290,y:273}],
     [{x:290,y:273}, {x:250,y:273}, {x:110,y:273}, {x:85,y:273}],
@@ -1350,15 +1350,16 @@ function SchematicDiagram({ cycle, textScale, units, animating, animProgress }) 
       </g>
       {/* PUMP */}
       <g style={{ cursor: "pointer" }} onClick={() => setActiveComponent("pump")}>
-        <circle cx={85} cy={172} r={28} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
-        <path d="M71,181 L85,151 L99,181 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
-        <text x={85} y={191} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Pump</text>
+        <circle cx={85} cy={172} r={35} fill="rgba(255,255,255,0.01)" stroke={K.workIn} strokeWidth={1.5} />
+        <path d="M56,189 L85,139 L114,189 Z" fill="none" stroke={K.workIn} strokeWidth={0.8} />
+        <rect x={85 - sz(16)} y={176 - sz(11)} width={sz(32)} height={sz(14)} fill={K.card} />
+        <text x={85} y={176} fill={K.workIn} fontSize={sz(10)} textAnchor="middle" fontFamily={FD}>Pump</text>
       </g>
       {/* Pipes */}
-      <polyline points="85,144 85,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points="85,137 85,82 110,57" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="250,57 290,57 290,127" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       <polyline points="290,219 290,273 250,273" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
-      <polyline points="110,273 85,273 85,200" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
+      <polyline points="110,273 85,273 85,207" fill="none" stroke={K.ink} strokeWidth={1.2} markerEnd="url(#mK)" />
       {/* State markers */}
       {[{ n:"2",x:85,y:82 },{ n:"3",x:290,y:57 },{ n:"4",x:290,y:273 },{ n:"1",x:85,y:273 }].map((p,i) => (
         <g key={i}><circle cx={p.x} cy={p.y} r={11} fill={K.card} stroke={K.stateCircle} strokeWidth={1.2} /><text x={p.x} y={p.y+4} fill={K.accent} fontSize={sz(12)} textAnchor="middle" fontFamily={FD}>{p.n}</text></g>
