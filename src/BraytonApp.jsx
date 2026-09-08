@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop, SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
-import { GuidedTour, WelcomePopup, BRAYTON_TOUR_STEPS } from "./GuidedTour.jsx";
+import { GuidedTour, WelcomePopup, BRAYTON_TOUR_STEPS, tourState, markTour } from "./GuidedTour.jsx";
 let K = K_LIGHT;
 
 /* ───────── Working gases (ideal gas, constant cp — "cold-air standard" for air) ─────────
@@ -1319,8 +1319,8 @@ export default function BraytonPage({ onBack }) {
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
-  const [showTour, setShowTour] = useState(() => { try { return !localStorage.getItem("tourSeen"); } catch { return false; } });
-  const [forcedTour, setForcedTour] = useState(() => { try { return !localStorage.getItem("tourSeen"); } catch { return false; } });
+  const [showTour, setShowTour] = useState(() => tourState("brayton").show);
+  const [forcedTour, setForcedTour] = useState(() => tourState("brayton").forced);
   const [showWelcome] = useState(false);
   const [showAreas, setShowAreas] = useState(false);
   const [showPvAreas, setShowPvAreas] = useState(false);
@@ -1422,8 +1422,8 @@ export default function BraytonPage({ onBack }) {
         darkMode={darkMode} onDarkModeToggle={toggleDarkMode}
         units={units} onUnitsChange={handleUnitsChange}
         animSpeed={animSpeed} onAnimSpeedChange={handleAnimSpeedChange} />
-      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { localStorage.setItem("tourSeen", "1"); }} />
-      <GuidedTour steps={BRAYTON_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
+      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { markTour("brayton"); setShowTour(true); }} onDismiss={() => { markTour("brayton"); }} />
+      <GuidedTour steps={BRAYTON_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={(done) => { setShowTour(false); setForcedTour(false); markTour("brayton", done); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>

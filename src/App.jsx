@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { GuidedTour, WelcomePopup, RANKINE_TOUR_STEPS } from "./GuidedTour.jsx";
+import { GuidedTour, WelcomePopup, RANKINE_TOUR_STEPS, tourState, markTour } from "./GuidedTour.jsx";
 import { ParamSlider, SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
 
 /* ───────── Steam Property Data ───────── */
@@ -1801,12 +1801,8 @@ function RankinePage({ onBack }) {
   const [showInfo, setShowInfo] = useState(false);
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
-  const [showTour, setShowTour] = useState(() => {
-    try { return !localStorage.getItem("tourSeen"); } catch { return false; }
-  });
-  const [forcedTour, setForcedTour] = useState(() => {
-    try { return !localStorage.getItem("tourSeen"); } catch { return false; }
-  });
+  const [showTour, setShowTour] = useState(() => tourState("rankine").show);
+  const [forcedTour, setForcedTour] = useState(() => tourState("rankine").forced);
   const [showWelcome] = useState(false);
   const [dragPoint, setDragPoint] = useState({ s: 4.2, T: 200 });
   const [showAreas, setShowAreas] = useState(false);
@@ -1921,8 +1917,8 @@ function RankinePage({ onBack }) {
         darkMode={darkMode} onDarkModeToggle={toggleDarkMode}
         units={units} onUnitsChange={handleUnitsChange}
         animSpeed={animSpeed} onAnimSpeedChange={handleAnimSpeedChange} />
-      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); }} />
-      <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
+      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); markTour("rankine"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); markTour("rankine"); }} />
+      <GuidedTour steps={RANKINE_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={(done) => { setShowTour(false); setForcedTour(false); markTour("rankine", done); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>

@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop, SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
-import { GuidedTour, WelcomePopup, OTTO_TOUR_STEPS } from "./GuidedTour.jsx";
+import { GuidedTour, WelcomePopup, OTTO_TOUR_STEPS, tourState, markTour } from "./GuidedTour.jsx";
 import { GASES } from "./BraytonApp.jsx";
 let K = K_LIGHT;
 
@@ -2430,7 +2430,8 @@ export default function OttoPage({ onBack }) {
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
   // TODO(temporary, 2026-09-04): first-visit guided tour disabled while the page is being tuned. Re-enable by restoring:
-  //   useState(() => { try { return !localStorage.getItem("tourSeen"); } catch { return false; } })   for both showTour and forcedTour
+  //   const [showTour, setShowTour] = useState(() => tourState("otto").show);
+  //   const [forcedTour, setForcedTour] = useState(() => tourState("otto").forced);
   const [showTour, setShowTour] = useState(false);
   const [forcedTour, setForcedTour] = useState(false);
   const [showWelcome] = useState(false);
@@ -2541,8 +2542,8 @@ export default function OttoPage({ onBack }) {
         darkMode={darkMode} onDarkModeToggle={toggleDarkMode}
         units={units} onUnitsChange={handleUnitsChange}
         animSpeed={animSpeed} onAnimSpeedChange={handleAnimSpeedChange} />
-      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { localStorage.setItem("tourSeen", "1"); }} />
-      <GuidedTour steps={OTTO_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
+      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { markTour("otto"); setShowTour(true); }} onDismiss={() => { markTour("otto"); }} />
+      <GuidedTour steps={OTTO_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={(done) => { setShowTour(false); setForcedTour(false); markTour("otto", done); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>

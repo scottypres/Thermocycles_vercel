@@ -97,6 +97,13 @@ const readViewport = () => {
 };
 
 /* ───────── Guided Tour ───────── */
+/* One "seen" flag per page, so the tour opens on the first visit to each cycle, and one site-wide "done" flag, so a
+   student who has finished any tour is never forced through another. */
+export const TOUR_MANDATE = false; // TODO: true once every cycle page is final — first visit then can't skip until one tour has been finished
+const ls = (k) => { try { return localStorage.getItem(k); } catch { return "1"; } };
+export const tourState = (page) => ({ show: !ls("tourSeen:" + page), forced: TOUR_MANDATE && !ls("tourSeen:" + page) && !ls("tourDone") });
+export const markTour = (page, done) => { try { localStorage.setItem("tourSeen:" + page, "1"); if (done) localStorage.setItem("tourDone", "1"); } catch {} };
+
 export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange, forced }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [rect, setRect] = useState(null);
@@ -258,7 +265,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         `}</style>
         {/* Semi-transparent backdrop — page visible so user sees live changes */}
         <div data-anim-keep="1" style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.25)" }}
-          onClick={forced ? undefined : onClose} />
+          onClick={forced ? undefined : () => onClose()} />
         {/* Welcome card — pinned to top so page elements visible below */}
         <div data-anim-keep="1" onClick={e => e.stopPropagation()} style={{
           position: "fixed", zIndex: 10000,
@@ -287,7 +294,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
             background: accent, border: "none", padding: "10px 28px",
             color: "#fff", fontSize: 14, fontFamily: FD, cursor: "pointer", width: "100%",
           }}>Start Tour</button>
-          {!forced && <button onClick={onClose} style={{
+          {!forced && <button onClick={() => onClose()} style={{
             background: "none", border: `1px solid ${K.border}`, color: K.inkMed, marginTop: 10,
             fontSize: 11, fontFamily: FM, cursor: "pointer", padding: "6px 16px",
           }}>Skip</button>}
@@ -308,7 +315,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
         ${step.hide ? `${step.hide} { visibility: hidden; }` : ""}
       `}</style>
 
-      <div data-anim-keep="1" style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={forced ? undefined : onClose}>
+      <div data-anim-keep="1" style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={forced ? undefined : () => onClose()}>
         <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
           <defs>
             <mask id="tour-mask">
@@ -367,7 +374,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            {!forced && <button onClick={onClose} style={{
+            {!forced && <button onClick={() => onClose()} style={{
               background: "none", border: `1px solid ${K.border}`, color: K.inkMed,
               fontSize: 12, fontFamily: FM, cursor: "pointer", padding: "6px 14px",
             }}>Exit Tour</button>}
@@ -382,7 +389,7 @@ export function GuidedTour({ steps, isOpen, onClose, K, textScale, onScaleChange
                   color: "#fff", fontSize: 14, fontFamily: FD, cursor: "pointer",
                 }}>Next</button>
               ) : (
-                <button onClick={onClose} style={{
+                <button onClick={() => onClose(true)} style={{
                   background: accent, border: "none", padding: "6px 14px",
                   color: "#fff", fontSize: 14, fontFamily: FD, cursor: "pointer",
                 }}>Finish</button>

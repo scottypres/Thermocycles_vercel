@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { K_LIGHT, K_DARK, FD, FM, lerp, ParamSlider, useIsDesktop, SettingsModal, loadUnits, saveUnits, loadAnimSpeed, saveAnimSpeed, fmtT, fmtP, fmtH, fmtS, cvtT, cvtP, cvtH, cvtS, lblT, lblP, lblH, lblS } from "./shared.jsx";
 let K = K_LIGHT;
 import { REFRIGERANTS, interpRefrigerant, getRefrigerantDomeBounds, getRefrigerantPhaseInfo, getDefaultPressures } from "./refrigerantData.js";
-import { GuidedTour, WelcomePopup, REF_TOUR_STEPS } from "./GuidedTour.jsx";
+import { GuidedTour, WelcomePopup, REF_TOUR_STEPS, tourState, markTour } from "./GuidedTour.jsx";
 
 /* ───────── Cycle Calculation ───────── */
 function calculateRefrigerationCycle(ref, pHigh, pLow) {
@@ -1511,12 +1511,8 @@ export default function RefrigerationPage({ onBack }) {
   const [showEqs, setShowEqs] = useState(false);
   const [eqTopic, setEqTopic] = useState(null);
   const [showRefInfo, setShowRefInfo] = useState(false);
-  const [showTour, setShowTour] = useState(() => {
-    try { return !localStorage.getItem("tourSeen"); } catch { return false; }
-  });
-  const [forcedTour, setForcedTour] = useState(() => {
-    try { return !localStorage.getItem("tourSeen"); } catch { return false; }
-  });
+  const [showTour, setShowTour] = useState(() => tourState("refrigeration").show);
+  const [forcedTour, setForcedTour] = useState(() => tourState("refrigeration").forced);
   const [showWelcome] = useState(false);
   const [showTsAreas, setShowTsAreas] = useState(false);
   const [showPhAreas, setShowPhAreas] = useState(false);
@@ -1706,8 +1702,8 @@ export default function RefrigerationPage({ onBack }) {
         darkMode={darkMode} onDarkModeToggle={toggleDarkMode}
         units={units} onUnitsChange={handleUnitsChange}
         animSpeed={animSpeed} onAnimSpeedChange={handleAnimSpeedChange} />
-      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); localStorage.setItem("tourSeen", "1"); }} />
-      <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={() => { setShowTour(false); setForcedTour(false); localStorage.setItem("tourSeen", "1"); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
+      <WelcomePopup open={showWelcome} K={K} textScale={textScale} onScaleChange={handleScaleChange} onStart={() => { setShowWelcome(false); markTour("refrigeration"); setShowTour(true); }} onDismiss={() => { setShowWelcome(false); markTour("refrigeration"); }} />
+      <GuidedTour steps={REF_TOUR_STEPS} isOpen={showTour} forced={forcedTour} onClose={(done) => { setShowTour(false); setForcedTour(false); markTour("refrigeration", done); }} K={K} textScale={textScale} onScaleChange={handleScaleChange} />
 
       {/* Performance bar */}
       <div style={{ margin: `${gap}px ${gap}px 0`, padding: desktop ? "16px" : "12px", background: K.card, border: `1px solid ${K.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
